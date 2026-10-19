@@ -1,0 +1,5 @@
+Generated with the built-in imagegen tool.
+
+Use case: stylized-concept. Asset type: final macOS application icon for a Russian fantasy tabletop RPG storyteller application. Create one polished square icon, a large beautifully crafted twenty-sided D20 die, dark emerald enamel triangular faces with luminous antique gold bevels and a clearly engraved gold numeral 20 on the main front triangular face. Strong readable silhouette, premium tactile 3D fantasy artifact, subtle warm magical light at the edges. Centered single die occupying about 75% of square. Background is a deep forest-green rounded square macOS icon tile, with fully transparent outside corners and a restrained soft shadow. Match a dark forest green and muted gold application aesthetic. Clean elegant composition legible at 32px, no extra objects, no writing except the number 20, no branding or watermark. Square 1024x1024.
+
+Transparent background: true. Generated original retained; ICNS representations resized for macOS packaging.

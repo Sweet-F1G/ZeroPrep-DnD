@@ -1,0 +1,17 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {spawn} from 'node:child_process';import {mkdtemp,rm} from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
+test('full state HTTP: idempotent use, rollback, voice memory, import references and restart',async()=>{
+ const dir=await mkdtemp(path.join(os.tmpdir(),'skazitel-v4-api-'));let child,base;
+ async function boot(){child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',SKAZITEL_DATA:dir,SKAZITEL_KEYCHAIN_HELPER:'',SKAZITEL_TOKEN:'test'},stdio:['ignore','pipe','inherit']});base=await new Promise((resolve,reject)=>{let out='';child.stdout.on('data',b=>{out+=b;const m=out.match(/SKAZITEL_URL=(http:\/\/[^\n]+)/);if(m)resolve(m[1]);});child.once('error',reject);});}
+ async function api(route,data,status=200){const r=await fetch(base+'/api/'+route,{method:data?'POST':'GET',headers:{'x-app-token':'test','Content-Type':'application/json'},...(data?{body:JSON.stringify(data)}:{})});const result=await r.json();assert.equal(r.status,status,JSON.stringify(result));return result;}
+ async function stop(){const stopped=new Promise(r=>child.once('exit',r));child.kill();await stopped;}
+ try{await boot();let s=await api('create',{name:'Игра',edition:'2014',characters:[{name:'Лира',resources:[{id:'slots',name:'Ячейки',max:2,recovery:'longRest'}]}]});const id=s.activeId,h=s.campaigns[0].characters[0].id;
+ const use={id,requestId:'same-use',actions:[{type:'resource.use',characterId:h,resourceId:'slots',amount:1}]};s=await api('actions',use);assert.equal(s.campaigns[0].characters[0].resources[0].current,1);
+ s=await api('actions',use);assert.equal(s.campaigns[0].characters[0].resources[0].current,1);await api('actions',{...use,actions:[{type:'resource.use',characterId:h,resourceId:'slots',amount:2}]},400);
+ s=await api('undo',{id});assert.equal(s.campaigns[0].characters[0].resources[0].current,2);s=await api('actions',use);assert.equal(s.campaigns[0].characters[0].resources[0].current,2);
+ s=await api('turn',{id,characterId:h,text:'Лира, Запиши обещание вернуть кольцо мельнику до заката'});assert.equal(s.campaigns[0].memory.length,1);assert.equal(s.campaigns[0].memory[0].actorId,h);const source=s.campaigns[0].memory[0].sourceId;assert.ok(s.campaigns[0].journal.some(e=>e.id===source));
+ s=await api('actions',{id,actions:[{type:'item.add',item:{id:'p',name:'Зелье',ownerId:h,quantity:3}},{type:'wallet.change',ownerId:h,deltaCp:50}]});
+ const before=s.campaigns[0];await api('actions',{id,actions:[{type:'wallet.change',ownerId:h,deltaCp:-40},{type:'item.consume',itemId:'p',quantity:4}]},400);assert.deepEqual((await api('state')).campaigns[0],before);
+ let exported=await api('export?id='+id);s=await api('import',exported);const imported=s.campaigns.at(-1);assert.notEqual(imported.characters[0].id,h);assert.equal(imported.inventory[0].ownerId,imported.characters[0].id);assert.equal(imported.memory[0].actorId,imported.characters[0].id);assert.ok(imported.journal.some(e=>e.id===imported.memory[0].sourceId));
+ await stop();await boot();s=await api('state');assert.equal(s.storage.engine,'SQLite');assert.equal(s.campaigns[0].inventory[0].quantity,3);assert.equal(s.campaigns[0].edition,'2014');assert.match((await api('archive?id='+id+'&q=кольцо')).results[0].text,/кольцо/);
+ }finally{if(child&&!child.killed)await stop();await rm(dir,{recursive:true,force:true});}
+});

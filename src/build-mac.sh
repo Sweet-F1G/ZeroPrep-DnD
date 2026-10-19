@@ -1,0 +1,58 @@
+#!/bin/zsh
+set -eu
+TASK_SRC="$(cd "$(dirname "$0")" && pwd)"
+TASK_OUT="$(dirname "$TASK_SRC")"
+TASK_STAGE="$(mktemp -d /private/tmp/skazitel-build.XXXXXX)"
+TASK_APP="$TASK_STAGE/Skazitel.app"
+TASK_CACHE="${SKAZITEL_BUILD_CACHE:-/private/tmp/skazitel-swift-cache}"
+mkdir -p "$TASK_APP/Contents/MacOS" "$TASK_APP/Contents/Resources/src" "$TASK_CACHE"
+cat "$TASK_SRC/Keychain.swift" "$TASK_SRC/MacApp.swift" > "$TASK_STAGE/main.swift"
+swiftc -O -module-cache-path "$TASK_CACHE" "$TASK_STAGE/main.swift" -o "$TASK_APP/Contents/MacOS/Skazitel" -framework Cocoa -framework WebKit -framework AVFoundation -framework CFNetwork -framework Security
+cp -X "${SKAZITEL_NODE:-$(command -v node)}" "$TASK_APP/Contents/Resources/node"
+for TASK_FILE in server.mjs audio-stream.mjs response-stream.mjs maps.mjs openai-context.mjs cost.mjs progression.mjs dm-state.mjs illustrations.mjs rules.mjs memory.mjs inventory.mjs actions.mjs prompts.mjs campaign-store.mjs engine.mjs session-zero.mjs providers.mjs credentials.mjs usage.mjs context.mjs delivery.mjs local-voice.mjs silero-worker.py voice_text.py package.json; do
+  cp -X "$TASK_SRC/$TASK_FILE" "$TASK_APP/Contents/Resources/src/$TASK_FILE"
+done
+cp -RX "$TASK_SRC/public" "$TASK_APP/Contents/Resources/src/"
+cp -RX "$TASK_SRC/seed" "$TASK_APP/Contents/Resources/src/"
+cp -X "$TASK_SRC/assets/Skazitel.icns" "$TASK_APP/Contents/Resources/Skazitel.icns"
+# Keep the credential reader's signed identity stable when UI/resources change.
+if [[ -d "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app" ]]; then
+  ditto --norsrc --noextattr "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app" "$TASK_APP/Contents/Resources/KeyStore.app"
+else
+  TASK_KEYSTORE="$TASK_APP/Contents/Resources/KeyStore.app"
+  mkdir -p "$TASK_KEYSTORE/Contents/MacOS"
+  cat "$TASK_SRC/Keychain.swift" > "$TASK_STAGE/key-store-main.swift"
+  echo 'if !handleCredentialCommand() { exit(1) }' >> "$TASK_STAGE/key-store-main.swift"
+  mkdir -p "$TASK_STAGE/key-store-build"
+  cp -X "$TASK_STAGE/key-store-main.swift" "$TASK_STAGE/key-store-build/main.swift"
+  swiftc -O -module-cache-path "$TASK_CACHE" "$TASK_STAGE/key-store-build/main.swift" -o "$TASK_KEYSTORE/Contents/MacOS/Skazitel" -framework Security
+  cat > "$TASK_KEYSTORE/Contents/Info.plist" <<'KEYSTORE'
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>CFBundleExecutable</key><string>Skazitel</string><key>CFBundleIdentifier</key><string>local.skazitel.key-store</string><key>CFBundleName</key><string>Сказитель — ключи</string><key>CFBundlePackageType</key><string>APPL</string><key>LSUIElement</key><true/></dict></plist>
+KEYSTORE
+  codesign --force --sign - "$TASK_KEYSTORE"
+fi
+cat > "$TASK_APP/Contents/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>Skazitel</string>
+<key>CFBundleIdentifier</key><string>local.skazitel.demo</string>
+<key>CFBundleName</key><string>Сказитель</string>
+<key>CFBundleDisplayName</key><string>Сказитель</string>
+<key>CFBundleIconFile</key><string>Skazitel.icns</string>
+<key>CFBundleVersion</key><string>9</string>
+<key>CFBundleShortVersionString</key><string>0.5.0</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>LSMinimumSystemVersion</key><string>14.0</string>
+<key>NSMicrophoneUsageDescription</key><string>Распознавать игровые реплики: по кнопке или при включённом постоянном прослушивании.</string>
+<key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
+<key>NSHighResolutionCapable</key><true/>
+</dict></plist>
+PLIST
+chmod +x "$TASK_APP/Contents/MacOS/Skazitel" "$TASK_APP/Contents/Resources/node"
+xattr -cr "$TASK_APP"
+codesign --force --sign - "$TASK_APP"
+codesign --verify --deep --strict "$TASK_APP"
+ditto --norsrc --noextattr "$TASK_APP" "$TASK_OUT/Skazitel.app"
+xattr -cr "$TASK_OUT/Skazitel.app"
+echo "Готово: $TASK_OUT/Skazitel.app"

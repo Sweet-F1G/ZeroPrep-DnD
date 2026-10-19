@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Temporary and log files
+*.tmp
+*.log
+*.swp
+
+# SQLite runtime locks and journals
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+
+# Local voice weights, virtual environment and large models
+LocalVoice/models/
+LocalVoice/venv/
+
+# Backup snapshots and temporary journals
+Saves/Backups/
+src/data/*.sqlite-wal
+src/data/*.sqlite-shm
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Native Mac application bundle (built via src/build-mac.sh)
+Skazitel.app/

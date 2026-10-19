@@ -1,0 +1,17 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import {spawn} from 'node:child_process';
+test('OpenAI media server: persisted selectors, one image per intent, private PNG, metering and Live exclusivity',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'skazitel-media-')),preload=path.join(dir,'preload.mjs');let child;
+ const png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvRcAAAAASUVORK5CYII=';
+ await fs.writeFile(preload,`const real=fetch;globalThis.fetch=async(url,options)=>{if(String(url).startsWith('https://api.openai.com/')){const b=JSON.parse(options.body);if(String(url).endsWith('/live/sessions')){await new Promise(r=>setTimeout(r,100));return Response.json({session:{id:'live-fixture'},transport:{sdp:'v=0 answer'}});}if(String(url).endsWith('/images/generations'))return Response.json({data:[{b64_json:${JSON.stringify(png)}}],usage:{input_tokens:20,output_tokens:400,input_tokens_details:{text_tokens:20,image_tokens:0}}});throw Error('Unexpected paid endpoint');}return real(url,options);};`);
+ child=spawn(process.execPath,['--import',preload,'server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',SKAZITEL_DATA:dir,SKAZITEL_KEYCHAIN_HELPER:'',SKAZITEL_TOKEN:'fixture'},stdio:['ignore','pipe','inherit']});
+ try{const base=await new Promise((resolve,reject)=>{let text='';child.stdout.on('data',b=>{text+=b;const m=text.match(/SKAZITEL_URL=(http:\/\/[^\n]+)/);if(m)resolve(m[1]);});child.once('error',reject);});
+ const api=async(route,data,status=200)=>{const r=await fetch(base+'/api/'+route,{method:data?'POST':'GET',headers:{'x-app-token':'fixture','Content-Type':'application/json'},...(data?{body:JSON.stringify(data)}:{})});const body=await r.json();assert.equal(r.status,status,JSON.stringify(body));return body;};
+ await api('settings',{provider:'openai',voicePipeline:'live',imageProvider:'openai',keys:{openai:'fixture-media-secret'}});
+ let state=await api('create',{name:'Fixture',characters:[{name:'Лира'}]});const id=state.activeId;
+ state=await api('image-request',{id,prompt:'A misty forest'});const image=state.campaigns[0].images[0];assert.equal(image.status,'ready');assert.equal(image.public,false);assert.equal(image.provider,'openai');assert.equal(state.usage.recent[0].kind,'image');
+ state=await api('image-request',{id,prompt:'A misty forest'});assert.equal(state.campaigns[0].images.length,1);assert.equal(state.usage.recent.filter(e=>e.kind==='image').length,1);assert.equal((await fetch(base+'/images/'+image.file)).status,200);
+ const start=api('live-start',{sdp:'v=0 offer'});await new Promise(r=>setTimeout(r,15));await api('live-start',{sdp:'v=0 offer'},400);const session=await start;assert.deepEqual(session,{id:'live-fixture',sdp:'v=0 answer'});
+ await api('live-meter',{sessionId:session.id});await api('live-meter',{sessionId:session.id});await api('cost-session',{action:'new'},400);state=await api('state');assert.equal(state.usage.recent.filter(e=>e.kind==='live').length,1);assert.ok(Math.abs(state.usage.recent[0].cost.usd-.0125)<1e-9);
+ await api('live-meter',{sessionId:session.id,closed:true});await api('cost-session',{action:'new'});state=await api('state');assert.equal(state.config.voicePipeline,'live');assert.ok(!JSON.stringify(state).includes('fixture-media-secret'));
+ }finally{const stopped=new Promise(r=>child.once('exit',r));child.kill();await stopped;await fs.rm(dir,{recursive:true,force:true});}
+});

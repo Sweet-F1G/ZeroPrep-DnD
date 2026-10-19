@@ -1,0 +1,15 @@
+Skazitel · source and asset credits
+
+This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.
+
+This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.
+
+The application implements a subset of mechanics. Rules descriptions and presentation are adapted in Russian. Original documents and rule versions remain distinct.
+
+Icons: Lorc (http://lorcblog.blogspot.com) and Delapouite (http://delapouite.com), https://game-icons.net, CC BY 3.0, https://creativecommons.org/licenses/by/3.0/. SVGs sanitized, background removed and fill recolored. Individual source URLs, pinned repository revision and hashes are in icons/manifest.json. Full artist list: icons/LICENSE.txt.
+
+Music and Ambient Tracks:
+- Veloren (https://gitlab.com/veloren/veloren), Licensed under CC-BY-SA 3.0 / CC-BY 4.0. Tracks by Aeronic, Eden, Sharp, and contributors.
+- The Battle for Wesnoth (https://www.wesnoth.org), Licensed under CC-BY-SA / GPL. Tracks: traveling_minstrels, battle-epic, legends_of_the_north, underground, elvish-theme.
+- Flare RPG (https://flarerpg.org), Licensed under CC-BY-SA. Tracks: battle_theme, boss_theme by Justin Nichol / Clint Bellanger.
+

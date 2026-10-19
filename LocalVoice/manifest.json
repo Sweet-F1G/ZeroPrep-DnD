@@ -1,0 +1,16 @@
+{
+  "engine": "Silero TTS",
+  "version": "v5_6_ru",
+  "source": "https://models.silero.ai/models/tts/ru/v5_6_ru.pt",
+  "bytes": 147664410,
+  "sha256": "04cc9b1d08ce38bcaa9d02c488d80d3e6806d17f7eaa7c95982f36a3cbf50b2e",
+  "speakers": [
+    "eugene",
+    "aidar",
+    "xenia",
+    "kseniya",
+    "baya"
+  ],
+  "runtime": "venv/bin/python",
+  "sampleRate": 48000
+}

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#121417">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="player-token" content="__PLAYER_TOKEN__">
+  <title>Сказитель · Карманный компаньон игрока</title>
+  <link rel="stylesheet" href="/player.css">
+  <script src="/player.js" type="module"></script>
+</head>
+<body>
+  <div class="player-app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <span class="brand-spark">✦</span>
+        <span class="brand-title">СКАЗИТЕЛЬ</span>
+        <span class="status-indicator" id="connStatus" title="Статус связи со столом Мастера">
+          <span class="status-dot"></span>
+          <small id="connLabel">LAN</small>
+        </span>
+      </div>
+      <div class="header-hero-picker">
+        <label for="heroSelect" class="sr-only">Выберите героя</label>
+        <select id="heroSelect" aria-label="Действующий герой">
+          <option value="">Загрузка героев...</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- Story / Campaign Switcher Bar -->
+    <div class="campaign-bar">
+      <div class="campaign-bar-inner">
+        <span class="campaign-bar-icon">📖</span>
+        <label for="campaignSelect" class="campaign-bar-label">История:</label>
+        <select id="campaignSelect" class="campaign-select" aria-label="Выбор истории">
+          <option value="">Загрузка историй...</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="hero" role="tab" aria-selected="true">
+        <span class="tab-icon">👤</span>
+        <span class="tab-label">Герой</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="dice" role="tab" aria-selected="false">
+        <span class="tab-icon">🎲</span>
+        <span class="tab-label">Кубики</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="inventory" role="tab" aria-selected="false">
+        <span class="tab-icon">🎒</span>
+        <span class="tab-label">Вещи</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="map" role="tab" aria-selected="false">
+        <span class="tab-icon">🗺️</span>
+        <span class="tab-label">Карта</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Panels -->
+    <main class="panels-container">
+      <!-- 1. Hero Sheet Panel -->
+      <section id="heroPanel" class="panel active" role="tabpanel">
+        <div id="heroCard" class="hero-card">
+          <!-- Dynamic hero header -->
+          <div class="hero-headline">
+            <div>
+              <h1 id="heroName" class="hero-name">—</h1>
+              <p id="heroMeta" class="hero-meta">—</p>
+            </div>
+            <div id="heroPortrait" class="hero-portrait">👤</div>
+          </div>
+
+          <!-- Health / HP Section -->
+          <div class="hp-section">
+            <div class="hp-header">
+              <span class="hp-title">❤️ Здоровье (Очки Жизни)</span>
+              <span class="hp-values">
+                <strong id="hpCurrent">0</strong> / <span id="hpMax">0</span>
+                <span id="hpTemp" class="hp-temp" hidden>+0 врем.</span>
+              </span>
+            </div>
+            <div class="hp-bar-track">
+              <div id="hpBarFill" class="hp-bar-fill" style="width: 100%;"></div>
+            </div>
+            <!-- HP Status Footer (Security / Anti-Cheat) -->
+            <div class="hp-status-footer">
+              <span class="hp-master-note">🔒 Здоровье контролируется Мастером игры</span>
+              <span id="hpDeathSaves" class="hp-death-saves" hidden>От смерти: <span id="hpDeathSuccess">✓ 0</span> / <span id="hpDeathFailure">✕ 0</span></span>
+            </div>
+          </div>
+
+          <!-- Combat Stats Row -->
+          <div class="combat-stats-row">
+            <div class="stat-badge">
+              <span class="badge-icon">🛡️</span>
+              <span class="badge-label">КД (Armor)</span>
+              <strong id="statAc" class="badge-val">10</strong>
+            </div>
+            <div class="stat-badge">
+              <span class="badge-icon">⚡</span>
+              <span class="badge-label">Инициатива</span>
+              <strong id="statInit" class="badge-val">+0</strong>
+            </div>
+            <div class="stat-badge">
+              <span class="badge-icon">👟</span>
+              <span class="badge-label">Скорость</span>
+              <strong id="statSpeed" class="badge-val">30 фт</strong>
+            </div>
+            <div class="stat-badge">
+              <span class="badge-icon">🎲</span>
+              <span class="badge-label">Кость хит</span>
+              <strong id="statHitDice" class="badge-val">1d8</strong>
+            </div>
+          </div>
+
+          <!-- Core Attributes Grid (6 D&D stats) -->
+          <div class="section-title">ХАРАКТЕРИСТИКИ · НАЖМИТЕ ДЛЯ БРОСКА D20</div>
+          <div class="stats-grid" id="statsGrid">
+            <!-- Rendered dynamically: STR, DEX, CON, INT, WIS, CHA -->
+          </div>
+
+          <!-- Skills Accordion -->
+          <details class="skills-details" open>
+            <summary class="section-title-summary">НАВЫКИ И ВЛАДЕНИЯ (НАЖМИТЕ ДЛЯ ПРОВЕРКИ)</summary>
+            <div class="skills-list" id="skillsList">
+              <!-- Rendered dynamically -->
+            </div>
+          </details>
+
+          <!-- Notes / Features -->
+          <details class="features-details">
+            <summary class="section-title-summary">ОСОБЕННОСТИ И ЗАМЕТКИ</summary>
+            <div class="features-body" id="heroFeatures">
+              <p class="empty-note">Нет особых заметок.</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- 2. Dice Bag Panel -->
+      <section id="dicePanel" class="panel" role="tabpanel" hidden>
+        <div class="dice-container">
+          <div class="dice-header">
+            <h2>БРОСОК В СТОЛ МАСТЕРУ</h2>
+            <p class="dice-subtitle">Результат мгновенно появится в хронике на экране Мастера</p>
+          </div>
+
+          <!-- Roll Advantage / Mode -->
+          <div class="roll-mode-selector">
+            <button type="button" class="mode-btn active" data-mode="normal">Обычный</button>
+            <button type="button" class="mode-btn" data-mode="adv">Преимущество</button>
+            <button type="button" class="mode-btn" data-mode="dis">Помеха</button>
+          </div>
+
+          <!-- Fair Play Note (Anti-Cheat: Clean rolls, DM evaluates bonuses) -->
+          <div class="dice-fair-play-note">
+            <span class="fair-icon">🔒</span>
+            <span>Чистый бросок кубика. Модификаторы и сложность проверяет Мастер</span>
+          </div>
+
+          <!-- Dice Selection Buttons -->
+          <div class="dice-grid">
+            <button type="button" class="die-btn d20-btn" data-die="20">
+              <span class="die-face">d20</span>
+              <span class="die-label">Проверка / Атака</span>
+            </button>
+            <button type="button" class="die-btn" data-die="12">
+              <span class="die-face">d12</span>
+              <span class="die-label">Урон</span>
+            </button>
+            <button type="button" class="die-btn" data-die="10">
+              <span class="die-face">d10</span>
+              <span class="die-label">Урон</span>
+            </button>
+            <button type="button" class="die-btn" data-die="8">
+              <span class="die-face">d8</span>
+              <span class="die-label">Оружие</span>
+            </button>
+            <button type="button" class="die-btn" data-die="6">
+              <span class="die-face">d6</span>
+              <span class="die-label">Урон / Спас</span>
+            </button>
+            <button type="button" class="die-btn" data-die="4">
+              <span class="die-face">d4</span>
+              <span class="die-label">Кинжал / Зелье</span>
+            </button>
+            <button type="button" class="die-btn" data-die="100">
+              <span class="die-face">d100</span>
+              <span class="die-label">Проценты</span>
+            </button>
+          </div>
+
+          <!-- Roll Result Showcase -->
+          <div id="rollShowcase" class="roll-showcase" hidden>
+            <div id="critBanner" class="crit-banner" hidden>💥 КРИТИЧЕСКИЙ УСПЕХ!</div>
+            <div id="fumbleBanner" class="fumble-banner" hidden>💀 КРИТИЧЕСКИЙ ПРОВАЛ!</div>
+            <div class="result-number" id="rollTotalNumber">0</div>
+            <div class="result-breakdown" id="rollBreakdownText">—</div>
+            <button type="button" id="reSendRollBtn" class="send-master-btn">✓ Отправлено Мастеру в стол</button>
+          </div>
+
+          <!-- Recent Rolls Feed -->
+          <div class="recent-rolls-section">
+            <div class="section-title">ИСТОРИЯ ВАШИХ БРОСКОВ</div>
+            <div class="recent-rolls-list" id="recentRollsList">
+              <p class="empty-note">Бросьте любой кубик, чтобы увидеть результат.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Inventory & Gear Panel -->
+      <section id="inventoryPanel" class="panel" role="tabpanel" hidden>
+        <div class="inventory-container">
+          <!-- Currency Box -->
+          <div class="wallet-card">
+            <span class="wallet-icon">💰</span>
+            <div class="wallet-info">
+              <span class="wallet-title">Казна отряда</span>
+              <strong id="playerWallet" class="wallet-amount">0 золотых</strong>
+            </div>
+          </div>
+
+          <!-- Consumables Quick Bar -->
+          <div class="section-title">БЫСТРЫЕ ЗЕЛЬЯ И ПРИПАСЫ</div>
+          <div id="consumablesList" class="consumables-list">
+            <!-- Dynamic potion buttons -->
+          </div>
+
+          <!-- Full Inventory List -->
+          <div class="section-title">ВСЁ СНАРЯЖЕНИЕ И ПРЕДМЕТЫ</div>
+          <div id="playerInventoryList" class="items-list">
+            <p class="empty-note">Инвентарь пуст.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Tactical Map Panel -->
+      <section id="mapPanel" class="panel" role="tabpanel" hidden>
+        <div class="map-container">
+          <div class="map-top-bar">
+            <div class="map-picker-row">
+              <span class="map-picker-icon">🗺️</span>
+              <select id="mapSelect" class="map-select" aria-label="Выбор карты">
+                <option value="">Загрузка карт...</option>
+              </select>
+            </div>
+            <div class="map-zoom-actions">
+              <button type="button" id="mapThemeToggle" class="map-mini-btn" title="Оформление: Пиксели / Классика">🎨 Пиксели</button>
+              <button type="button" id="mapZoomIn" class="map-mini-btn" title="Увеличить">＋</button>
+              <button type="button" id="mapZoomOut" class="map-mini-btn" title="Уменьшить">－</button>
+              <button type="button" id="mapResetZoom" class="map-mini-btn" title="Сбросить масштаб">⛶</button>
+            </div>
+          </div>
+          <div class="map-scale-info" id="mapScaleInfo">Сетка: 14×12 · 1 кл = 5 фт</div>
+          <div class="map-viewport" id="mapViewport">
+            <div id="mapRenderArea" class="map-render-area">
+              <p class="empty-note">Карта не развёрнута Мастером.</p>
+            </div>
+          </div>
+          <div id="mapCellInspector" class="map-cell-inspector" hidden>
+            <div id="mapCellDetail" class="map-cell-detail">Коснитесь любой клетки, чтобы осмотреть маркер</div>
+          </div>
+          <div class="map-legend" id="mapLegend">
+            <!-- Active actors / tokens -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Quick Floating Toast -->
+  <div id="playerToast" class="player-toast" role="alert" hidden></div>
+</body>
+</html>

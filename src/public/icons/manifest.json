@@ -1,0 +1,3203 @@
+{
+  "commit": "82d948812bfe3f269ef8f731dcdb07b08160edc4",
+  "icons": [
+    {
+      "id": "delapouite-axe-sword",
+      "file": "delapouite-axe-sword.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/axe-sword.svg",
+      "sha256": "95ec7b329980240fcc2adde1bb72c4409c503eab7dcca05216ba4bdb77717de7",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "axe",
+        "sword"
+      ]
+    },
+    {
+      "id": "delapouite-belt-armor",
+      "file": "delapouite-belt-armor.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/belt-armor.svg",
+      "sha256": "29db37db01b46f324bcaaa46b29be1381a1fa53986c7bff94d9363a85e6d0e24",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "belt",
+        "armor"
+      ]
+    },
+    {
+      "id": "delapouite-bow-arrow",
+      "file": "delapouite-bow-arrow.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bow-arrow.svg",
+      "sha256": "54a88d81629c4017b1305964dcde9aba1999ec03c72706ff66dfe5bc25024691",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bow",
+        "arrow"
+      ]
+    },
+    {
+      "id": "delapouite-chest-armor",
+      "file": "delapouite-chest-armor.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/chest-armor.svg",
+      "sha256": "002700316019f51e49588972afb67f71b763ce15272613b0c1fef32c38795fb3",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "chest",
+        "armor"
+      ]
+    },
+    {
+      "id": "delapouite-diamond-ring",
+      "file": "delapouite-diamond-ring.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/diamond-ring.svg",
+      "sha256": "6d9339491e26433b84153d6c2e70194863404577626197e5353c2ea9615d0de9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "diamond",
+        "ring"
+      ]
+    },
+    {
+      "id": "delapouite-door-ring-handle",
+      "file": "delapouite-door-ring-handle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/door-ring-handle.svg",
+      "sha256": "2260c88ad2c3faf124ef6ea214de39e8a2b5a0eea4497021360f6ff89793750b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "door",
+        "ring",
+        "handle"
+      ]
+    },
+    {
+      "id": "delapouite-dragon-shield",
+      "file": "delapouite-dragon-shield.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/dragon-shield.svg",
+      "sha256": "00cb682bf3933201f8c367b3180cc90fa6b424f46f89fc1bd35d5fbcae026b45",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "dragon",
+        "shield"
+      ]
+    },
+    {
+      "id": "delapouite-feather-necklace",
+      "file": "delapouite-feather-necklace.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/feather-necklace.svg",
+      "sha256": "363e3afd7c7664b6522640c17bb387bdc86f425972550189cc609781700e8e75",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "feather",
+        "necklace"
+      ]
+    },
+    {
+      "id": "delapouite-fire-flower",
+      "file": "delapouite-fire-flower.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fire-flower.svg",
+      "sha256": "420a85cba85b4b3391ae6ba27ff316a23c13b5757c68e06950f1c65727c66b1e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "flower"
+      ]
+    },
+    {
+      "id": "delapouite-fire-gem",
+      "file": "delapouite-fire-gem.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fire-gem.svg",
+      "sha256": "ca4186abcf789c8633793e19b09a5efbde44343979e92190bb3625fcbf6fe98e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "gem"
+      ]
+    },
+    {
+      "id": "delapouite-fire-spell-cast",
+      "file": "delapouite-fire-spell-cast.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fire-spell-cast.svg",
+      "sha256": "bb2a8924247580bf3c161e06bb376b736c6d5679eee43a158e9f7c8285cfb1a2",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "spell",
+        "cast"
+      ]
+    },
+    {
+      "id": "delapouite-flower-hat",
+      "file": "delapouite-flower-hat.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/flower-hat.svg",
+      "sha256": "1847391d6e3af212575e597c6aa46787845dfcf468ecbd7586a55896ad618cc2",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "flower",
+        "hat"
+      ]
+    },
+    {
+      "id": "delapouite-heart-armor",
+      "file": "delapouite-heart-armor.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/heart-armor.svg",
+      "sha256": "37b329a2fc0d23d9776fd3707ae68f6ecc4111d4ff32854a6781009788fb40a2",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "armor"
+      ]
+    },
+    {
+      "id": "delapouite-heart-key",
+      "file": "delapouite-heart-key.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/heart-key.svg",
+      "sha256": "9be49e81b29712db02af3fa447329f5a7ab5ef7a1a188a6604621946325e7476",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "key"
+      ]
+    },
+    {
+      "id": "delapouite-heart-necklace",
+      "file": "delapouite-heart-necklace.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/heart-necklace.svg",
+      "sha256": "551784e1c971e5b305869fc3c13767e43ac4afd53449d6dc62dd9ea745cf7fcc",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "necklace"
+      ]
+    },
+    {
+      "id": "delapouite-heart-shield",
+      "file": "delapouite-heart-shield.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/heart-shield.svg",
+      "sha256": "035f62d626221312208385479f1c3442b4bbd2fb2ac3779fd45277f5f25d5155",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "shield"
+      ]
+    },
+    {
+      "id": "delapouite-ice-spell-cast",
+      "file": "delapouite-ice-spell-cast.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ice-spell-cast.svg",
+      "sha256": "09fd2788b84076db39320280424d8e3541f84efff8807b2811559e8df9874d73",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "spell",
+        "cast"
+      ]
+    },
+    {
+      "id": "delapouite-jewel-crown",
+      "file": "delapouite-jewel-crown.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/jewel-crown.svg",
+      "sha256": "4b275bc3e1fa2e41eead2218beabe32d90c0c31781e0652fded4ea965ee32570",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "jewel",
+        "crown"
+      ]
+    },
+    {
+      "id": "delapouite-key-lock",
+      "file": "delapouite-key-lock.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/key-lock.svg",
+      "sha256": "6f344bf0ec88a0b811758dc01031053cba87063ecf25b7f183d0947c3ed6de7d",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "key",
+        "lock"
+      ]
+    },
+    {
+      "id": "delapouite-leather-armor",
+      "file": "delapouite-leather-armor.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/leather-armor.svg",
+      "sha256": "3bc9e891881494288f2629a166a9b5ef57e2e024bd42133c28bd33d30b7ddc11",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "leather",
+        "armor"
+      ]
+    },
+    {
+      "id": "delapouite-magic-axe",
+      "file": "delapouite-magic-axe.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/magic-axe.svg",
+      "sha256": "75dd8121ecbdb92cbeecd3e7d9411fb6eb9030ca8ea87e101cf03bf90e09a752",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "magic",
+        "axe"
+      ]
+    },
+    {
+      "id": "delapouite-magic-hat",
+      "file": "delapouite-magic-hat.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/magic-hat.svg",
+      "sha256": "1942a91a606ae04e2d9135976f760570ae93105442782511e8582e903a4e2032",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "magic",
+        "hat"
+      ]
+    },
+    {
+      "id": "delapouite-magic-potion",
+      "file": "delapouite-magic-potion.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/magic-potion.svg",
+      "sha256": "7212bbc49f00744813fe699a7b31fdb174e9d43930272b02a07729e53cad0dcb",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "magic",
+        "potion"
+      ]
+    },
+    {
+      "id": "delapouite-mountain-cave",
+      "file": "delapouite-mountain-cave.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/mountain-cave.svg",
+      "sha256": "bfd1c11853e5b29647331d117a27996304e563bc2f63a84859c09c5de1d24770",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "mountain",
+        "cave"
+      ]
+    },
+    {
+      "id": "delapouite-pendant-key",
+      "file": "delapouite-pendant-key.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/pendant-key.svg",
+      "sha256": "71ebb6cd31fa8dfe060642fa3711125b260d8024295640ebd0cc6ae9db4a55ea",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "pendant",
+        "key"
+      ]
+    },
+    {
+      "id": "delapouite-rope-bridge",
+      "file": "delapouite-rope-bridge.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/rope-bridge.svg",
+      "sha256": "2cc8333a4a24b01592569d08427a4689e7d08c43c51852cc3ecc1c4d404922cd",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "rope",
+        "bridge"
+      ]
+    },
+    {
+      "id": "delapouite-skull-staff",
+      "file": "delapouite-skull-staff.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/skull-staff.svg",
+      "sha256": "68aac54db89fb4c3e3c974888c03fa70c4aa990382d2059ab531e52906ca6047",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "skull",
+        "staff"
+      ]
+    },
+    {
+      "id": "delapouite-spear-feather",
+      "file": "delapouite-spear-feather.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/spear-feather.svg",
+      "sha256": "eeb74eabd2aeb1ef00eef8c278aeb2b051c274f0f1863d6055ca1424768cc91c",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "spear",
+        "feather"
+      ]
+    },
+    {
+      "id": "delapouite-spell-book",
+      "file": "delapouite-spell-book.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/spell-book.svg",
+      "sha256": "ed708b549128135dbfe0a29ee8d6432555a90b9be298095b23131259b31a893d",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "spell",
+        "book"
+      ]
+    },
+    {
+      "id": "delapouite-stone-bridge",
+      "file": "delapouite-stone-bridge.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/stone-bridge.svg",
+      "sha256": "3aee933af1f901ec3175885b93c98b9549962a195134f2c6f22a4948bdebf442",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "stone",
+        "bridge"
+      ]
+    },
+    {
+      "id": "delapouite-tower-bridge",
+      "file": "delapouite-tower-bridge.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/tower-bridge.svg",
+      "sha256": "32dae329186e260205984db58d76dcf7012233842700befb48015168ab5a1f59",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "tower",
+        "bridge"
+      ]
+    },
+    {
+      "id": "delapouite-water-bottle",
+      "file": "delapouite-water-bottle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/water-bottle.svg",
+      "sha256": "fe6dfad9ccc8bca645d514db36ee8b581c3dc58d53426e885058442695329e62",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "water",
+        "bottle"
+      ]
+    },
+    {
+      "id": "delapouite-water-flask",
+      "file": "delapouite-water-flask.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/water-flask.svg",
+      "sha256": "e474d7927b6f58e906ab2784b3464a863338edeeb7831dc79592688e3c2e2acd",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "water",
+        "flask"
+      ]
+    },
+    {
+      "id": "delapouite-water-tower",
+      "file": "delapouite-water-tower.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/water-tower.svg",
+      "sha256": "15ceaed5d44448b159031fae21c6cdc56e72657a1d1253b088e11f58ab9e05ca",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "water",
+        "tower"
+      ]
+    },
+    {
+      "id": "delapouite-wine-bottle",
+      "file": "delapouite-wine-bottle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/wine-bottle.svg",
+      "sha256": "54c86df1052acb30f42e1954f8bf2ed76268935b7d387fb03fb83ed367c8c8bc",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "wine",
+        "bottle"
+      ]
+    },
+    {
+      "id": "lorc-candle-skull",
+      "file": "lorc-candle-skull.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/candle-skull.svg",
+      "sha256": "7702dc54494218d0b4f0b01bf070157e0633ed24cf6838736731dfdef3a6d485",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "candle",
+        "skull"
+      ]
+    },
+    {
+      "id": "lorc-claw-hammer",
+      "file": "lorc-claw-hammer.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/claw-hammer.svg",
+      "sha256": "f0c064f1d47a2e3876e0d7157d5e92f7baaed83712e53692b276a8a746c0d6dc",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "claw",
+        "hammer"
+      ]
+    },
+    {
+      "id": "lorc-cloak-dagger",
+      "file": "lorc-cloak-dagger.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/cloak-dagger.svg",
+      "sha256": "0c37a9b3768effa73b2fcdd509b49745b022b4e8c89e3e71d0de0c8dd2562cca",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "cloak",
+        "dagger"
+      ]
+    },
+    {
+      "id": "lorc-crown-coin",
+      "file": "lorc-crown-coin.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/crown-coin.svg",
+      "sha256": "cfb6b163da1be2d8bb2978d00eb251b9973c4afe70afd8f7eb62458d82d1022b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "crown",
+        "coin"
+      ]
+    },
+    {
+      "id": "lorc-crystal-wand",
+      "file": "lorc-crystal-wand.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/crystal-wand.svg",
+      "sha256": "ac64c832fcb3d6cfdaba92b8256eab66c01542df1b136409ed37008061509c3b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "crystal",
+        "wand"
+      ]
+    },
+    {
+      "id": "lorc-fire-axe",
+      "file": "lorc-fire-axe.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/fire-axe.svg",
+      "sha256": "fce04b40ab789973d3dd1721fbcf21f351af9e86e05608eebb48abf4f93f0676",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "axe"
+      ]
+    },
+    {
+      "id": "lorc-fire-bottle",
+      "file": "lorc-fire-bottle.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/fire-bottle.svg",
+      "sha256": "1c5c2ea4c64c2ecd7f79c25f4fe89722d097cbbe2e405d023e420d5da2cf879b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "bottle"
+      ]
+    },
+    {
+      "id": "lorc-fire-ring",
+      "file": "lorc-fire-ring.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/fire-ring.svg",
+      "sha256": "22ff466c6d39034a9059dc2194baab6e2f908584e5eacc8fc630bc900c78ea7f",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "ring"
+      ]
+    },
+    {
+      "id": "lorc-fire-shield",
+      "file": "lorc-fire-shield.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/fire-shield.svg",
+      "sha256": "7425777fc4faa350ed3491c14fdc5c61a4663ea62294dbeaca0a1dbb3cfa035b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "shield"
+      ]
+    },
+    {
+      "id": "lorc-gem-necklace",
+      "file": "lorc-gem-necklace.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/gem-necklace.svg",
+      "sha256": "ef5790a3c799aa76a7ac30c7b4ecccd48dea25084e72fe2dd3673a8c81ccbb5e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "gem",
+        "necklace"
+      ]
+    },
+    {
+      "id": "lorc-gem-pendant",
+      "file": "lorc-gem-pendant.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/gem-pendant.svg",
+      "sha256": "cd2ad5076bd5c4c7bd1cf832c226a99ff5fe241cca804f36a5168691454b7fbf",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "gem",
+        "pendant"
+      ]
+    },
+    {
+      "id": "lorc-heart-bottle",
+      "file": "lorc-heart-bottle.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/heart-bottle.svg",
+      "sha256": "e532bd047a503687594a1d8d60623d322126ca9fb8a63c84f65b8b6e98aa5405",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "bottle"
+      ]
+    },
+    {
+      "id": "lorc-heart-tower",
+      "file": "lorc-heart-tower.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/heart-tower.svg",
+      "sha256": "c1de62692db59586a9d93efcfeb0800889b1ed5387f9bcb5db16502b9280ac69",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "tower"
+      ]
+    },
+    {
+      "id": "lorc-ice-shield",
+      "file": "lorc-ice-shield.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/ice-shield.svg",
+      "sha256": "497a997a4b204296b43ad25968ad9d857ba9c5fc9991d4acc3f4b0246a0007b8",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "shield"
+      ]
+    },
+    {
+      "id": "lorc-ice-spear",
+      "file": "lorc-ice-spear.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/ice-spear.svg",
+      "sha256": "4d1178bb7e7225bf80ac6b300cc787ef8fec22eacbd49915e3d581a5da7ba061",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "spear"
+      ]
+    },
+    {
+      "id": "lorc-lightning-bow",
+      "file": "lorc-lightning-bow.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/lightning-bow.svg",
+      "sha256": "a80ecef8b073462cfd34fabe8581c0f03fbc57949b546c5fdaf197e7d000d704",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "lightning",
+        "bow"
+      ]
+    },
+    {
+      "id": "lorc-lightning-shield",
+      "file": "lorc-lightning-shield.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/lightning-shield.svg",
+      "sha256": "d13859a0ab3c20ad3c1191389df2f57a91d186dccdba68b318ac6715087f7083",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "lightning",
+        "shield"
+      ]
+    },
+    {
+      "id": "lorc-magic-shield",
+      "file": "lorc-magic-shield.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/magic-shield.svg",
+      "sha256": "c8168040e4b859d8b218a549b7e1e09bbaede7279a47df2ffa2b37e77c0d3ef4",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "magic",
+        "shield"
+      ]
+    },
+    {
+      "id": "lorc-poison-bottle",
+      "file": "lorc-poison-bottle.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/poison-bottle.svg",
+      "sha256": "56f4bc1961fe2e39ae605f6f1982aac281564251c400cfbdf12e65aa35a8c9e4",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "poison",
+        "bottle"
+      ]
+    },
+    {
+      "id": "lorc-skull-ring",
+      "file": "lorc-skull-ring.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/skull-ring.svg",
+      "sha256": "b11f3d9166096d6306381e29762bedc24f7efd07e8decfaea2119aad70f1d46f",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "skull",
+        "ring"
+      ]
+    },
+    {
+      "id": "lorc-skull-shield",
+      "file": "lorc-skull-shield.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/skull-shield.svg",
+      "sha256": "0ff0d5e0fdf9a1192941a4715d8603ee8b1a11ee6788da7c6d02600d5034fdec",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "skull",
+        "shield"
+      ]
+    },
+    {
+      "id": "lorc-stone-axe",
+      "file": "lorc-stone-axe.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/stone-axe.svg",
+      "sha256": "628638423962d1d1cf2bf52631b03cd642b9a7b4bcf3c60119b1027bfca94fda",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "stone",
+        "axe"
+      ]
+    },
+    {
+      "id": "lorc-stone-spear",
+      "file": "lorc-stone-spear.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/stone-spear.svg",
+      "sha256": "ca9422f96a3018ce49a14b1391aa49b81c45c79c1975dfd5c93f5ec48a77a158",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "stone",
+        "spear"
+      ]
+    },
+    {
+      "id": "lorc-stone-tower",
+      "file": "lorc-stone-tower.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/stone-tower.svg",
+      "sha256": "1868ed1349d57f5273382606289c36f6b59af663cc2f49f2aaa3668136024f5f",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "stone",
+        "tower"
+      ]
+    },
+    {
+      "id": "lorc-sword-in-stone",
+      "file": "lorc-sword-in-stone.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/sword-in-stone.svg",
+      "sha256": "1f46e2bd9c0070080ad7706d9168b23f8c239642333a8dd09182a0fd53cc8af4",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "sword",
+        "in",
+        "stone"
+      ]
+    },
+    {
+      "id": "lorc-treasure-map",
+      "file": "lorc-treasure-map.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/treasure-map.svg",
+      "sha256": "baf78bb4d8597ab77b05eebdf17133db23aa4a5c5fe135e819ff245a661601a9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "treasure",
+        "map"
+      ]
+    },
+    {
+      "id": "lorc-wood-axe",
+      "file": "lorc-wood-axe.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/wood-axe.svg",
+      "sha256": "64c87cf80851dc1d5a090af6b2d493ed473916f99141d2bc8bbb013acbe8600c",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "wood",
+        "axe"
+      ]
+    },
+    {
+      "id": "delapouite-3d-hammer",
+      "file": "delapouite-3d-hammer.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/3d-hammer.svg",
+      "sha256": "977582bf148af7b81afe0f04d6127a5ead1064efe10fe452f9fe12ad785e7a4a",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "3d",
+        "hammer"
+      ]
+    },
+    {
+      "id": "delapouite-abdominal-armor",
+      "file": "delapouite-abdominal-armor.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/abdominal-armor.svg",
+      "sha256": "e6d74f7bf35d96f9b09333e2076dec1d52b1081215310eff9ad5b98070b40a51",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "abdominal",
+        "armor"
+      ]
+    },
+    {
+      "id": "delapouite-american-football-helmet",
+      "file": "delapouite-american-football-helmet.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/american-football-helmet.svg",
+      "sha256": "88f57fb359790b978574996a33c48166e0062f9d737312f81835ab4a72d81bcc",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "american",
+        "football",
+        "helmet"
+      ]
+    },
+    {
+      "id": "delapouite-american-shield",
+      "file": "delapouite-american-shield.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/american-shield.svg",
+      "sha256": "75afe866619bb3c2b4c2ae73b7495fe246805a2d6cc1e500b0469f87914b7081",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "american",
+        "shield"
+      ]
+    },
+    {
+      "id": "delapouite-ancient-sword",
+      "file": "delapouite-ancient-sword.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ancient-sword.svg",
+      "sha256": "710e6e388c449d381c166ebdf323b2ee441fc0d8133be20cb23fe81d64e878d9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ancient",
+        "sword"
+      ]
+    },
+    {
+      "id": "delapouite-apple-core",
+      "file": "delapouite-apple-core.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/apple-core.svg",
+      "sha256": "a67498773077cde2c4233c238ffe6934a504b6c04f5b187589891976858f3d82",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "apple",
+        "core"
+      ]
+    },
+    {
+      "id": "delapouite-arabic-door",
+      "file": "delapouite-arabic-door.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/arabic-door.svg",
+      "sha256": "e7ec3f1b622a6b691240da79de6ae7dc14e20ff188433eadeaf4d63b5f8c7415",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "arabic",
+        "door"
+      ]
+    },
+    {
+      "id": "delapouite-arch-bridge",
+      "file": "delapouite-arch-bridge.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/arch-bridge.svg",
+      "sha256": "69d48c3aca58a0bb8b08573a983a8b95cf82199e28edc905f8b3340ca1989f7f",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "arch",
+        "bridge"
+      ]
+    },
+    {
+      "id": "delapouite-armor-cuisses",
+      "file": "delapouite-armor-cuisses.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/armor-cuisses.svg",
+      "sha256": "1a7c53bb271f8c49c8018dd8aa4fe195bd97a00c97909e705701f7187c856298",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "armor",
+        "cuisses"
+      ]
+    },
+    {
+      "id": "delapouite-armor-downgrade",
+      "file": "delapouite-armor-downgrade.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/armor-downgrade.svg",
+      "sha256": "4fb9fb6fe122679405485007174bb1c4cdb9ba5e8f5c4b7df59c6c6d8bf931e7",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "armor",
+        "downgrade"
+      ]
+    },
+    {
+      "id": "delapouite-armor-punch",
+      "file": "delapouite-armor-punch.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/armor-punch.svg",
+      "sha256": "fe2f1ac72ae65c90da812b8af41b2d022d18a8599816fe48d09054668568639e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "armor",
+        "punch"
+      ]
+    },
+    {
+      "id": "delapouite-armor-upgrade",
+      "file": "delapouite-armor-upgrade.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/armor-upgrade.svg",
+      "sha256": "635646cebb667402bc0ffb9c83bca1cb60f7af92c0cbc2da5b45ad97e1fc3dce",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "armor",
+        "upgrade"
+      ]
+    },
+    {
+      "id": "delapouite-arrow-cursor",
+      "file": "delapouite-arrow-cursor.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/arrow-cursor.svg",
+      "sha256": "c0b1ac708e693da660343f896791bbd6d99a8dc4e05a6a014b071ca50fd21f2b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "arrow",
+        "cursor"
+      ]
+    },
+    {
+      "id": "delapouite-arrow-wings",
+      "file": "delapouite-arrow-wings.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/arrow-wings.svg",
+      "sha256": "189b65af1765dc3d058fce286d4a8c5048dba4f5d97d532b131622c009ed6a5d",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "arrow",
+        "wings"
+      ]
+    },
+    {
+      "id": "delapouite-asian-lantern",
+      "file": "delapouite-asian-lantern.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/asian-lantern.svg",
+      "sha256": "af8fd9b6718225be89a20e7de79c4556b4ff395c81aa510d6f51eefc08e9889b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "asian",
+        "lantern"
+      ]
+    },
+    {
+      "id": "delapouite-astronaut-helmet",
+      "file": "delapouite-astronaut-helmet.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/astronaut-helmet.svg",
+      "sha256": "fb7230fb9de1519262ebe4787f7c23765b6e435233641f957d75ab8958ebcc47",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "astronaut",
+        "helmet"
+      ]
+    },
+    {
+      "id": "delapouite-attached-shield",
+      "file": "delapouite-attached-shield.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/attached-shield.svg",
+      "sha256": "54d807f3f5e7f51ac337a009e52093e7177605c77c10b7eb2999378580147424",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "attached",
+        "shield"
+      ]
+    },
+    {
+      "id": "delapouite-axe-in-log",
+      "file": "delapouite-axe-in-log.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/axe-in-log.svg",
+      "sha256": "79e150a96fbc9fd86eafbd89f4292acffe964a7f001f0b80236471a018ad3cb1",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "axe",
+        "in",
+        "log"
+      ]
+    },
+    {
+      "id": "delapouite-baby-bottle",
+      "file": "delapouite-baby-bottle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/baby-bottle.svg",
+      "sha256": "afb302ce7520add9694195370a0422c8687d25c9548306c522360fa6389003a9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "baby",
+        "bottle"
+      ]
+    },
+    {
+      "id": "delapouite-backpack",
+      "file": "delapouite-backpack.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/backpack.svg",
+      "sha256": "998fdd8e80a4387b98e0805fd1329600923ca3d8dd3cedf0e2da66a652258d3d",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "backpack"
+      ]
+    },
+    {
+      "id": "delapouite-barracks-tent",
+      "file": "delapouite-barracks-tent.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/barracks-tent.svg",
+      "sha256": "eecc2a3aab6fe7d9f8b6d08847ce0f190b98207ff0944360437cc796b0aeff67",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "barracks",
+        "tent"
+      ]
+    },
+    {
+      "id": "delapouite-barrel-leak",
+      "file": "delapouite-barrel-leak.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/barrel-leak.svg",
+      "sha256": "f62265e6a0313bb49bb474a094d12c8d895d973bf1d192aae2b328869595acce",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "barrel",
+        "leak"
+      ]
+    },
+    {
+      "id": "delapouite-barrel",
+      "file": "delapouite-barrel.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/barrel.svg",
+      "sha256": "0085f656fc321f5de24cbcdce9f75b8810c95c047d600df453df20528bd1b42c",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "barrel"
+      ]
+    },
+    {
+      "id": "delapouite-baseball-glove",
+      "file": "delapouite-baseball-glove.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/baseball-glove.svg",
+      "sha256": "a63e6a6d87157885cc8dc7fb824fc078f29dcbf5bf5854d3749ec66d36265228",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "baseball",
+        "glove"
+      ]
+    },
+    {
+      "id": "delapouite-beach-bag",
+      "file": "delapouite-beach-bag.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/beach-bag.svg",
+      "sha256": "bb7e94ff257d865027fb87e176c4278a59d62fd556bdcbe9a3d3318204e1bd21",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "beach",
+        "bag"
+      ]
+    },
+    {
+      "id": "delapouite-beer-bottle",
+      "file": "delapouite-beer-bottle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/beer-bottle.svg",
+      "sha256": "aa32f4f99b2dbaa9f39ccb5f2ee9fc5927f5b49533e713630f3485aec3afc9e5",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "beer",
+        "bottle"
+      ]
+    },
+    {
+      "id": "delapouite-black-belt",
+      "file": "delapouite-black-belt.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/black-belt.svg",
+      "sha256": "2d1930a35be8b16cd09289933225b7931c6b56da55ec750042f4411d36dd9044",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "black",
+        "belt"
+      ]
+    },
+    {
+      "id": "delapouite-black-bridge",
+      "file": "delapouite-black-bridge.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/black-bridge.svg",
+      "sha256": "235c90e68dffb7b88b406afae1acc74441d2247b9b02aacd75612aeebe0edbc3",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "black",
+        "bridge"
+      ]
+    },
+    {
+      "id": "delapouite-bolt-spell-cast",
+      "file": "delapouite-bolt-spell-cast.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bolt-spell-cast.svg",
+      "sha256": "0a7f38c7f13543371cd70b5f1fbd8251bc6e0bdb296215916d10deb02677dd80",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bolt",
+        "spell",
+        "cast"
+      ]
+    },
+    {
+      "id": "delapouite-bone-knife",
+      "file": "delapouite-bone-knife.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bone-knife.svg",
+      "sha256": "c55a2744a47e0afba6c586edd005883b5db6b7d37617542a34175034e5cdc736",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bone",
+        "knife"
+      ]
+    },
+    {
+      "id": "delapouite-bone-mace",
+      "file": "delapouite-bone-mace.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bone-mace.svg",
+      "sha256": "d0e8c9800f4723b3695636340c1d97e0146f63f199859fe45878c53c1fc0c995",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bone",
+        "mace"
+      ]
+    },
+    {
+      "id": "delapouite-book-cover",
+      "file": "delapouite-book-cover.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/book-cover.svg",
+      "sha256": "047189001433ca2932b6979154a39f0d3b2a30479db919356be433624228c133",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "book",
+        "cover"
+      ]
+    },
+    {
+      "id": "delapouite-book-pile",
+      "file": "delapouite-book-pile.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/book-pile.svg",
+      "sha256": "b3395149ca2f5af24366aa6f58705232a7cf13e9756520f0a6f994229b8413fe",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "book",
+        "pile"
+      ]
+    },
+    {
+      "id": "delapouite-boss-key",
+      "file": "delapouite-boss-key.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/boss-key.svg",
+      "sha256": "547696caf2e1771d9ae26fb298ce8f5d97398a45e0765066d9af63ead5baee1a",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "boss",
+        "key"
+      ]
+    },
+    {
+      "id": "delapouite-bottle-cap",
+      "file": "delapouite-bottle-cap.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bottle-cap.svg",
+      "sha256": "c8f5ce12abda6faa80d9892a81812aec6ce9ea6f71347dcd661b4f02bfb4d380",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bottle",
+        "cap"
+      ]
+    },
+    {
+      "id": "delapouite-bow-string",
+      "file": "delapouite-bow-string.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bow-string.svg",
+      "sha256": "9c86e4980ea76149e9805f86fe21a5fadf0b0642e0d3ccb9f04db1d6a63241e1",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bow",
+        "string"
+      ]
+    },
+    {
+      "id": "delapouite-bow-tie-ribbon",
+      "file": "delapouite-bow-tie-ribbon.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bow-tie-ribbon.svg",
+      "sha256": "948338024a67081b249953ea6f023e800ec7fdb3412ba7b81b5a18068b50b2de",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bow",
+        "tie",
+        "ribbon"
+      ]
+    },
+    {
+      "id": "delapouite-bow-tie",
+      "file": "delapouite-bow-tie.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bow-tie.svg",
+      "sha256": "876b0c7009c845c590142af67573832ae7029f8bedb210f044746ad290de5731",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bow",
+        "tie"
+      ]
+    },
+    {
+      "id": "delapouite-boxing-ring",
+      "file": "delapouite-boxing-ring.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/boxing-ring.svg",
+      "sha256": "2771f0b21f349d9f0238e7e772b7601ab2d1525b872b1bd0fc644e9d59a2e272",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "boxing",
+        "ring"
+      ]
+    },
+    {
+      "id": "delapouite-bread-slice",
+      "file": "delapouite-bread-slice.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bread-slice.svg",
+      "sha256": "9014942c99ede677cff33e8850055eb8de1542e5435ebbbda8bde8d4e420410f",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bread",
+        "slice"
+      ]
+    },
+    {
+      "id": "delapouite-bread",
+      "file": "delapouite-bread.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/bread.svg",
+      "sha256": "c210b1de5e3e8abc321c10b2f6ffde3556a6c696202f2aa86a8a2ecfc2fa7415",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "bread"
+      ]
+    },
+    {
+      "id": "delapouite-broken-axe",
+      "file": "delapouite-broken-axe.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/broken-axe.svg",
+      "sha256": "b0bdd4efb80e597eb2a98454b7c6439c2dc01784a1191f0602574578376f51e6",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "broken",
+        "axe"
+      ]
+    },
+    {
+      "id": "delapouite-burning-forest",
+      "file": "delapouite-burning-forest.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/burning-forest.svg",
+      "sha256": "fae137f02dea063a2535a83e3941823686b5230f72078125a67c1ebfdfd71e7f",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "burning",
+        "forest"
+      ]
+    },
+    {
+      "id": "delapouite-butterfly-flower",
+      "file": "delapouite-butterfly-flower.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/butterfly-flower.svg",
+      "sha256": "e50d4d7591cd21f2bb2bc0cc1a8a032ad7a8763cca1a38d8b9fe3cadece224d8",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "butterfly",
+        "flower"
+      ]
+    },
+    {
+      "id": "delapouite-cable-stayed-bridge",
+      "file": "delapouite-cable-stayed-bridge.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/cable-stayed-bridge.svg",
+      "sha256": "43909d80c53a0ed3a626edd98eadd41de9d53949b2eb3ced5ea818fcfde91a88",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "cable",
+        "stayed",
+        "bridge"
+      ]
+    },
+    {
+      "id": "delapouite-camping-tent",
+      "file": "delapouite-camping-tent.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/camping-tent.svg",
+      "sha256": "61dc7a5af0fe8833a537bf48829cf73681800ae15238777d5d6ed710940cae81",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "camping",
+        "tent"
+      ]
+    },
+    {
+      "id": "delapouite-canned-fish",
+      "file": "delapouite-canned-fish.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/canned-fish.svg",
+      "sha256": "8f2c7d215d1b2df8ee7552980496782f5819cdab4bb49d206c39fce5def60043",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "canned",
+        "fish"
+      ]
+    },
+    {
+      "id": "delapouite-cape-armor",
+      "file": "delapouite-cape-armor.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/cape-armor.svg",
+      "sha256": "62cec64665f30e19459950e570e094bf018080310690d1396ce6170327b82693",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "cape",
+        "armor"
+      ]
+    },
+    {
+      "id": "delapouite-captain-hat-profile",
+      "file": "delapouite-captain-hat-profile.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/captain-hat-profile.svg",
+      "sha256": "1848a6332c1bbd3012eb9a141fc96b9ca08a0a4b7d9b58a70eec61a0e3e1bf0a",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "captain",
+        "hat",
+        "profile"
+      ]
+    },
+    {
+      "id": "delapouite-car-door",
+      "file": "delapouite-car-door.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/car-door.svg",
+      "sha256": "be1126dbd715bdba1633449b2d44b8db4a0f66ef2499bc572ccde7a12a5b4a25",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "car",
+        "door"
+      ]
+    },
+    {
+      "id": "delapouite-car-key",
+      "file": "delapouite-car-key.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/car-key.svg",
+      "sha256": "9350401c9166ec2f370877ce071b0fefa39de880b94e21f068f5f81d8ea8618a",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "car",
+        "key"
+      ]
+    },
+    {
+      "id": "delapouite-castle-ruins",
+      "file": "delapouite-castle-ruins.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/castle-ruins.svg",
+      "sha256": "c67d2571a6bc940873d3810d7439fca44b45a1de09c58fd84da15ef1df7cd301",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "castle",
+        "ruins"
+      ]
+    },
+    {
+      "id": "delapouite-castle",
+      "file": "delapouite-castle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/castle.svg",
+      "sha256": "c7220b9efbd9f20c6e9e427ff37670eb7692b52b2e9152802399ee37cfa8d8d5",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "castle"
+      ]
+    },
+    {
+      "id": "delapouite-cave-entrance",
+      "file": "delapouite-cave-entrance.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/cave-entrance.svg",
+      "sha256": "b457fe461fee51a4673fbd6cd377506873643e2ae59e765cd77e1838b49d0d21",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "cave",
+        "entrance"
+      ]
+    },
+    {
+      "id": "delapouite-centaur-heart",
+      "file": "delapouite-centaur-heart.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/centaur-heart.svg",
+      "sha256": "ea6925df44a3de3b6ce7ba195bc5792cb831c9423a28636974e74463bd14c5c8",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "centaur",
+        "heart"
+      ]
+    },
+    {
+      "id": "delapouite-centurion-helmet",
+      "file": "delapouite-centurion-helmet.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/centurion-helmet.svg",
+      "sha256": "031fe412e4d3093a9d7ab0281dc0cb4152118b4168ab1ad5e9ecd20c7d0661b9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "centurion",
+        "helmet"
+      ]
+    },
+    {
+      "id": "delapouite-chest",
+      "file": "delapouite-chest.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/chest.svg",
+      "sha256": "316988c11695fe158a5ffdd1c4401121322e39977428ba9310ab4a7cfcaf2f20",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "chest"
+      ]
+    },
+    {
+      "id": "delapouite-chestnut-leaf",
+      "file": "delapouite-chestnut-leaf.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/chestnut-leaf.svg",
+      "sha256": "b1cd39696bc2144544aed4549dd1babdfaca3632a2e3b5277e4c4a205968700e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "chestnut",
+        "leaf"
+      ]
+    },
+    {
+      "id": "delapouite-chips-bag",
+      "file": "delapouite-chips-bag.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/chips-bag.svg",
+      "sha256": "d87ecf4f5d93e7180c75240e3360a8479e5b3bcd314ee1035aa68db1a8674fb3",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "chips",
+        "bag"
+      ]
+    },
+    {
+      "id": "delapouite-circle-forest",
+      "file": "delapouite-circle-forest.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/circle-forest.svg",
+      "sha256": "ae5c446aa91b55d3b2fc7cfcf8af1dd241dfaccce055c1f6b348934b9d119521",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "circle",
+        "forest"
+      ]
+    },
+    {
+      "id": "delapouite-circling-fish",
+      "file": "delapouite-circling-fish.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/circling-fish.svg",
+      "sha256": "5fa6c9ce51f90d083bde7c5a10990647870671df06019a6173212d66cef516a3",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "circling",
+        "fish"
+      ]
+    },
+    {
+      "id": "delapouite-concrete-bag",
+      "file": "delapouite-concrete-bag.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/concrete-bag.svg",
+      "sha256": "0ba91e190ed9e731a018b530ce09f136abb46e0f315ed639b53c61924a1644a0",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "concrete",
+        "bag"
+      ]
+    },
+    {
+      "id": "delapouite-control-tower",
+      "file": "delapouite-control-tower.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/control-tower.svg",
+      "sha256": "bd12d5c428735ed931fbe0dcb65be2ea1b70eaae163c91e90fa7e879bd3f5c69",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "control",
+        "tower"
+      ]
+    },
+    {
+      "id": "delapouite-cooking-glove",
+      "file": "delapouite-cooking-glove.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/cooking-glove.svg",
+      "sha256": "c12bbf761f77ecd275016c61e31d304d17fda2ffc703b136824bc4689ba96c52",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "cooking",
+        "glove"
+      ]
+    },
+    {
+      "id": "delapouite-cork-hat",
+      "file": "delapouite-cork-hat.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/cork-hat.svg",
+      "sha256": "cfa593bdb46512ad56ffc13d9eef3e490607be84e9965586e3ffb66c5fea0fd9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "cork",
+        "hat"
+      ]
+    },
+    {
+      "id": "delapouite-cotton-flower",
+      "file": "delapouite-cotton-flower.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/cotton-flower.svg",
+      "sha256": "198f67d1c6391505c79b3929d5a4235a324172353505bcc5741b6f8511d7941a",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "cotton",
+        "flower"
+      ]
+    },
+    {
+      "id": "delapouite-crenel-crown",
+      "file": "delapouite-crenel-crown.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/crenel-crown.svg",
+      "sha256": "5fb0457d5657a13e8f81635b22a0f7b5c25be25e0715602bfd6ed70fbbe37871",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "crenel",
+        "crown"
+      ]
+    },
+    {
+      "id": "delapouite-crescent-staff",
+      "file": "delapouite-crescent-staff.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/crescent-staff.svg",
+      "sha256": "a8b7e97977f40e1b0556d1098c55f700a779833664989cad8d1eb539a71fb596",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "crescent",
+        "staff"
+      ]
+    },
+    {
+      "id": "delapouite-cross-shield",
+      "file": "delapouite-cross-shield.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/cross-shield.svg",
+      "sha256": "6ecd4fbd542a228248f056530d6b3108b6f7daeb31f6dfa17d83bc481a6ab276",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "cross",
+        "shield"
+      ]
+    },
+    {
+      "id": "delapouite-crystal-earrings",
+      "file": "delapouite-crystal-earrings.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/crystal-earrings.svg",
+      "sha256": "f490fc645cd42d7316600b004e666f4b354666ec25a3a0ed304dd9b9ccee2412",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "crystal",
+        "earrings"
+      ]
+    },
+    {
+      "id": "delapouite-crystal-shrine",
+      "file": "delapouite-crystal-shrine.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/crystal-shrine.svg",
+      "sha256": "a6726c2ab0df3a17cd049152eb1f2e6d63da108ecdfe4d814e493702bfd9da96",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "crystal",
+        "shrine"
+      ]
+    },
+    {
+      "id": "delapouite-curling-stone",
+      "file": "delapouite-curling-stone.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/curling-stone.svg",
+      "sha256": "d789e18f82b3e8beb6750232a1430095d6b644679c797d083bee4d20a3bd0219",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "curling",
+        "stone"
+      ]
+    },
+    {
+      "id": "delapouite-custodian-helmet",
+      "file": "delapouite-custodian-helmet.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/custodian-helmet.svg",
+      "sha256": "967420d42dd37078d1319e030284b654c0bc8ad8bb7c6516f29ec8929dca618b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "custodian",
+        "helmet"
+      ]
+    },
+    {
+      "id": "delapouite-dagger-rose",
+      "file": "delapouite-dagger-rose.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/dagger-rose.svg",
+      "sha256": "defed3ec65f419562e53f380a6f8cf0269e9fc496a315c2d7115cb545a4981cb",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "dagger",
+        "rose"
+      ]
+    },
+    {
+      "id": "delapouite-dandelion-flower",
+      "file": "delapouite-dandelion-flower.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/dandelion-flower.svg",
+      "sha256": "bc24a339d7d483ca8416e25e54af3c7faf1c998e2739e3f2c7697c5802fcdb40",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "dandelion",
+        "flower"
+      ]
+    },
+    {
+      "id": "delapouite-deshret-red-crown",
+      "file": "delapouite-deshret-red-crown.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/deshret-red-crown.svg",
+      "sha256": "667d1f90fce0bf37e420c5bc95e2e1757c1fcd3eb2d72d2c7c866f7091d6b586",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "deshret",
+        "red",
+        "crown"
+      ]
+    },
+    {
+      "id": "delapouite-diamond-hilt",
+      "file": "delapouite-diamond-hilt.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/diamond-hilt.svg",
+      "sha256": "9513a7de7c4171eb865b90dc305dd8516885bbf025fc365fc76ee424b112186c",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "diamond",
+        "hilt"
+      ]
+    },
+    {
+      "id": "delapouite-diamond-trophy",
+      "file": "delapouite-diamond-trophy.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/diamond-trophy.svg",
+      "sha256": "f9fa3b0e8eef5d4d1f0c42cbfbcb82eabcf4c4e3273ac14f266ec6a5218733f0",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "diamond",
+        "trophy"
+      ]
+    },
+    {
+      "id": "delapouite-dice-fire",
+      "file": "delapouite-dice-fire.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/dice-fire.svg",
+      "sha256": "145f608da16707377a48c17697e6422c9f27faa98f6b959267dafac0eff02125",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "dice",
+        "fire"
+      ]
+    },
+    {
+      "id": "delapouite-dice-shield",
+      "file": "delapouite-dice-shield.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/dice-shield.svg",
+      "sha256": "4106285eac880fb30fab08d176a58e5e560e7c0f3c7453b999d5897a05c9b0a8",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "dice",
+        "shield"
+      ]
+    },
+    {
+      "id": "delapouite-disc-golf-bag",
+      "file": "delapouite-disc-golf-bag.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/disc-golf-bag.svg",
+      "sha256": "5cb71f4e74d8360737f412bd513b4e6ca8e19fea9a8daa347d589158fa491412",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "disc",
+        "golf",
+        "bag"
+      ]
+    },
+    {
+      "id": "delapouite-diving-helmet",
+      "file": "delapouite-diving-helmet.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/diving-helmet.svg",
+      "sha256": "1a968dd6af8b09e877814b0b840456b70e4dab5309cda05e6f3c75be232082a1",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "diving",
+        "helmet"
+      ]
+    },
+    {
+      "id": "delapouite-door-handle",
+      "file": "delapouite-door-handle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/door-handle.svg",
+      "sha256": "c88f670d0623ed1797631a15558e051ed4dd61433c6ad002cf256294cc1dee70",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "door",
+        "handle"
+      ]
+    },
+    {
+      "id": "delapouite-door-watcher",
+      "file": "delapouite-door-watcher.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/door-watcher.svg",
+      "sha256": "002cd23628c876fd2c5ec4def0f9e4dfaed9df29566fd98dedf33ee81475fb8a",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "door",
+        "watcher"
+      ]
+    },
+    {
+      "id": "delapouite-door",
+      "file": "delapouite-door.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/door.svg",
+      "sha256": "e681048888c53fb5bcc7d5494b40271b27d3719bff4c288ea8ac1a2180af879e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "door"
+      ]
+    },
+    {
+      "id": "delapouite-double-fish",
+      "file": "delapouite-double-fish.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/double-fish.svg",
+      "sha256": "b53104bb82ec26fd0c997e0ebf05428845ba6e76e8ee64abe4202aeac9a27924",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "double",
+        "fish"
+      ]
+    },
+    {
+      "id": "delapouite-double-necklace",
+      "file": "delapouite-double-necklace.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/double-necklace.svg",
+      "sha256": "5d74403595a821e5d5f16fbceb585685bdeb88c6d9b1095cd06d6b5a0b518a94",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "double",
+        "necklace"
+      ]
+    },
+    {
+      "id": "delapouite-dragon-orb",
+      "file": "delapouite-dragon-orb.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/dragon-orb.svg",
+      "sha256": "6df34cca255f2c2b567ddc8f1756adafb1fdff93e1c648ca571b5c0cd90687df",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "dragon",
+        "orb"
+      ]
+    },
+    {
+      "id": "delapouite-drakkar-dragon",
+      "file": "delapouite-drakkar-dragon.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/drakkar-dragon.svg",
+      "sha256": "70ec22472c902adaeb1caf33d8772ce3d2f43495e28c3003f0c3068f4c0f5ca9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "drakkar",
+        "dragon"
+      ]
+    },
+    {
+      "id": "delapouite-duffel-bag",
+      "file": "delapouite-duffel-bag.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/duffel-bag.svg",
+      "sha256": "efafe315a3f51721c7f219ad043ffe34e3f54629c9f80145d06661e6ec137d85",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "duffel",
+        "bag"
+      ]
+    },
+    {
+      "id": "delapouite-dungeon-gate",
+      "file": "delapouite-dungeon-gate.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/dungeon-gate.svg",
+      "sha256": "66d3a497c9455dc3fbe74d5b04564a6726ee5329523e82ac1fdd6792bb89c33c",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "dungeon",
+        "gate"
+      ]
+    },
+    {
+      "id": "delapouite-dungeon-light",
+      "file": "delapouite-dungeon-light.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/dungeon-light.svg",
+      "sha256": "506be5c0533c91722049e89ddfae30bf44239d3f5c11ecf25b9f95c38339c89b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "dungeon",
+        "light"
+      ]
+    },
+    {
+      "id": "delapouite-emerald-necklace",
+      "file": "delapouite-emerald-necklace.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/emerald-necklace.svg",
+      "sha256": "4d9de2fb872c8576393d28f1d3935691a8a6aff1825bcb5b04baa7f9009ef8a6",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "emerald",
+        "necklace"
+      ]
+    },
+    {
+      "id": "delapouite-empty-metal-bucket-handle",
+      "file": "delapouite-empty-metal-bucket-handle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/empty-metal-bucket-handle.svg",
+      "sha256": "e3e0168aaf8544688550053c994440addbf8a76aff24a6972360af7bce7226ed",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "empty",
+        "metal",
+        "bucket",
+        "handle"
+      ]
+    },
+    {
+      "id": "delapouite-empty-metal-bucket",
+      "file": "delapouite-empty-metal-bucket.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/empty-metal-bucket.svg",
+      "sha256": "0eda0ebdf9558ead28ce5bfc61dd3d10568334744f37b9a93e85ec9d8992eea6",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "empty",
+        "metal",
+        "bucket"
+      ]
+    },
+    {
+      "id": "delapouite-empty-wood-bucket-handle",
+      "file": "delapouite-empty-wood-bucket-handle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/empty-wood-bucket-handle.svg",
+      "sha256": "df759d098996e71606fb72fe44739a0e026916f65db1d016cae096e89e0db15b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "empty",
+        "wood",
+        "bucket",
+        "handle"
+      ]
+    },
+    {
+      "id": "delapouite-empty-wood-bucket",
+      "file": "delapouite-empty-wood-bucket.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/empty-wood-bucket.svg",
+      "sha256": "2d15772903f0e9b11463f68ac7d6cf765d6a9891781e1b0a73d1b2063153260e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "empty",
+        "wood",
+        "bucket"
+      ]
+    },
+    {
+      "id": "delapouite-entry-door",
+      "file": "delapouite-entry-door.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/entry-door.svg",
+      "sha256": "567eac30ce52e378faab05dc65c6ac76712dcedd0806966ac7c0880e57d1b742",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "entry",
+        "door"
+      ]
+    },
+    {
+      "id": "delapouite-evil-tower",
+      "file": "delapouite-evil-tower.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/evil-tower.svg",
+      "sha256": "72353e3e862d884e6f13f846cf2ec370f0ea71f65c49a7187165649b0104d091",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "evil",
+        "tower"
+      ]
+    },
+    {
+      "id": "delapouite-exit-door",
+      "file": "delapouite-exit-door.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/exit-door.svg",
+      "sha256": "8bfa59a0585220bd4a0e99337667efe90a00d1e8e81aca7920514e46eda2e97b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "exit",
+        "door"
+      ]
+    },
+    {
+      "id": "delapouite-fertilizer-bag",
+      "file": "delapouite-fertilizer-bag.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fertilizer-bag.svg",
+      "sha256": "f2566ab5977e9dc64f19961c9470decb735c73c1aaf5a30078611a21d9ead459",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fertilizer",
+        "bag"
+      ]
+    },
+    {
+      "id": "delapouite-fire-extinguisher",
+      "file": "delapouite-fire-extinguisher.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fire-extinguisher.svg",
+      "sha256": "a75b08505132ad031810bad2ee1c1d31577d3c4100f040cbfb0ba79336d14929",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "extinguisher"
+      ]
+    },
+    {
+      "id": "delapouite-fire-iris",
+      "file": "delapouite-fire-iris.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fire-iris.svg",
+      "sha256": "0c39d315c9f927d9e48991a3c39328de9acfea7d1e2db8cc7e72ed7944bdddc0",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "iris"
+      ]
+    },
+    {
+      "id": "delapouite-fire-shrine",
+      "file": "delapouite-fire-shrine.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fire-shrine.svg",
+      "sha256": "96db698b4f31a15ce0b407c7887621300151d3260c85fcdd830ed92f76317db5",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fire",
+        "shrine"
+      ]
+    },
+    {
+      "id": "delapouite-fish-bucket",
+      "file": "delapouite-fish-bucket.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fish-bucket.svg",
+      "sha256": "98356c0e12a3b39f93904df49fee828633cd9f55055483e12a8914b89749cf7f",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fish",
+        "bucket"
+      ]
+    },
+    {
+      "id": "delapouite-fish-eggs",
+      "file": "delapouite-fish-eggs.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fish-eggs.svg",
+      "sha256": "54c0ba0694704207bae45a75baee1c5115f69e5c4f9c9bd8fe78292efea1b55a",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fish",
+        "eggs"
+      ]
+    },
+    {
+      "id": "delapouite-fish-escape",
+      "file": "delapouite-fish-escape.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fish-escape.svg",
+      "sha256": "5924f7b4741fa851d6fd35f04cdf14361b1b61e58ac054b2e870c95ac0ee993e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fish",
+        "escape"
+      ]
+    },
+    {
+      "id": "delapouite-fish-monster",
+      "file": "delapouite-fish-monster.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fish-monster.svg",
+      "sha256": "25700e3708a8e64a9f596cae5600d012a231efad180921d30a0cbb5d919b4cde",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fish",
+        "monster"
+      ]
+    },
+    {
+      "id": "delapouite-fish-scales",
+      "file": "delapouite-fish-scales.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fish-scales.svg",
+      "sha256": "78547d1d011aaede25f1322fabb00a233b9357f7399fe5dfc75377d0165f9c60",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fish",
+        "scales"
+      ]
+    },
+    {
+      "id": "delapouite-fish-smoking",
+      "file": "delapouite-fish-smoking.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fish-smoking.svg",
+      "sha256": "7b69d1f1fa783673bd2ba0ee74ada904978e2ad57521a6def0245369b6e24c06",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fish",
+        "smoking"
+      ]
+    },
+    {
+      "id": "delapouite-flower-emblem",
+      "file": "delapouite-flower-emblem.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/flower-emblem.svg",
+      "sha256": "7ed22a3dd64b86373fb1f8cdd39f0c2c7d661046b92dcbaaccecd70dd4cab4d3",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "flower",
+        "emblem"
+      ]
+    },
+    {
+      "id": "delapouite-flower-star",
+      "file": "delapouite-flower-star.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/flower-star.svg",
+      "sha256": "d18158ca1039a2b08049ed2184fa69280d0c08b7bd257175952fab05d6a1c799",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "flower",
+        "star"
+      ]
+    },
+    {
+      "id": "delapouite-food-truck",
+      "file": "delapouite-food-truck.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/food-truck.svg",
+      "sha256": "68aadb8a645589c81b3479d64ad3abba223b8b62a3750fdf8bd804d40315c7dc",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "food",
+        "truck"
+      ]
+    },
+    {
+      "id": "delapouite-forest-camp",
+      "file": "delapouite-forest-camp.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/forest-camp.svg",
+      "sha256": "f4d18cff70166d2cbe623e84fd79f94572721387cca54cd555056a14874a5d28",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "forest",
+        "camp"
+      ]
+    },
+    {
+      "id": "delapouite-forest-entrance",
+      "file": "delapouite-forest-entrance.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/forest-entrance.svg",
+      "sha256": "5a92580dd2f33c79beb5431ab8ecd218f82d185f203f56d5ac357404143b8f63",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "forest",
+        "entrance"
+      ]
+    },
+    {
+      "id": "delapouite-forest",
+      "file": "delapouite-forest.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/forest.svg",
+      "sha256": "246a0e3526162619cfcdb01cf6ca90abb3e2eef4205aea37bc9088206e144c6f",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "forest"
+      ]
+    },
+    {
+      "id": "delapouite-frozen-ring",
+      "file": "delapouite-frozen-ring.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/frozen-ring.svg",
+      "sha256": "243ab113e4f59221c9bfa15b2d69b2694f75cb7e00650fce880c2a5524d90cec",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "frozen",
+        "ring"
+      ]
+    },
+    {
+      "id": "delapouite-fruit-tree",
+      "file": "delapouite-fruit-tree.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fruit-tree.svg",
+      "sha256": "d424ff937239873ce1286c5f6b6d94c4f1bddae250db3a1b638ef25ba9014190",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fruit",
+        "tree"
+      ]
+    },
+    {
+      "id": "delapouite-full-metal-bucket-handle",
+      "file": "delapouite-full-metal-bucket-handle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/full-metal-bucket-handle.svg",
+      "sha256": "8d32ea4e5ca19c91409c28a8e2c7aef2542492870da32bcf3ec8532a6a78f5b9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "full",
+        "metal",
+        "bucket",
+        "handle"
+      ]
+    },
+    {
+      "id": "delapouite-full-metal-bucket",
+      "file": "delapouite-full-metal-bucket.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/full-metal-bucket.svg",
+      "sha256": "41da8080fff43bfafd843138226be3e96d77e55cd7abab95e1fd3c9ca729bec6",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "full",
+        "metal",
+        "bucket"
+      ]
+    },
+    {
+      "id": "delapouite-full-motorcycle-helmet",
+      "file": "delapouite-full-motorcycle-helmet.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/full-motorcycle-helmet.svg",
+      "sha256": "f3d471026a6434aab9cc5f8126dd8809cedb8ffc1863cc11665408a576ad9641",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "full",
+        "motorcycle",
+        "helmet"
+      ]
+    },
+    {
+      "id": "delapouite-full-wood-bucket-handle",
+      "file": "delapouite-full-wood-bucket-handle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/full-wood-bucket-handle.svg",
+      "sha256": "0d4a7a3edc953ea843ecf50029e5bef2dadb8e116d0ad8f6df510693c2cc7156",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "full",
+        "wood",
+        "bucket",
+        "handle"
+      ]
+    },
+    {
+      "id": "delapouite-full-wood-bucket",
+      "file": "delapouite-full-wood-bucket.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/full-wood-bucket.svg",
+      "sha256": "b9a1d34b2e9ddd3f2083e609ffddaf15ede047f38cf64e8825fdd706a15cb983",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "full",
+        "wood",
+        "bucket"
+      ]
+    },
+    {
+      "id": "delapouite-fur-boot",
+      "file": "delapouite-fur-boot.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fur-boot.svg",
+      "sha256": "2a41b095ebeab7f77d7211a4cdf760288bd7c9bfada6d86c3a93e20264dbfa5d",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fur",
+        "boot"
+      ]
+    },
+    {
+      "id": "delapouite-fur-shirt",
+      "file": "delapouite-fur-shirt.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/fur-shirt.svg",
+      "sha256": "54bb8e2982ad0296aff4953a966b44ad56996c678feffc1c05dd4bfe65856f66",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "fur",
+        "shirt"
+      ]
+    },
+    {
+      "id": "delapouite-ginkgo-leaf",
+      "file": "delapouite-ginkgo-leaf.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ginkgo-leaf.svg",
+      "sha256": "d3550ebb9e6549522292bf50b340799a83b40ee1160d9a5c16d1411514eb5ab9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ginkgo",
+        "leaf"
+      ]
+    },
+    {
+      "id": "delapouite-globe-ring",
+      "file": "delapouite-globe-ring.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/globe-ring.svg",
+      "sha256": "d99caf523c33d2c6f05d538e8e36748f9f7b485aca061ad667da48471c96d708",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "globe",
+        "ring"
+      ]
+    },
+    {
+      "id": "delapouite-gold-mine",
+      "file": "delapouite-gold-mine.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/gold-mine.svg",
+      "sha256": "36b7a3f8e9b00d7a379b059e1621d573f00b33d76832a0d3c5a93e6b718a6add",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "gold",
+        "mine"
+      ]
+    },
+    {
+      "id": "delapouite-gold-nuggets",
+      "file": "delapouite-gold-nuggets.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/gold-nuggets.svg",
+      "sha256": "7f487b9524a6c396046eb552db6722cea85ba99a2ba1c66c2984a74708fc4775",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "gold",
+        "nuggets"
+      ]
+    },
+    {
+      "id": "delapouite-gold-stack",
+      "file": "delapouite-gold-stack.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/gold-stack.svg",
+      "sha256": "7286459f0f2ad0f23d7c5833d6914ecb18f46a28eca6014c4d74d158398e9f7d",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "gold",
+        "stack"
+      ]
+    },
+    {
+      "id": "delapouite-grass-mushroom",
+      "file": "delapouite-grass-mushroom.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/grass-mushroom.svg",
+      "sha256": "51c17b093fff7a1b8170b4164fd15cd4303672ff7d4046f71bbdf1042416b045",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "grass",
+        "mushroom"
+      ]
+    },
+    {
+      "id": "delapouite-griffin-shield",
+      "file": "delapouite-griffin-shield.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/griffin-shield.svg",
+      "sha256": "35e7c0bafd254689c8c1db401714234e7484c2677a99cb60a714d364ecec562e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "griffin",
+        "shield"
+      ]
+    },
+    {
+      "id": "delapouite-gym-bag",
+      "file": "delapouite-gym-bag.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/gym-bag.svg",
+      "sha256": "9bb0ffc89a5e555820b1fa83beee6697578580e61c0ed7b89dd9d50d27093704",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "gym",
+        "bag"
+      ]
+    },
+    {
+      "id": "delapouite-hammer-break",
+      "file": "delapouite-hammer-break.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/hammer-break.svg",
+      "sha256": "3624c906d7834de7bca6dea3fdffb820405b4f83e3ed73d84faecef4bd3f8795",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "hammer",
+        "break"
+      ]
+    },
+    {
+      "id": "delapouite-hammer-sickle",
+      "file": "delapouite-hammer-sickle.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/hammer-sickle.svg",
+      "sha256": "9e5c7b097cf9364fa12ebb61c943ded4e07078587d1b50a9e6872afd8e5994bd",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "hammer",
+        "sickle"
+      ]
+    },
+    {
+      "id": "delapouite-hand-bag",
+      "file": "delapouite-hand-bag.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/hand-bag.svg",
+      "sha256": "5d6bb1c41a226baef26f54330cadce06733101bea6ebd9aa6175e8c05da9f3fa",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "hand",
+        "bag"
+      ]
+    },
+    {
+      "id": "delapouite-healing-shield",
+      "file": "delapouite-healing-shield.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/healing-shield.svg",
+      "sha256": "16745ebb9f3a63b2c7765dfeb39fe973d48ea726d9cb3fec554ae2c49581d439",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "healing",
+        "shield"
+      ]
+    },
+    {
+      "id": "delapouite-health-potion",
+      "file": "delapouite-health-potion.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/health-potion.svg",
+      "sha256": "a7880c1c10b68bed8d7cbd120a1e550f5e00d2b35592813a968863045d892cdf",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "health",
+        "potion"
+      ]
+    },
+    {
+      "id": "delapouite-heart-battery",
+      "file": "delapouite-heart-battery.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/heart-battery.svg",
+      "sha256": "962f8a1981b26bd10b854643ffa75a346fd088a30c7e855e2386fc7b0588a4dc",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "battery"
+      ]
+    },
+    {
+      "id": "delapouite-heart-beats",
+      "file": "delapouite-heart-beats.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/heart-beats.svg",
+      "sha256": "9a356ea7e603ef8b2d8684685b2dff5d19468e1ed5bf6ef5e4a6634e12da24cf",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "beats"
+      ]
+    },
+    {
+      "id": "delapouite-heart-earrings",
+      "file": "delapouite-heart-earrings.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/heart-earrings.svg",
+      "sha256": "5d0f83884382feed5cda90364bbaf6149499abfd1b08f885f3b78dfe385d1b0b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "earrings"
+      ]
+    },
+    {
+      "id": "delapouite-heart-stake",
+      "file": "delapouite-heart-stake.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/heart-stake.svg",
+      "sha256": "42ce5cb062a4719f1c4c5b8e8350d255e53c392ac2ac611fb7f0b021e3396676",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "stake"
+      ]
+    },
+    {
+      "id": "delapouite-heart-wings",
+      "file": "delapouite-heart-wings.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/heart-wings.svg",
+      "sha256": "455f2632a3208765c53e7ae061b9a3b9bae9d3bbee9fac97c1a9ac9498cf10dd",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "heart",
+        "wings"
+      ]
+    },
+    {
+      "id": "delapouite-hedjet-white-crown",
+      "file": "delapouite-hedjet-white-crown.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/hedjet-white-crown.svg",
+      "sha256": "a18968c4db36962152b6ee6291d1fa98c42280df76897d0dcb865b7b3eb4b1e7",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "hedjet",
+        "white",
+        "crown"
+      ]
+    },
+    {
+      "id": "delapouite-hobbit-door",
+      "file": "delapouite-hobbit-door.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/hobbit-door.svg",
+      "sha256": "454c6421a90eef6e9d90186645b27280f88c75397400f04e93076fda5d35a50e",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "hobbit",
+        "door"
+      ]
+    },
+    {
+      "id": "delapouite-holy-water",
+      "file": "delapouite-holy-water.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/holy-water.svg",
+      "sha256": "639fac3bebccc09fa4b92f4f3ff2a517e38da8a5be6fc7ff882b4c460e80244d",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "holy",
+        "water"
+      ]
+    },
+    {
+      "id": "delapouite-horse-head",
+      "file": "delapouite-horse-head.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/horse-head.svg",
+      "sha256": "1e8ad2bcdc32cde7cd4810549bb5a4042a4905af921ea28ffd8b2d2b5cbb1ea9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "horse",
+        "head"
+      ]
+    },
+    {
+      "id": "delapouite-huts-village",
+      "file": "delapouite-huts-village.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/huts-village.svg",
+      "sha256": "92277d1d88313e740370402bef422fc6cb651e836ad440fda46fd00ba318da9a",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "huts",
+        "village"
+      ]
+    },
+    {
+      "id": "delapouite-ice-cream-cone",
+      "file": "delapouite-ice-cream-cone.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ice-cream-cone.svg",
+      "sha256": "67c947cccf5ac33655606231f2ad8d8a229d221266d8bf84211d53b3948fded8",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "cream",
+        "cone"
+      ]
+    },
+    {
+      "id": "delapouite-ice-cream-scoop",
+      "file": "delapouite-ice-cream-scoop.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ice-cream-scoop.svg",
+      "sha256": "d2293def63f55957f440547418158210b13c4f5ad2fb4af3521487ed71130c8c",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "cream",
+        "scoop"
+      ]
+    },
+    {
+      "id": "delapouite-ice-cubes",
+      "file": "delapouite-ice-cubes.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ice-cubes.svg",
+      "sha256": "6893094b5b0ddab75a4cba80ffcd07e0deac26fbeff312ea079f84f96c6a6cd9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "cubes"
+      ]
+    },
+    {
+      "id": "delapouite-ice-golem",
+      "file": "delapouite-ice-golem.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ice-golem.svg",
+      "sha256": "7b58bdc892d8bb2a697c0d03bf9fb0713ed91d9d995ec446ef749cc2fe432d33",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "golem"
+      ]
+    },
+    {
+      "id": "delapouite-ice-iris",
+      "file": "delapouite-ice-iris.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ice-iris.svg",
+      "sha256": "401b313ec201dd55be8616dc03058a0683624a9ddc96ac4dae9994f515e5a195",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "iris"
+      ]
+    },
+    {
+      "id": "delapouite-ice-pop",
+      "file": "delapouite-ice-pop.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ice-pop.svg",
+      "sha256": "efdf22a9ff8a6fe8e39d1a5817970a1016f4aaa7df84ffdb7f135d72d0b6bfe3",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "pop"
+      ]
+    },
+    {
+      "id": "delapouite-ice-skate",
+      "file": "delapouite-ice-skate.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/ice-skate.svg",
+      "sha256": "4eee8aff926d8f7192aeb195e1cdd7f3a827f8f15de6fceb5068ce82c1204f34",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "ice",
+        "skate"
+      ]
+    },
+    {
+      "id": "delapouite-imperial-crown",
+      "file": "delapouite-imperial-crown.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/imperial-crown.svg",
+      "sha256": "fd81a62605f33a7d2db62c390d91018eda277248194d907701501f2b8f2b6daa",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "imperial",
+        "crown"
+      ]
+    },
+    {
+      "id": "delapouite-intricate-necklace",
+      "file": "delapouite-intricate-necklace.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/intricate-necklace.svg",
+      "sha256": "210333efd6f97f1116c64e21d0c03cb78093a5ada8509a661d208c9170b0cca4",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "intricate",
+        "necklace"
+      ]
+    },
+    {
+      "id": "delapouite-japanese-bridge",
+      "file": "delapouite-japanese-bridge.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/japanese-bridge.svg",
+      "sha256": "68d59ebad32a00745eefaa778728db4925b207a7e0ab5564244b8d059beb4f8b",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "japanese",
+        "bridge"
+      ]
+    },
+    {
+      "id": "lorc-crossed-swords",
+      "file": "lorc-crossed-swords.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/crossed-swords.svg",
+      "sha256": "ed52f750fa76e0a8de71397b5cae17e82a31d711949b54ad946386be38697c8c",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "crossed",
+        "swords"
+      ]
+    },
+    {
+      "id": "lorc-potion-ball",
+      "file": "lorc-potion-ball.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/potion-ball.svg",
+      "sha256": "16a4f43b89a88f8ef126b7620f0a0630cf25d81bc71e9837451edd9aef41a5a4",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "potion",
+        "ball"
+      ]
+    },
+    {
+      "id": "lorc-meat",
+      "file": "lorc-meat.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/meat.svg",
+      "sha256": "dc57245c32bf1fb4004b23f104a45e09f0f9b23dfa142c3d40231aa9f37b0700",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "meat"
+      ]
+    },
+    {
+      "id": "lorc-gem-chain",
+      "file": "lorc-gem-chain.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/gem-chain.svg",
+      "sha256": "f51df164bf3964bd7b2c7db84b930981d766368f9093c2c17f87df5e5f1eb4a9",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "gem",
+        "chain"
+      ]
+    },
+    {
+      "id": "lorc-locked-chest",
+      "file": "lorc-locked-chest.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/locked-chest.svg",
+      "sha256": "d6185fbd4bbec77d43e56062a59f00da5f35e7f0cddf25723a7ff450fd40f806",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "locked",
+        "chest"
+      ]
+    },
+    {
+      "id": "lorc-scroll-unfurled",
+      "file": "lorc-scroll-unfurled.svg",
+      "author": "Lorc",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/lorc/scroll-unfurled.svg",
+      "sha256": "03cb2fea0ceb3de50ab4eee39040e03d963c9cc261a25ee4d7eed74a4a586bb7",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "scroll",
+        "unfurled"
+      ]
+    },
+    {
+      "id": "delapouite-rope-coil",
+      "file": "delapouite-rope-coil.svg",
+      "author": "Delapouite",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://raw.githubusercontent.com/game-icons/icons/82d948812bfe3f269ef8f731dcdb07b08160edc4/delapouite/rope-coil.svg",
+      "sha256": "2c8d0f0e2249f19e5b0f99538022ada2499f75c1d30efb7d078811ce9223f297",
+      "changes": "Sanitized SVG; transparent background and gold fill",
+      "tags": [
+        "rope",
+        "coil"
+      ]
+    }
+  ]
+}
