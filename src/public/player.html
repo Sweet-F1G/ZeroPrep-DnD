@@ -273,6 +273,29 @@
         </div>
       </section>
     </main>
+
+    <!-- Floating Push-to-Talk Bar (LAN Mobile Companion) -->
+    <div id="playerPttBar" class="player-ptt-bar">
+      <div id="pttStatusHint" class="ptt-status-hint">
+        <span class="ptt-hero-badge">👤 <span id="pttHeroBadgeName">—</span></span>
+        <span id="pttStatusText" class="ptt-status-text">Зажмите кнопку для хода</span>
+      </div>
+
+      <div class="ptt-controls-row">
+        <button type="button" id="playerPttBtn" class="player-ptt-btn" aria-label="Удерживайте, чтобы сказать действие за героя">
+          <span class="ptt-btn-icon" id="pttBtnIcon">🎙️</span>
+          <span class="ptt-btn-text" id="pttBtnText">Удерживайте для хода</span>
+        </button>
+        <button type="button" id="pttTextToggleBtn" class="ptt-toggle-btn" title="Ввести действие текстом" aria-label="Ввести действие текстом">
+          ✏️
+        </button>
+      </div>
+
+      <div id="pttTextInputRow" class="ptt-text-input-row" hidden>
+        <input type="text" id="pttTextInput" class="ptt-text-input" placeholder="Опишите действие героя..." maxlength="1000">
+        <button type="button" id="pttSendTextBtn" class="ptt-send-text-btn" aria-label="Отправить действие">↗</button>
+      </div>
+    </div>
   </div>
 
   <!-- Quick Floating Toast -->

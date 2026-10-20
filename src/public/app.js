@@ -69,7 +69,7 @@ function render(){
   ambientEngine.setTheme(targetTheme);
  }
 }
-async function refresh(){state=await api('state');if(!current())activeId=state.campaigns.find(c=>c.id===state.config.activeCampaignId)?.id||state.campaigns[0]?.id;render();scrollToLatest();}
+async function refresh(){state=await api('state');if(!current())activeId=state.campaigns.find(c=>c.id===state.config.activeCampaignId)?.id||state.campaigns[0]?.id;render();scrollToLatest();if(current()?.delivery&&$('autoVoice')?.checked&&!voiceActive&&!interruptionActive&&!liveVoice.active&&!liveDelegating){playDelivery();}}
 function stopVoice(){speechPrefetch.clear();activeSpeechRequest?.abort();activeSpeechRequest=null;speechDone?.(false);speechDone=null;speechVersion++;voiceActive=false;ambientEngine.setDucked(false);if(currentAudio){currentAudio.pause();currentAudio.remove();currentAudio=null;}if(currentAudioURL){URL.revokeObjectURL(currentAudioURL);currentAudioURL=null;}window.speechSynthesis?.cancel();window.webkit?.messageHandlers?.nativeVoice?.postMessage({stop:true});if(state)renderListening();}
 async function loadSpeech(text,preview,signal){
  const isEdgePreview=preview&&(preview.startsWith('ru-RU-')||preview==='edge');

@@ -207,6 +207,68 @@ const server=http.createServer(async(req,res)=>{
     }
     throw Error('Неизвестное действие');
    }
+   if(req.method==='POST'&&(url.pathname==='/api/player/ptt'||url.pathname==='/api/player/turn'||url.pathname==='/api/player/transcribe')){
+    const auth=req.headers['x-app-token']||req.headers['x-player-token'];
+    if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
+    const b=await body(req);
+    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
+    if(!c)throw Error('Кампания не найдена');
+    let text=String(b.text||'').trim();
+    if(b.audio){
+     await keysReady;
+     const audioBuf=Buffer.from(String(b.audio||''),'base64');
+     if(!audioBuf.length)throw Error('Пустая запись с микрофона');
+     const mime=b.mime||'audio/wav';
+     if(!['audio/wav','audio/webm','audio/mp4'].includes(mime))throw Error('Неподдерживаемый аудиоформат');
+     const names=c.characters.map(x=>x.name);
+     costSensitive=true;costRequests++;
+     try{
+      text=(await transcribe(config,keys,audioBuf,mime,names,observe)).trim();
+     }finally{
+      costRequests--;
+     }
+     if(!text)throw Error('Речь не распознана. Повторите запись ближе к микрофону.');
+    }
+    if(url.pathname==='/api/player/transcribe'){
+     return json(res,{ok:true,text});
+    }
+    if(!text)throw Error('Опишите действие героя');
+    const hero=c.characters.find(h=>h.id===b.characterId);
+    if(!hero)throw Error('Персонаж не найден');
+    interruptDelivery(c);
+    if(c.proposals?.length)throw Error('Сначала подтвердите или отклоните изменения HP');
+    if(c.pending)throw Error('Сначала завершите ожидаемый бросок d20 на вкладке «Кубики»');
+    checkpoint(c);
+    const event={id:randomUUID(),role:'user',text:`${hero.name}: ${text}`,at:new Date().toISOString()};
+    c.journal.push(event);
+    let localReply=localCommand(c,text,hero.id,event.id);
+    if(!localReply&&/^(?:я\s+)?(?:обещаю|клянусь)(?:\s|$)/iu.test(playerSpeech(c,text,hero.id))){
+     remember(c,{kind:'promise',text:playerSpeech(c,text,hero.id),actorId:hero.id},event.id);
+    }
+    if(config.provider!=='demo')await keysReady;
+    const prepareFirst=t=>{const first=narrationParts(t)[0];if(first)audioStreams.prepare(first,audioScope());};
+    const speechCallback=(config.ttsProvider==='openai'||config.ttsProvider==='edge')?prepareFirst:undefined;
+    costSensitive=true;costRequests++;
+    let reply;
+    try{
+     reply=localReply?{narration:localReply,changes:[]}:config.provider==='demo'?demoReply(c,b,null):await generate({...config},{...keys},c,observe,speechCallback,speechCallback);
+    }finally{
+     costRequests--;
+    }
+    stageReply(c,reply);
+    const latest=campaigns.find(x=>x.id===c.id);
+    if(latest?.summary&&(!c.summary||latest.summary.count>c.summary.count)&&summaryValid({...c,summary:latest.summary}))c.summary=latest.summary;
+    await commitCampaign(c);
+    if(config.autoSummary==='on'&&config.provider!=='demo'&&!summaryBusy.has(c.id)){
+     const plan=summaryPlan(c);
+     if(plan){
+      summaryBusy.add(c.id);
+      const snapshotConfig={...config},snapshotKeys={...keys};
+      (async()=>{try{const result=await summarize(snapshotConfig,snapshotKeys,plan,observe);await updateImage(c.id,lat=>{if((lat.summary?.count||0)<plan.count)setSummary(lat,result.summary,plan);});}catch{}finally{summaryBusy.delete(c.id);}})();
+     }
+    }
+    return json(res,{ok:true,characterId:hero.id,characterName:hero.name,text,narration:reply.narration});
+   }
    if(req.headers['x-app-token']!==token)return json(res,{error:'Нужна локальная сессия приложения'},403);
   if(req.method==='GET'&&url.pathname==='/api/state')return json(res,state());
   if(req.method==='GET'&&url.pathname==='/api/archive'){const c=campaigns.find(x=>x.id===url.searchParams.get('id'));if(!c)throw Error('Кампания не найдена');const query=(url.searchParams.get('q')||'').slice(0,300);return json(res,{results:query?searchArchive({...c,dm:publicDM(c.dm)},query,20):c.journal.slice(-100),indexed:campaignStore.search(c.id,query)});}

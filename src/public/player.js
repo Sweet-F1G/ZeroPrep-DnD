@@ -41,6 +41,7 @@ const panels = {
 initTabs();
 initDiceControls();
 initMapControls();
+initPttControls();
 loadInitialState();
 connectSSE();
 
@@ -246,6 +247,7 @@ function getClassIcon(hero) {
 
 function renderActiveHero() {
   const hero = getActiveHero();
+  updatePttHero();
   if (!hero) return;
 
   // Name & Archetype
@@ -1077,4 +1079,285 @@ function escapeHtml(str) {
     '"': '&quot;',
     "'": '&#39;'
   })[m]);
+}
+
+// ----------------------------------------------------------------------------
+// Push-to-Talk (PTT) Mobile Voice Companion
+// ----------------------------------------------------------------------------
+let pttRecording = null;
+let pttRecordHeld = false;
+let pttBusy = false;
+
+function initPttControls() {
+  const pttBtn = document.getElementById('playerPttBtn');
+  const toggleBtn = document.getElementById('pttTextToggleBtn');
+  const sendTextBtn = document.getElementById('pttSendTextBtn');
+  const textInput = document.getElementById('pttTextInput');
+  const textRow = document.getElementById('pttTextInputRow');
+
+  if (pttBtn) {
+    pttBtn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      try { pttBtn.setPointerCapture(e.pointerId); } catch {}
+      startPttRecording();
+    });
+    pttBtn.addEventListener('pointerup', e => {
+      e.preventDefault();
+      stopPttRecording();
+    });
+    pttBtn.addEventListener('pointercancel', e => {
+      e.preventDefault();
+      stopPttRecording();
+    });
+    pttBtn.addEventListener('keydown', e => {
+      if ((e.code === 'Space' || e.key === 'Enter') && !e.repeat && !pttRecording) {
+        e.preventDefault();
+        startPttRecording();
+      }
+    });
+    pttBtn.addEventListener('keyup', e => {
+      if ((e.code === 'Space' || e.key === 'Enter') && pttRecording) {
+        e.preventDefault();
+        stopPttRecording();
+      }
+    });
+  }
+
+  if (toggleBtn && textRow) {
+    toggleBtn.addEventListener('click', () => {
+      const willShow = textRow.hidden;
+      textRow.hidden = !willShow;
+      if (willShow && textInput) {
+        textInput.focus();
+      }
+    });
+  }
+
+  if (sendTextBtn) {
+    sendTextBtn.addEventListener('click', () => {
+      sendPttTextAction();
+    });
+  }
+
+  if (textInput) {
+    textInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendPttTextAction();
+      }
+    });
+  }
+}
+
+function updatePttHero() {
+  const hero = getActiveHero();
+  const name = hero ? hero.name : '—';
+  const badge = document.getElementById('pttHeroBadgeName');
+  const btnText = document.getElementById('pttBtnText');
+  const status = document.getElementById('pttStatusText');
+  const textInput = document.getElementById('pttTextInput');
+  if (badge) badge.textContent = name;
+  if (btnText && !pttRecording && !pttBusy) {
+    btnText.textContent = hero ? `Говорить от лица: ${name}` : 'Удерживайте для хода';
+  }
+  if (status && !pttRecording && !pttBusy) {
+    status.textContent = 'Зажмите кнопку для хода';
+  }
+  if (textInput) {
+    textInput.placeholder = `Действие от лица ${name}...`;
+  }
+}
+
+function wav(chunks, sampleRate) {
+  const n = chunks.reduce((a, c) => a + c.length, 0);
+  const buffer = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buffer);
+  const str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, 'RIFF');
+  v.setUint32(4, 36 + n * 2, true);
+  str(8, 'WAVE');
+  str(12, 'fmt ');
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, sampleRate, true);
+  v.setUint32(28, sampleRate * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  str(36, 'data');
+  v.setUint32(40, n * 2, true);
+  let offset = 44;
+  for (const c of chunks) {
+    for (const s of c) {
+      v.setInt16(offset, Math.max(-1, Math.min(1, s)) * (s < 0 ? 32768 : 32767), true);
+      offset += 2;
+    }
+  }
+  return new Uint8Array(buffer);
+}
+
+async function startPttRecording() {
+  if (pttBusy || pttRecording) return;
+  const hero = getActiveHero();
+  if (!hero) {
+    showToast('Сначала выберите героя');
+    return;
+  }
+  pttRecordHeld = true;
+  let stream = null, ctx = null;
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error('Микрофон недоступен. Откройте в Safari или Chrome.');
+    }
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: false
+    });
+    if (!pttRecordHeld) {
+      stream.getTracks().forEach(t => t.stop());
+      return;
+    }
+    ctx = new AudioContext();
+    await ctx.resume();
+    const source = ctx.createMediaStreamSource(stream);
+    const processor = ctx.createScriptProcessor(4096, 1, 1);
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    const chunks = [];
+    processor.onaudioprocess = e => {
+      chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+    };
+    source.connect(processor);
+    processor.connect(gain);
+    gain.connect(ctx.destination);
+
+    pttRecording = {
+      stream, ctx, source, processor, gain, chunks,
+      rate: ctx.sampleRate,
+      hero,
+      startedAt: performance.now()
+    };
+
+    const pttBtn = document.getElementById('playerPttBtn');
+    const pttIcon = document.getElementById('pttBtnIcon');
+    const pttText = document.getElementById('pttBtnText');
+    const pttStatus = document.getElementById('pttStatusText');
+
+    if (pttBtn) pttBtn.classList.add('recording');
+    if (pttIcon) pttIcon.textContent = '🔴';
+    if (pttText) pttText.textContent = `Говорите за ${hero.name}...`;
+    if (pttStatus) pttStatus.textContent = 'Идёт запись... отпустите для отправки';
+
+    if (navigator.vibrate) navigator.vibrate(40);
+  } catch (e) {
+    stream?.getTracks().forEach(t => t.stop());
+    if (ctx) await ctx.close().catch(() => {});
+    pttRecordHeld = false;
+    showToast(e.name === 'NotAllowedError' ? 'Разрешите доступ к микрофону в настройках браузера' : (e.message || 'Ошибка микрофона'));
+  }
+}
+
+async function stopPttRecording() {
+  pttRecordHeld = false;
+  if (!pttRecording) return;
+  const r = pttRecording;
+  pttRecording = null;
+  r.processor.disconnect();
+  r.source.disconnect();
+  r.gain.disconnect();
+  r.stream.getTracks().forEach(t => t.stop());
+  await r.ctx.close().catch(() => {});
+
+  const pttBtn = document.getElementById('playerPttBtn');
+  const pttIcon = document.getElementById('pttBtnIcon');
+  const pttText = document.getElementById('pttBtnText');
+  const pttStatus = document.getElementById('pttStatusText');
+
+  if (pttBtn) pttBtn.classList.remove('recording');
+
+  const totalSamples = r.chunks.reduce((sum, c) => sum + c.length, 0);
+  if (totalSamples < r.rate * 0.25) {
+    updatePttHero();
+    showToast('Удерживайте кнопку и говорите фразу');
+    return;
+  }
+
+  pttBusy = true;
+  if (pttBtn) pttBtn.classList.add('busy');
+  if (pttIcon) pttIcon.textContent = '⏳';
+  if (pttText) pttText.textContent = 'Обработка Мастером...';
+  if (pttStatus) pttStatus.textContent = `Передаём ход Мастеру за ${r.hero.name}...`;
+
+  try {
+    const bytes = wav(r.chunks, r.rate);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 8192) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    }
+    const res = await fetch('/api/player/ptt', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        campaignId: campaign?.id,
+        characterId: r.hero.id,
+        audio: btoa(binary),
+        mime: 'audio/wav'
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Ошибка отправки хода');
+    }
+    const data = await res.json();
+    showToast(`✨ ${r.hero.name}: «${data.text}» отправлено!`);
+    if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+    await refreshCampaignState();
+  } catch (e) {
+    showToast(e.message || 'Не удалось передать ход');
+  } finally {
+    pttBusy = false;
+    if (pttBtn) pttBtn.classList.remove('busy');
+    if (pttIcon) pttIcon.textContent = '🎙️';
+    updatePttHero();
+  }
+}
+
+async function sendPttTextAction() {
+  const input = document.getElementById('pttTextInput');
+  const text = input?.value?.trim();
+  if (!text) return;
+  const hero = getActiveHero();
+  if (!hero) {
+    showToast('Сначала выберите героя');
+    return;
+  }
+  pttBusy = true;
+  const pttBtn = document.getElementById('playerPttBtn');
+  if (pttBtn) pttBtn.classList.add('busy');
+  showToast(`Отправляем ход за ${hero.name}...`);
+  try {
+    const res = await fetch('/api/player/turn', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        campaignId: campaign?.id,
+        characterId: hero.id,
+        text
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Ошибка отправки');
+    }
+    const data = await res.json();
+    input.value = '';
+    showToast(`✨ ${hero.name}: «${text}» отправлено!`);
+    await refreshCampaignState();
+  } catch (e) {
+    showToast(e.message || 'Не удалось передать ход');
+  } finally {
+    pttBusy = false;
+    if (pttBtn) pttBtn.classList.remove('busy');
+    updatePttHero();
+  }
 }

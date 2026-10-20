@@ -10,6 +10,8 @@ cat "$TASK_SRC/Keychain.swift" "$TASK_SRC/MacApp.swift" > "$TASK_STAGE/main.swif
 swiftc -O -module-cache-path "$TASK_CACHE" "$TASK_STAGE/main.swift" -o "$TASK_APP/Contents/MacOS/Skazitel" -framework Cocoa -framework WebKit -framework AVFoundation -framework CFNetwork -framework Security
 NODE_BIN="${SKAZITEL_NODE:-$(command -v node 2>/dev/null || echo "$TASK_OUT/Skazitel.app/Contents/Resources/node")}"
 cp -X "$NODE_BIN" "$TASK_APP/Contents/Resources/node"
+install_name_tool -add_rpath /opt/homebrew/lib "$TASK_APP/Contents/Resources/node" 2>/dev/null || true
+install_name_tool -add_rpath /usr/local/lib "$TASK_APP/Contents/Resources/node" 2>/dev/null || true
 for TASK_FILE in server.mjs audio-stream.mjs response-stream.mjs maps.mjs openai-context.mjs cost.mjs progression.mjs dm-state.mjs illustrations.mjs rules.mjs memory.mjs inventory.mjs actions.mjs prompts.mjs campaign-store.mjs engine.mjs session-zero.mjs providers.mjs credentials.mjs usage.mjs context.mjs delivery.mjs local-voice.mjs edge-voice.mjs edge-worker.py silero-worker.py voice_text.py package.json; do
   cp -X "$TASK_SRC/$TASK_FILE" "$TASK_APP/Contents/Resources/src/$TASK_FILE"
 done
@@ -51,11 +53,15 @@ cat > "$TASK_APP/Contents/Info.plist" <<'PLIST'
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
 PLIST
+chmod -R u+w "$TASK_APP"
 chmod +x "$TASK_APP/Contents/MacOS/Skazitel" "$TASK_APP/Contents/Resources/node"
-xattr -cr "$TASK_APP"
+xattr -cr "$TASK_APP" 2>/dev/null || true
+codesign --force --sign - "$TASK_APP/Contents/Resources/node"
 codesign --force --sign - "$TASK_APP"
 codesign --verify --deep --strict "$TASK_APP"
 rm -rf "$TASK_OUT/Skazitel.app"
 ditto --norsrc --noextattr "$TASK_APP" "$TASK_OUT/Skazitel.app"
 xattr -cr "$TASK_OUT/Skazitel.app" 2>/dev/null || true
+codesign --force --sign - "$TASK_OUT/Skazitel.app/Contents/Resources/node"
+codesign --force --sign - "$TASK_OUT/Skazitel.app"
 echo "Готово: $TASK_OUT/Skazitel.app"

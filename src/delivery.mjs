@@ -1,6 +1,19 @@
 import {randomUUID} from 'node:crypto';
 import {acceptReply} from './engine.mjs';
-export function narrationParts(text){return text.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«“])/u).map(s=>s.trim()).filter(Boolean).reduce((a,s)=>{if(s.length>650){const words=s.split(/\s+/);let part='';for(const w of words){if(part.length+w.length>600){a.push(part);part='';}part+=(part?' ':'')+w;}if(part)a.push(part);}else a.push(s);return a;},[]);}
+export function cleanNarrationForTTS(text){
+ if(!text)return '';
+ return String(text)
+  .replace(/\*\*([^*]+)\*\*/g,'$1')
+  .replace(/\*([^*]+)\*/g,'$1')
+  .replace(/#{1,6}\s*/g,'')
+  .replace(/^[\s*•-]+\s+/gm,'')
+  .replace(/`([^`]+)`/g,'$1')
+  .replace(/[ \t]+/g,' ')
+  .trim();
+}
+export function narrationParts(text){
+ const cleaned=cleanNarrationForTTS(text);
+ return cleaned.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«“])/u).map(s=>s.trim()).filter(Boolean).reduce((a,s)=>{if(s.length>650){const words=s.split(/\s+/);let part='';for(const w of words){if(part.length+w.length>600){a.push(part);part='';}part+=(part?' ':'')+w;}if(part)a.push(part);}else a.push(s);return a;},[]);}
 export function stageReply(c,reply){
  acceptReply(structuredClone(c),reply); // Validate the full protocol without committing consequences.
  const entry={id:randomUUID(),role:'assistant',text:'',at:new Date().toISOString()};c.journal.push(entry);
