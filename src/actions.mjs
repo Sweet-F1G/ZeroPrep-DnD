@@ -14,6 +14,13 @@ export function executeAction(c,action,sourceId){
   const id=String(ch.id||randomUUID()).slice(0,100);
   const h={id,name,description:String(ch.description||'Искатель приключений').slice(0,500),maxHp,hp:integer(ch.hp??maxHp,0,maxHp,'HP'),ac:integer(ch.ac??12,0,50,'КД'),...sheet(ch),...heroRecords(ch)};
   c.characters.push(h);text=`Создан герой: ${h.name} (${h.className||'Искатель приключений'}, HP ${h.hp}/${h.maxHp}, КД ${h.ac})`;
+  if(Array.isArray(ch.items)){
+   for(const it of ch.items){
+    if(it&&typeof it==='object'&&it.name){
+     try{executeAction(c,{type:'item.add',item:{...it,ownerId:h.id,carrierId:h.id}},sourceId);}catch{}
+    }
+   }
+  }
  }
  else if(action.type==='hero.delete'){
   const index=c.characters.findIndex(h=>h.id===action.characterId);if(index<0)throw Error('Герой не найден');
@@ -44,9 +51,11 @@ export function executeAction(c,action,sourceId){
  else if(action.type==='loot.claim')text=claimLoot(c,action.lootId);
  validateInventory(c);checkDeadlines(c);return text;
 }
+export const actionOrder={'hero.create':1,'hero.delete':2,'session.complete':3,'sheet.patch':4,'hero.record':4,'feature.learn':4,'spell.learn':4,'training.grant':4,'resource.add':4,'resource.configure':4,'item.add':5,'item.update':5,'item.equip':5,'item.transfer':5,'wallet.change':5};
 export function applyActions(c,actions,sourceId){
  if(!Array.isArray(actions)||!actions.length||actions.length>25)throw Error('От одного до двадцати пяти действий за раз');
- const draft=structuredClone(c),messages=actions.map(a=>executeAction(draft,a,sourceId));
+ const sorted=[...actions].sort((a,b)=>(actionOrder[a?.type]||10)-(actionOrder[b?.type]||10));
+ const draft=structuredClone(c),messages=sorted.map(a=>executeAction(draft,a,sourceId));
  Object.assign(c,draft);return messages;
 }
 export function proposeActions(c,actions,sourceId){

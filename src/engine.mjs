@@ -42,7 +42,16 @@ export function acceptReply(c,reply) {
  const draft=structuredClone(c);draft.journal.push(entry);
  const operations=reply.actions||[],automaticTypes=['sheet.patch','hero.record','hero.create','hero.delete','session.complete','feature.learn','feature.remove','spell.learn','spell.remove','training.grant','resource.add','resource.configure','resource.remove','item.add','item.consume','item.transfer','item.equip','item.update','item.store','item.buy','wallet.change','rest','time.advance','memory.add','memory.status','world.update','scene.update','resource.use','boundary.start','encounter.end','progression.award','map.update','map.remove'];
  if(!Array.isArray(operations)||operations.length>25)throw Error('Некорректный список операций');
- const automatic=operations.filter(a=>((c.dm?.autonomy==='full'&&a.type!=='dm.configure')||((c.dm?.autonomy||'automatic')==='automatic'&&automaticTypes.includes(a.type)))&&a.commit==='resolved'&&typeof a.reason==='string'&&a.reason.trim());
+ for(const a of operations){
+  if(a&&typeof a==='object'){
+   if(!a.reason||typeof a.reason!=='string'||!a.reason.trim())a.reason='Действие Мастера';
+   if(['hero.create','hero.delete','session.complete'].includes(a.type)||(c.sessionZero&&!c.sessionZero.complete)){
+    if(a.commit!=='proposed')a.commit='resolved';
+   }
+  }
+ }
+ const actionPriority={'hero.create':1,'hero.delete':2,'session.complete':3,'sheet.patch':4,'hero.record':4,'feature.learn':4,'spell.learn':4,'training.grant':4,'resource.add':4,'resource.configure':4,'item.add':5,'item.update':5,'item.equip':5,'item.transfer':5,'wallet.change':5};
+ const automatic=operations.filter(a=>((c.dm?.autonomy==='full'&&a.type!=='dm.configure')||((c.dm?.autonomy||'automatic')==='automatic'&&automaticTypes.includes(a.type)))&&a.commit==='resolved'&&typeof a.reason==='string'&&a.reason.trim()).sort((a,b)=>(actionPriority[a.type]||10)-(actionPriority[b.type]||10));
  if(reaction&&automatic.length)throw Error('До вмешательства нельзя применять последствия');
  const messages=automatic.length?applyActions(draft,automatic,entry.id):[];
  const actionProposals=proposeActions(draft,operations.filter(a=>!automatic.includes(a)),entry.id);
@@ -52,6 +61,7 @@ export function acceptReply(c,reply) {
  const nextActions=[...(c.actionProposals||[]),...actionProposals].filter((x,i,all)=>all.findIndex(y=>y.fingerprint===x.fingerprint)===i);
  if(nextActions.length>30)throw Error('Слишком много неподтверждённых действий: обработайте старые');
  Object.assign(c,draft);c.pending=pending;c.reaction=reaction;c.proposals=proposals;c.actionProposals=nextActions;
+ if(c.characters?.length&&c.sessionZero&&!c.sessionZero.complete&&operations.some(a=>['session.complete','scene.update','map.update'].includes(a?.type))){c.sessionZero.complete=true;}
  const hintState=availableHints(c);if(hintState.enabled&&Array.isArray(reply.tactical_hints)){const recent=c.journal.slice(-4).flatMap(e=>e.tacticalHints||[]).map(h=>h.text);entry.tacticalHints=reply.tactical_hints.slice(0,2).flatMap(v=>{if(!v||typeof v!=='object')return [];const h=c.characters.find(h=>h.id===v.characterId),text=String(v.text||'').slice(0,300);if(!h||!text||recent.includes(text))return [];if(v.resourceId&&!h.resources.some(r=>r.id===v.resourceId&&r.current>0))return [];if(v.featureId&&!h.features.some(f=>f.id===v.featureId))return [];if(v.spellId&&!h.spells.some(s=>s.id===v.spellId&&s.prepared&&spellAvailable(h,s,c)))return [];if(!v.resourceId&&!v.featureId&&!v.spellId&&v.kind!=='rule')return [];return [{characterId:h.id,text,...(v.resourceId?{resourceId:v.resourceId}:{}),...(v.featureId?{featureId:v.featureId}:{}),...(v.spellId?{spellId:v.spellId}:{})}];});}
  c.journal[c.journal.length-1]=entry;
 }

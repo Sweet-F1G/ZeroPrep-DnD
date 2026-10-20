@@ -92,6 +92,54 @@ test('hero.create, hero.delete and session.complete manage party dynamically', (
  });
  assert.equal(c.characters.length,2);
  assert.ok(c.inventory.some(i=>i.name==='Тяжёлый кузнечный молот'&&i.ownerId===c.characters[0].id));
+
+ // 6. Test inverted action order (item.add before hero.create) with fuzzy ownerId and safe fallback
+ const freshCampaign=makeCampaign({name:'Борьба за деревню'});
+ freshCampaign.characters=[];
+ freshCampaign.sessionZero={complete:false,step:0};
+ acceptReply(freshCampaign,{
+  narration:'Мастер создаёт героев и выдаёт им стартовые пожитки.',
+  actions:[
+   {
+    type:'item.add',
+    item:{name:'Серп друида',category:'weapon',ownerId:'Тихон'},
+    commit:'resolved',
+    reason:'Стартовое оружие'
+   },
+   {
+    type:'item.add',
+    item:{name:'Мешок картошки',category:'food',ownerId:'Неизвестный путник'},
+    commit:'resolved',
+    reason:'Общие припасы'
+   },
+   {
+    type:'hero.create',
+    character:{name:'Дед Тихон',className:'Друид',maxHp:14,ac:11},
+    commit:'resolved',
+    reason:'Генерация друида'
+   },
+   {
+    type:'hero.create',
+    character:{name:'Вакула Кузнец',className:'Воин',maxHp:16,ac:14},
+    commit:'resolved',
+    reason:'Генерация воина'
+   },
+   {
+    type:'scene.update',
+    scene:{name:'Деревенская площадь',description:'Солнце заливает пыльную дорогу'},
+    commit:'resolved',
+    reason:'Первая сцена'
+   }
+  ]
+ });
+ assert.equal(freshCampaign.characters.length,2);
+ assert.equal(freshCampaign.sessionZero.complete,true);
+ const sickle=freshCampaign.inventory.find(i=>i.name==='Серп друида');
+ assert.ok(sickle);
+ assert.equal(sickle.ownerId,freshCampaign.characters[0].id);
+ const potatoes=freshCampaign.inventory.find(i=>i.name==='Мешок картошки');
+ assert.ok(potatoes);
+ assert.equal(potatoes.ownerId,'group');
 });
 
 test('HTTP API: campaign deletion and session zero AI flow', async ()=>{
