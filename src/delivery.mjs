@@ -1,6 +1,139 @@
 import {randomUUID} from 'node:crypto';
 import {acceptReply} from './engine.mjs';
 
+const YO_EXACT_WORDS = [
+ [/(?<!\p{L})еще(?!\p{L})/giu, 'ещё'],
+ [/(?<!\p{L})мое(?!\p{L})/giu, 'моё'],
+ [/(?<!\p{L})твое(?!\p{L})/giu, 'твоё'],
+ [/(?<!\p{L})свое(?!\p{L})/giu, 'своё'],
+ [/(?<!\p{L})своем(?!\p{L})/giu, 'своём'],
+ [/(?<!\p{L})твоем(?!\p{L})/giu, 'твоём'],
+ [/(?<!\p{L})моем(?!\p{L})/giu, 'моём'],
+ [/(?<!\p{L})о нем(?!\p{L})/giu, 'о нём'],
+ [/(?<!\p{L})в нем(?!\p{L})/giu, 'в нём'],
+ [/(?<!\p{L})на нем(?!\p{L})/giu, 'на нём'],
+ [/(?<!\p{L})при нем(?!\p{L})/giu, 'при нём'],
+ [/(?<!\p{L})о чем(?!\p{L})/giu, 'о чём'],
+ [/(?<!\p{L})в чем(?!\p{L})/giu, 'в чём'],
+ [/(?<!\p{L})на чем(?!\p{L})/giu, 'на чём'],
+ [/(?<!\p{L})ни о чем(?!\p{L})/giu, 'ни о чём'],
+ [/(?<!\p{L})дождем(?!\p{L})/giu, 'дождём'],
+ [/(?<!\p{L})огнем(?!\p{L})/giu, 'огнём'],
+ [/(?<!\p{L})копьем(?!\p{L})/giu, 'копьём'],
+ [/(?<!\p{L})копье(?!\p{L})/giu, 'копьё'],
+ [/(?<!\p{L})ружьем(?!\p{L})/giu, 'ружьём'],
+ [/(?<!\p{L})ружье(?!\p{L})/giu, 'ружьё'],
+ [/(?<!\p{L})котел(?!\p{L})/giu, 'котёл'],
+ [/(?<!\p{L})костер(?!\p{L})/giu, 'костёр'],
+ [/(?<!\p{L})пес(?!\p{L})/giu, 'пёс'],
+ [/(?<!\p{L})лед(?!\p{L})/giu, 'лёд'],
+ [/(?<!\p{L})мед(?!\p{L})/giu, 'мёд'],
+ [/(?<!\p{L})слезы(?!\p{L})/giu, 'слёзы'],
+ [/(?<!\p{L})слезами(?!\p{L})/giu, 'слёзами'],
+ [/(?<!\p{L})колеса(?!\p{L})/giu, 'колёса'],
+ [/(?<!\p{L})колесами(?!\p{L})/giu, 'колёсами'],
+ [/(?<!\p{L})звезды(?!\p{L})/giu, 'звёзды'],
+ [/(?<!\p{L})звездами(?!\p{L})/giu, 'звёздами'],
+ [/(?<!\p{L})острие(?!\p{L})/giu, 'остриё'],
+ [/(?<!\p{L})чутье(?!\p{L})/giu, 'чутьё'],
+ [/(?<!\p{L})щелк(?!\p{L})/giu, 'щёлк'],
+ [/(?<!\p{L})шел(?!\p{L})/giu, 'шёл'],
+ [/(?<!\p{L})пошел(?!\p{L})/giu, 'пошёл'],
+ [/(?<!\p{L})пошла(?!\p{L})/giu, 'пошла'],
+ [/(?<!\p{L})пошло(?!\p{L})/giu, 'пошло'],
+ [/(?<!\p{L})пришел(?!\p{L})/giu, 'пришёл'],
+ [/(?<!\p{L})нашел(?!\p{L})/giu, 'нашёл'],
+ [/(?<!\p{L})обошел(?!\p{L})/giu, 'обошёл'],
+ [/(?<!\p{L})ушел(?!\p{L})/giu, 'ушёл'],
+ [/(?<!\p{L})зашел(?!\p{L})/giu, 'зашёл'],
+ [/(?<!\p{L})отошел(?!\p{L})/giu, 'отошёл'],
+ [/(?<!\p{L})подошел(?!\p{L})/giu, 'подошёл'],
+ [/(?<!\p{L})перешел(?!\p{L})/giu, 'перешёл']
+];
+
+const YO_STEMS = [
+ [/(?<!\p{L})черт([а-я]*)(?!\p{L})/giu, 'чёрт'],
+ [/(?<!\p{L})темн([оыаеую][йемухвм]?)(?!\p{L})/giu, 'тёмн'],
+ [/(?<!\p{L})мертв([оыаеую][йемухвм]?)(?!\p{L})/giu, 'мёртв'],
+ [/(?<!\p{L})тяжел([оыаеую][йемухвм]?)(?!\p{L})/giu, 'тяжёл'],
+ [/(?<!\p{L})желт([оыаеую][йемухвм]?)(?!\p{L})/giu, 'жёлт'],
+ [/(?<!\p{L})тепл([оыаеую][йемухвм]?)(?!\p{L})/giu, 'тёпл'],
+ [/(?<!\p{L})легк([оыаеую][йемухвм]?)(?!\p{L})/giu, 'лёгк'],
+ [/(?<!\p{L})зелен([оыаеую][йемухвм]?)(?!\p{L})/giu, 'зелён'],
+ [/(?<!\p{L})четк([оыаеую][йемухвм]?)(?!\p{L})/giu, 'чётк'],
+ [/(?<!\p{L})надежн([оыаеую][йемухвм]?)(?!\p{L})/giu, 'надёжн'],
+ [/(?<!\p{L})весел([оыаеую][йемухвм]?)(?!\p{L})/giu, 'весёл']
+];
+
+const VSE_PHRASES = [
+ [/(?<!\p{L})все равно(?!\p{L})/giu, 'всё равно'],
+ [/(?<!\p{L})все еще(?!\p{L})/giu, 'всё ещё'],
+ [/(?<!\p{L})все вокруг(?!\p{L})/giu, 'всё вокруг'],
+ [/(?<!\p{L})все это(?!\p{L})/giu, 'всё это'],
+ [/(?<!\p{L})вот и все(?!\p{L})/giu, 'вот и всё'],
+ [/(?<!\p{L})и все же(?!\p{L})/giu, 'и всё же'],
+ [/(?<!\p{L})все так же(?!\p{L})/giu, 'всё так же'],
+ [/(?<!\p{L})все кончено(?!\p{L})/giu, 'всё кончено'],
+ [/(?<!\p{L})все пропало(?!\p{L})/giu, 'всё пропало'],
+ [/(?<!\p{L})все хорошо(?!\p{L})/giu, 'всё хорошо'],
+ [/(?<!\p{L})все в порядке(?!\p{L})/giu, 'всё в порядке'],
+ [/(?<!\p{L})оно все(?!\p{L})/giu, 'оно всё'],
+ [/(?<!\p{L})это все(?!\p{L})/giu, 'это всё'],
+ [/(?<!\p{L})все (тихо|спокойно|темно|ясно|понятно|затихло|кончилось|прошло|сгорело|готово|впереди|позади)(?!\p{L})/giu, 'всё $1']
+];
+
+export function normalizeIntonationAndStressForTTS(text){
+ if(!text)return '';
+ let s=String(text);
+
+ // 1. Punctuation pauses and em-dash pacing
+ s=s
+  .replace(/--+/g,' — ')
+  .replace(/(?<=\S)\s+-\s+(?=\S)/gu,' — ')
+  .replace(/\.{2,}/g,'...')
+  .replace(/\.{3}(?=[А-ЯЁа-яёA-Za-z«“])/gu,'... ')
+  .replace(/(?<=[,;:!?])(?=[^\s\d,;:!?»”\)])/gu,' ')
+  .replace(/\s+([,;:.!?»”])/gu,'$1');
+
+ // 2. Common unambiguous phrases with "всё"
+ for(const [re,rep] of VSE_PHRASES){
+  if(rep.includes('$1')){
+   s=s.replace(re,(match,p1)=>{
+    const isCap=match[0]===match[0].toUpperCase();
+    return (isCap?'Всё ':'всё ')+p1;
+   });
+  }else{
+   s=s.replace(re,match=>{
+    if(match[0]===match[0].toUpperCase()){
+     return rep[0].toUpperCase()+rep.slice(1);
+    }
+    return rep;
+   });
+  }
+ }
+
+ // 3. Stems with grammatical endings
+ for(const [re,rep] of YO_STEMS){
+  s=s.replace(re,(match,ending)=>{
+   const isCap=match[0]===match[0].toUpperCase();
+   const stem=isCap?(rep[0].toUpperCase()+rep.slice(1)):rep;
+   return stem+ending;
+  });
+ }
+
+ // 4. Exact words with "ё" (guarantees accurate stress in OpenAI TTS)
+ for(const [re,rep] of YO_EXACT_WORDS){
+  s=s.replace(re,match=>{
+   if(match[0]===match[0].toUpperCase()){
+    return rep[0].toUpperCase()+rep.slice(1);
+   }
+   return rep;
+  });
+ }
+
+ return s.trim();
+}
+
 export function cleanNarrationForTTS(text){
  if(!text)return '';
  let s = String(text)
@@ -19,7 +152,7 @@ export function cleanNarrationForTTS(text){
   .replace(/[ \t]+/g,' ')
   .trim();
 
- return s;
+ return normalizeIntonationAndStressForTTS(s);
 }
 
 export function extractSpeaker(text) {
@@ -60,9 +193,19 @@ export function narrationParts(text){
    const speech = tagMatch[2].trim();
    if (!speech) continue;
    
-   const sentences = speech.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«“])/u).map(s => s.trim()).filter(Boolean);
+   const sentences = speech.split(/(?<=[.!?…][»"”]?)\s+(?=[А-ЯЁA-Z«“])/u).map(s => s.trim()).filter(Boolean);
+   let inQuotes = speech.startsWith('«') || speech.startsWith('"') || speech.startsWith('“');
+   let quoteClosed = false;
+
    for (const sent of sentences) {
-    parts.push(`[${speaker}] ${sent}`);
+    if (quoteClosed) {
+     parts.push(sent);
+    } else {
+     parts.push(`[${speaker}] ${sent}`);
+     if (inQuotes && (sent.endsWith('»') || sent.endsWith('"') || sent.endsWith('”') || sent.includes('»') || sent.includes('”'))) {
+      quoteClosed = true;
+     }
+    }
    }
    continue;
   }

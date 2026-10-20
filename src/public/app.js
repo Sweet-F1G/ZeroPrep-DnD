@@ -468,8 +468,16 @@ function splitNarration(text){
   if(tagMatch){
    const speaker=tagMatch[1].trim(),speech=tagMatch[2].trim();
    if(!speech)continue;
-   const sents=speech.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«“])/u).map(s=>s.trim()).filter(Boolean);
-   for(const s of sents)parts.push(`[${speaker}] ${s}`);
+   const sents=speech.split(/(?<=[.!?…][»"”]?)\s+(?=[А-ЯЁA-Z«“])/u).map(s=>s.trim()).filter(Boolean);
+   let inQuotes=speech.startsWith('«')||speech.startsWith('"')||speech.startsWith('“');
+   let quoteClosed=false;
+   for(const s of sents){
+    if(quoteClosed){parts.push(s);}
+    else{
+     parts.push(`[${speaker}] ${s}`);
+     if(inQuotes&&(s.endsWith('»')||s.endsWith('"')||s.endsWith('”')||s.includes('»')||s.includes('”'))){quoteClosed=true;}
+    }
+   }
    continue;
   }
   const sents=line.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«“—])/u).map(s=>s.trim()).filter(Boolean);

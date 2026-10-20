@@ -5,7 +5,7 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import https from 'node:https';
 import os from 'node:os';
 import path from 'node:path';
-import {cleanNarrationForTTS,resolveOpenAiVoice,resolveEdgeVoice,extractSpeaker,narrationParts} from '../delivery.mjs';
+import {cleanNarrationForTTS,resolveOpenAiVoice,resolveEdgeVoice,extractSpeaker,narrationParts,normalizeIntonationAndStressForTTS} from '../delivery.mjs';
 import {buildSystem,ttsVoiceSystem,coreSystem} from '../prompts.mjs';
 
 test('cleanNarrationForTTS cleans markdown symbols while keeping dramatic pauses and punctuation', () => {
@@ -32,6 +32,24 @@ test('cleanNarrationForTTS strips speaker prefixes so names are never read aloud
   assert.equal(cleanNarrationForTTS('Фёдор: Ну и пошло оно всё!'), 'Ну и пошло оно всё!');
   assert.equal(cleanNarrationForTTS('[speaker:Марта]: Да точно, бабушка права.'), 'Да точно, бабушка права.');
   assert.equal(cleanNarrationForTTS('«Марта: Да точно!»'), 'Да точно!');
+});
+
+test('normalizeIntonationAndStressForTTS fixes punctuation, pauses, and auto-yoifies for correct OpenAI TTS stress', () => {
+  const raw = 'Черт возьми,он еще не пришел?--шепчет Марта..В темном лесу потрескивает костер,а на острие копья блестит лед.';
+  const normalized = normalizeIntonationAndStressForTTS(raw);
+  assert.equal(normalized.includes('Чёрт'), true);
+  assert.equal(normalized.includes('ещё'), true);
+  assert.equal(normalized.includes('пришёл'), true);
+  assert.equal(normalized.includes('тёмном'), true);
+  assert.equal(normalized.includes('костёр'), true);
+  assert.equal(normalized.includes('остриё'), true);
+  assert.equal(normalized.includes('лёд'), true);
+  assert.equal(normalized.includes(' — '), true);
+  assert.equal(normalized.includes('...'), true);
+
+  // Auto-yoifies ambiguous "все" when part of standard phrases
+  assert.equal(cleanNarrationForTTS('Фёдор: Ну и пошло оно все!'), 'Ну и пошло оно всё!');
+  assert.equal(cleanNarrationForTTS('Марта: Все равно ничего не видно...'), 'Всё равно ничего не видно...');
 });
 
 test('narrationParts preserves speaker across multi-sentence dialogue without saying names aloud', () => {
