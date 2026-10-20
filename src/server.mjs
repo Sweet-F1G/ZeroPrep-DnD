@@ -316,8 +316,15 @@ const server=http.createServer(async(req,res)=>{
     const audio=await edgeSpeech(String(b.text||''),voice);
     res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store'});return res.end(audio);
    }
-   if(config.ttsProvider!=='openai')throw Error('Выберите Edge, Silero или OpenAI для серверного озвучивания.');
-   await keysReady;const audio=await speech(config,keys,String(b.text||''),observe);res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store'});return res.end(audio);
+   if(config.ttsProvider==='openai'||b.preview==='openai'){
+    await keysReady;
+    const ttsCfg={...config};
+    if(b.preview==='openai'&&b.voice)ttsCfg.voice=b.voice;
+    if(b.preview==='openai'&&b.ttsModel)ttsCfg.ttsModel=b.ttsModel;
+    const audio=await speech(ttsCfg,keys,String(b.text||''),observe);
+    res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store'});return res.end(audio);
+   }
+   throw Error('Выберите Edge, Silero или OpenAI для серверного озвучивания.');
   }
   if(url.pathname==='/api/live-start'){
    if(config.voicePipeline!=='live')throw Error('Выберите режим Live в настройках');

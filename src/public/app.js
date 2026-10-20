@@ -73,6 +73,7 @@ async function refresh(){state=await api('state');if(!current())activeId=state.c
 function stopVoice(){speechPrefetch.clear();activeSpeechRequest?.abort();activeSpeechRequest=null;speechDone?.(false);speechDone=null;speechVersion++;voiceActive=false;ambientEngine.setDucked(false);if(currentAudio){currentAudio.pause();currentAudio.remove();currentAudio=null;}if(currentAudioURL){URL.revokeObjectURL(currentAudioURL);currentAudioURL=null;}window.speechSynthesis?.cancel();window.webkit?.messageHandlers?.nativeVoice?.postMessage({stop:true});if(state)renderListening();}
 async function loadSpeech(text,preview,signal){
  const isEdgePreview=preview&&(preview.startsWith('ru-RU-')||preview==='edge');
+ const isOpenAIPreview=preview&&(preview.startsWith('openai:')||['onyx','fable','echo','alloy','nova','shimmer'].includes(preview));
  if(!preview&&(state.config.ttsProvider==='openai'||state.config.ttsProvider==='edge')){
   const r=await fetch('/api/speech-prepare',{method:'POST',signal,headers:{'Content-Type':'application/json','x-app-token':token},body:JSON.stringify({text})});
   if(!r.ok)throw Error((await r.json()).error);const prepared=await r.json();
@@ -83,14 +84,16 @@ async function loadSpeech(text,preview,signal){
   const audio=await fetch(prepared.url,{signal});if(!audio.ok)throw Error('Не удалось получить аудио: HTTP '+audio.status);
   const blob=await audio.blob();if(!blob.size)throw Error('Сервис вернул пустое аудио');return blob;
  }
- const r=await fetch('/api/speech',{method:'POST',signal,headers:{'Content-Type':'application/json','x-app-token':token},body:JSON.stringify({text,...(isEdgePreview?{preview:'edge',voice:preview}:preview?{preview:'silero',speaker:preview}:{})})});
+ const voiceParam=isEdgePreview?{preview:'edge',voice:preview}:isOpenAIPreview?{preview:'openai',voice:preview.replace(/^openai:/,''),ttsModel:$('settingsForm')?.elements?.ttsModel?.value||'tts-1'}:preview?{preview:'silero',speaker:preview}:{};
+ const r=await fetch('/api/speech',{method:'POST',signal,headers:{'Content-Type':'application/json','x-app-token':token},body:JSON.stringify({text,...voiceParam})});
  if(!r.ok)throw Error((await r.json()).error);return r.blob();
 }
 async function speak(text,preview=null,delivery=null){
  if(liveDelegating)return true;
  const prepared=delivery?speechPrefetch.take(delivery.key):null;
  const isEdgePreview=preview&&(preview.startsWith('ru-RU-')||preview==='edge');
- stopVoice();const version=speechVersion,provider=isEdgePreview?'edge':preview?'silero':state.config.ttsProvider;if(provider==='off')return true;
+ const isOpenAIPreview=preview&&(preview.startsWith('openai:')||['onyx','fable','echo','alloy','nova','shimmer'].includes(preview));
+ stopVoice();const version=speechVersion,provider=isEdgePreview?'edge':isOpenAIPreview?'openai':preview?'silero':state.config.ttsProvider;if(provider==='off')return true;
  voiceActive=true;ambientEngine.setDucked(true);renderListening();
  const completed=new Promise(resolve=>{speechDone=resolve;});
  try{
@@ -104,6 +107,7 @@ async function speak(text,preview=null,delivery=null){
    if(version===speechVersion&&delivery?.nextText)speechPrefetch.warm(delivery.nextKey,delivery.nextText);
    if(preview){
     if(isEdgePreview)$('edgeStatus').textContent='Воспроизводится выбранный голос Edge.';
+    else if(isOpenAIPreview)$('openaiStatus').textContent='Воспроизводится выбранный голос OpenAI.';
     else $('sileroStatus').textContent='Воспроизводится выбранный голос Silero.';
    }
   }else if(window.webkit?.messageHandlers?.nativeVoice){window.webkit.messageHandlers.nativeVoice.postMessage({text,speechId:version});}
@@ -111,7 +115,7 @@ async function speak(text,preview=null,delivery=null){
    if(!window.speechSynthesis)throw Error('Системный голос недоступен');
    const u=new SpeechSynthesisUtterance(text);u.lang='ru-RU';u.onend=()=>voiceFinished(version);u.onerror=()=>voiceFinished(version,false);speechSynthesis.speak(u);
   }
- }catch(e){if(version===speechVersion){voiceFinished(version,false);toast('Озвучивание: '+e.message);if(preview){if(isEdgePreview)$('edgeStatus').textContent=e.message;else $('sileroStatus').textContent=e.message;}}}
+ }catch(e){if(version===speechVersion){voiceFinished(version,false);toast('Озвучивание: '+e.message);if(preview){if(isEdgePreview)$('edgeStatus').textContent=e.message;else if(isOpenAIPreview)$('openaiStatus').textContent=e.message;else $('sileroStatus').textContent=e.message;}}}
  return completed;
 }
 async function cancelDelivery(){
@@ -177,7 +181,8 @@ function voiceControls(){
  $('reserveNote').hidden=!sharedGroq;
  $('sttKeyNote').textContent=(stt==='groq'&&sharedGroq?'Ведущий и распознавание используют список ключей Groq. ':'')+'Запись отправляется в выбранный сервис; на диск она не сохраняется.';
  $('sileroControls').hidden=live||tts!=='silero';f.elements.sileroSpeaker.disabled=tts!=='silero';
- $('testSilero').disabled=!state.localVoice?.installed;show('ttsModel',!live&&tts==='openai');show('voice',!live&&tts==='openai');
+ $('testSilero').disabled=!state.localVoice?.installed;
+ $('openaiControls').hidden=live||tts!=='openai';if(f.elements.voice)f.elements.voice.disabled=tts!=='openai';if(f.elements.ttsModel)f.elements.ttsModel.disabled=tts!=='openai';
  $('sileroStatus').textContent=state.localVoice?.installed?'Silero установлен. Озвучивание на вашем компьютере, без API-ключа.':'Silero пока не установлен: нужна папка LocalVoice рядом с приложением.';
  $('edgeControls').hidden=live||tts!=='edge';if(f.elements.edgeVoice)f.elements.edgeVoice.disabled=tts!=='edge';
  const names={demo:'Учебный режим',openai:'OpenAI',gemini:'Gemini',compatible:sharedGroq?'Groq':'Совместимый API',groq:'Groq Whisper',silero:'Silero локально',edge:'Edge Neural онлайн',system:'Системный голос',off:'Без озвучивания'};
@@ -224,6 +229,7 @@ $('settingsForm').elements.imageProvider.onchange=voiceControls;
 $('settingsForm').elements.ttsProvider.onchange=e=>{const f=$('settingsForm');if(e.target.value==='openai'&&(!f.elements.ttsModel.value||f.elements.ttsModel.value==='gpt-4o-mini-tts'))f.elements.ttsModel.value='tts-1';voiceControls();};
 $('testSilero').onclick=async()=>{$('testSilero').disabled=true;$('sileroStatus').textContent='Готовим голос… Первая загрузка может занять несколько секунд.';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.sileroSpeaker.value);}finally{$('testSilero').disabled=false;}};
 $('testEdge').onclick=async()=>{$('testEdge').disabled=true;$('edgeStatus').textContent='Связываемся с нейросетью Edge…';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.edgeVoice.value);$('edgeStatus').textContent='Озвучено нейросетью Edge. Без ключей и оплаты.';}catch(err){$('edgeStatus').textContent='Ошибка Edge TTS: '+err.message;}finally{$('testEdge').disabled=false;}};
+$('testOpenAI').onclick=async()=>{$('testOpenAI').disabled=true;$('openaiStatus').textContent='Связываемся с OpenAI…';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?','openai:'+$('settingsForm').elements.voice.value);$('openaiStatus').textContent='Озвучено выбранным голосом OpenAI ('+$('settingsForm').elements.voice.value+').';}catch(err){$('openaiStatus').textContent='Ошибка OpenAI TTS: '+err.message;}finally{$('testOpenAI').disabled=false;}};
 $('settingsForm').elements.provider.onchange=e=>{const f=$('settingsForm');const presets={openai:['gpt-6-luna','https://api.openai.com/v1'],gemini:['gemini-2.0-flash','https://generativelanguage.googleapis.com'],compatible:['','https://openrouter.ai/api/v1']};if(presets[e.target.value]){[f.elements.model.value,f.elements.baseUrl.value]=presets[e.target.value];}if(e.target.value==='openai'){f.elements.reasoningEffort.value='low';$('keyPools').querySelector('[data-pool="openai"]').open=true;}voiceControls();};
 $('settingsForm').elements.sttProvider.onchange=e=>{$('settingsForm').elements.sttModel.value=({gemini:'gemini-2.0-flash',groq:'whisper-large-v3-turbo',openai:'gpt-4o-mini-transcribe'})[e.target.value];voiceControls();};
 $('settingsForm').elements.baseUrl.oninput=voiceControls;
@@ -565,7 +571,7 @@ document.addEventListener('change',event=>{
  row.querySelector('[data-resource="recovery"] option[value="manual"]').textContent=boundary==='none'?'Только вручную':'По событию, указанному ниже';
 });
 
-$('testVoice').onclick=async()=>{const button=$('testVoice');button.disabled=true;$('testVoiceStatus').textContent='Проверяем сохранённый голос…';try{if(state.config.ttsProvider==='off')throw Error('Выбран режим без озвучки. Сначала выберите голос и сохраните настройки.');const ok=await speak('Проверка. Голос Сказителя работает.');$('testVoiceStatus').textContent=ok?'✓ Аудио воспроизведено до конца':'Воспроизведение остановлено или завершилось с ошибкой';}catch(error){$('testVoiceStatus').textContent=error.message;}finally{button.disabled=false;}};
+$('testVoice').onclick=async()=>{const button=$('testVoice');button.disabled=true;$('testVoiceStatus').textContent='Проверяем голос…';try{const f=$('settingsForm'),tts=f.elements.ttsProvider.value;if(tts==='off')throw Error('Выбран режим без озвучки. Сначала выберите голос.');let previewParam=null;if(tts==='edge')previewParam=f.elements.edgeVoice.value;else if(tts==='openai')previewParam='openai:'+f.elements.voice.value;else if(tts==='silero')previewParam=f.elements.sileroSpeaker.value;const ok=await speak('Проверка. Голос Сказителя работает.',previewParam);$('testVoiceStatus').textContent=ok?'✓ Аудио воспроизведено до конца':'Воспроизведение остановлено или завершилось с ошибкой';}catch(error){$('testVoiceStatus').textContent=error.message;}finally{button.disabled=false;}};
 
 let tacticalHudOpen = false;
 let activeHudTab = 'map';
