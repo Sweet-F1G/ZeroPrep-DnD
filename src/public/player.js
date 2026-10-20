@@ -1088,31 +1088,127 @@ let pttRecording = null;
 let pttRecordHeld = false;
 let pttBusy = false;
 
+const hasMediaDevices = !!(
+  (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ||
+  (typeof navigator !== 'undefined' && (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia))
+);
+
 function initPttControls() {
   const pttBtn = document.getElementById('playerPttBtn');
   const toggleBtn = document.getElementById('pttTextToggleBtn');
   const sendTextBtn = document.getElementById('pttSendTextBtn');
   const textInput = document.getElementById('pttTextInput');
   const textRow = document.getElementById('pttTextInputRow');
+  const audioInput = document.getElementById('playerAudioInput');
+
+  if (audioInput) {
+    audioInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      audioInput.value = '';
+      if (!file) return;
+
+      const hero = getActiveHero();
+      if (!hero) {
+        showToast('Сначала выберите героя');
+        return;
+      }
+
+      pttBusy = true;
+      const pttBtn = document.getElementById('playerPttBtn');
+      const pttIcon = document.getElementById('pttBtnIcon');
+      const pttText = document.getElementById('pttBtnText');
+      const pttStatus = document.getElementById('pttStatusText');
+
+      if (pttBtn) pttBtn.classList.add('busy');
+      if (pttIcon) pttIcon.textContent = '⏳';
+      if (pttText) pttText.textContent = 'Обработка записи...';
+      if (pttStatus) pttStatus.textContent = `Распознавание речи для ${hero.name}...`;
+
+      try {
+        showToast('Аудио получено, расшифровываем...');
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const res = String(reader.result || '');
+            const idx = res.indexOf('base64,');
+            resolve(idx !== -1 ? res.substring(idx + 7) : res);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        const mime = file.type || (file.name?.endsWith('.m4a') ? 'audio/mp4' : 'audio/wav');
+        const res = await fetch('/api/player/ptt', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            campaignId: campaign?.id,
+            characterId: hero.id,
+            audio: base64,
+            mime
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Ошибка отправки хода');
+        }
+
+        const data = await res.json();
+        showToast(`✨ ${hero.name}: «${data.text}» отправлено!`);
+        if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+        await refreshCampaignState();
+      } catch (err) {
+        showToast(err.message || 'Не удалось передать ход');
+      } finally {
+        pttBusy = false;
+        if (pttBtn) pttBtn.classList.remove('busy');
+        if (pttIcon) pttIcon.textContent = '🎙️';
+        updatePttHero();
+      }
+    });
+  }
 
   if (pttBtn) {
+    // Click listener: on mobile HTTP (where browser blocks getUserMedia on non-localhost/non-https), trigger native recorder
+    pttBtn.addEventListener('click', e => {
+      if (!hasMediaDevices) {
+        e.preventDefault();
+        const hero = getActiveHero();
+        if (!hero) {
+          showToast('Сначала выберите героя');
+          return;
+        }
+        if (pttBusy) return;
+        const input = document.getElementById('playerAudioInput');
+        if (input) input.click();
+      }
+    });
+
     pttBtn.addEventListener('pointerdown', e => {
+      if (!hasMediaDevices) return;
       e.preventDefault();
       try { pttBtn.setPointerCapture(e.pointerId); } catch {}
       startPttRecording();
     });
     pttBtn.addEventListener('pointerup', e => {
+      if (!hasMediaDevices) return;
       e.preventDefault();
       stopPttRecording();
     });
     pttBtn.addEventListener('pointercancel', e => {
+      if (!hasMediaDevices) return;
       e.preventDefault();
       stopPttRecording();
     });
     pttBtn.addEventListener('keydown', e => {
       if ((e.code === 'Space' || e.key === 'Enter') && !e.repeat && !pttRecording) {
         e.preventDefault();
-        startPttRecording();
+        if (hasMediaDevices) {
+          startPttRecording();
+        } else {
+          document.getElementById('playerAudioInput')?.click();
+        }
       }
     });
     pttBtn.addEventListener('keyup', e => {
@@ -1158,10 +1254,18 @@ function updatePttHero() {
   const textInput = document.getElementById('pttTextInput');
   if (badge) badge.textContent = name;
   if (btnText && !pttRecording && !pttBusy) {
-    btnText.textContent = hero ? `Говорить от лица: ${name}` : 'Удерживайте для хода';
+    if (hasMediaDevices) {
+      btnText.textContent = hero ? `Говорить от лица: ${name}` : 'Удерживайте для хода';
+    } else {
+      btnText.textContent = hero ? `Голос от лица: ${name}` : 'Нажмите для записи';
+    }
   }
   if (status && !pttRecording && !pttBusy) {
-    status.textContent = 'Зажмите кнопку для хода';
+    if (hasMediaDevices) {
+      status.textContent = 'Зажмите кнопку для хода';
+    } else {
+      status.textContent = 'Нажмите кнопку для записи через микрофон (или ✏️ текстом)';
+    }
   }
   if (textInput) {
     textInput.placeholder = `Действие от лица ${name}...`;
@@ -1203,13 +1307,21 @@ async function startPttRecording() {
     showToast('Сначала выберите героя');
     return;
   }
+
+  const getUM = (navigator.mediaDevices && navigator.mediaDevices.getUserMedia?.bind(navigator.mediaDevices))
+    || navigator.getUserMedia?.bind(navigator)
+    || navigator.webkitGetUserMedia?.bind(navigator)
+    || navigator.mozGetUserMedia?.bind(navigator);
+
+  if (!getUM) {
+    document.getElementById('playerAudioInput')?.click();
+    return;
+  }
+
   pttRecordHeld = true;
   let stream = null, ctx = null;
   try {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      throw new Error('Микрофон недоступен. Откройте в Safari или Chrome.');
-    }
-    stream = await navigator.mediaDevices.getUserMedia({
+    stream = await getUM({
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       video: false
     });
@@ -1217,7 +1329,8 @@ async function startPttRecording() {
       stream.getTracks().forEach(t => t.stop());
       return;
     }
-    ctx = new AudioContext();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    ctx = new AudioContextClass();
     await ctx.resume();
     const source = ctx.createMediaStreamSource(stream);
     const processor = ctx.createScriptProcessor(4096, 1, 1);
@@ -1253,7 +1366,12 @@ async function startPttRecording() {
     stream?.getTracks().forEach(t => t.stop());
     if (ctx) await ctx.close().catch(() => {});
     pttRecordHeld = false;
-    showToast(e.name === 'NotAllowedError' ? 'Разрешите доступ к микрофону в настройках браузера' : (e.message || 'Ошибка микрофона'));
+    if (e.name === 'NotAllowedError' || e.name === 'SecurityError' || e.name === 'TypeError') {
+      showToast('Прямой доступ ограничен браузером, открываем запись…');
+      document.getElementById('playerAudioInput')?.click();
+    } else {
+      showToast(e.message || 'Ошибка микрофона');
+    }
   }
 }
 

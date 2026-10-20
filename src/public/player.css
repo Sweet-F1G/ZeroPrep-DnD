@@ -1406,7 +1406,7 @@ body {
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  touch-action: none;
+  touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
   transition: all 0.15s ease;

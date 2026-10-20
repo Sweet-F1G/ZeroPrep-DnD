@@ -133,6 +133,36 @@ test('LAN Companion: /api/player/ptt and /api/player/turn dispatch action for th
 
     assert.ok(journalTexts.some(t => t.startsWith('Альвари: Я тихо подкрадываюсь')));
     assert.ok(journalTexts.some(t => t.startsWith('Теон: Я достаю гаечный ключ')));
+
+    // 6. Mobile audio format check: verify audio/m4a and audio/aac are accepted by MIME validator
+    const invalidMimeRes = await fetch(base + '/api/player/ptt', {
+      method: 'POST',
+      headers: { 'x-player-token': 'player-secret', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        campaignId,
+        characterId: alvari.id,
+        audio: Buffer.from('RIFF....WAVEfmt ').toString('base64'),
+        mime: 'application/pdf'
+      })
+    });
+    assert.equal(invalidMimeRes.status, 400);
+    const invalidErr = await invalidMimeRes.json();
+    assert.match(invalidErr.error, /Неподдерживаемый аудиоформат/);
+
+    // Empty audio is rejected cleanly
+    const emptyAudioRes = await fetch(base + '/api/player/ptt', {
+      method: 'POST',
+      headers: { 'x-player-token': 'player-secret', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        campaignId,
+        characterId: alvari.id,
+        audio: '',
+        mime: 'audio/m4a'
+      })
+    });
+    assert.equal(emptyAudioRes.status, 400);
+    const emptyErr = await emptyAudioRes.json();
+    assert.match(emptyErr.error, /Опишите действие героя/);
   } finally {
     if (child && !child.killed) await stop();
     await rm(dir, { recursive: true, force: true });

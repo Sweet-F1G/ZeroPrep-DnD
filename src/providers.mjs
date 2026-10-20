@@ -376,7 +376,8 @@ export async function transcribe(config,keys,audio,mime,names=[],observe) {
  }
  const groq=config.sttProvider==='groq';
  const hint=('Настольная игра Dungeons and Dragons. Русская речь. Имена персонажей: '+names.slice(0,6).join(', ')+'. Броски d20.').slice(0,350);
- const form=new FormData();form.append('file',new Blob([audio],{type:mime}),'speech.'+(mime.includes('wav')?'wav':mime.includes('mp4')?'m4a':'webm'));form.append('model',config.sttModel);form.append('language','ru');form.append('prompt',hint);form.append('response_format','json');
+ let ext='wav';if(mime.includes('mp4')||mime.includes('m4a')||mime.includes('aac'))ext='m4a';else if(mime.includes('webm'))ext='webm';else if(mime.includes('mpeg')||mime.includes('mp3'))ext='mp3';else if(mime.includes('ogg'))ext='ogg';
+ const form=new FormData();form.append('file',new Blob([audio],{type:mime}),'speech.'+ext);form.append('model',config.sttModel);form.append('language','ru');form.append('prompt',hint);form.append('response_format','json');
  const r=await pooledRemote(config,keys,groq?'groq':'openai',groq?'https://api.groq.com/openai/v1/audio/transcriptions':'https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{},body:form},log);const result=await readJSON(r,log);if(typeof result.text!=='string')throw Error('Сервис распознавания не вернул текст. Повторите запись.');return result.text.trim();
 }
 export async function speech(config,keys,text,observe) {

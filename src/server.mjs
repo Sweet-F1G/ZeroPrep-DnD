@@ -218,8 +218,14 @@ const server=http.createServer(async(req,res)=>{
      await keysReady;
      const audioBuf=Buffer.from(String(b.audio||''),'base64');
      if(!audioBuf.length)throw Error('Пустая запись с микрофона');
-     const mime=b.mime||'audio/wav';
-     if(!['audio/wav','audio/webm','audio/mp4'].includes(mime))throw Error('Неподдерживаемый аудиоформат');
+     let mime=String(b.mime||'audio/wav').toLowerCase().split(';')[0].trim();
+     if(mime.includes('m4a')||mime.includes('aac')||mime.includes('mp4')||mime.includes('3gp')) mime='audio/mp4';
+     else if(mime.includes('webm')) mime='audio/webm';
+     else if(mime.includes('mpeg')||mime.includes('mp3')) mime='audio/mpeg';
+     else if(mime.includes('ogg')) mime='audio/ogg';
+     else if(mime.includes('wav')) mime='audio/wav';
+     else if(mime.startsWith('audio/')||mime.startsWith('video/')) mime='audio/mp4';
+     else throw Error('Неподдерживаемый аудиоформат: '+mime);
      const names=c.characters.map(x=>x.name);
      costSensitive=true;costRequests++;
      try{
