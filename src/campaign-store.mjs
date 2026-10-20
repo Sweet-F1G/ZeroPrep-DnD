@@ -31,7 +31,8 @@ export async function createCampaignStore(directory){
   if(raw!==undefined){const backups=path.join(directory,'Backups');await fs.mkdir(backups,{recursive:true});await fs.writeFile(path.join(backups,'campaigns-before-sqlite-'+Date.now()+'.json'),raw,{mode:0o600,flag:'wx'});}
   writeCampaigns(legacy);transaction(()=>{db.prepare("INSERT OR REPLACE INTO metadata VALUES('schema','1')").run();db.prepare("INSERT OR REPLACE INTO metadata VALUES('migrated','1')").run();});
  }else{
-  try{const raw=await fs.readFile(path.join(directory,'campaigns.json'),'utf8'),fromJson=JSON.parse(raw);if(Array.isArray(fromJson)&&fromJson.length)writeCampaigns(fromJson);}catch{}
+  const hasData=Number(db.prepare('SELECT count(*) AS n FROM campaigns').get().n)>0;
+  if(!hasData){try{const raw=await fs.readFile(path.join(directory,'campaigns.json'),'utf8'),fromJson=JSON.parse(raw);if(Array.isArray(fromJson)&&fromJson.length)writeCampaigns(fromJson);}catch{}}
  }
  const load=()=>db.prepare('SELECT data FROM campaigns ORDER BY rowid').all().map(r=>JSON.parse(r.data));
  return {

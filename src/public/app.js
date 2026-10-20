@@ -72,7 +72,8 @@ function render(){
 async function refresh(){state=await api('state');if(!current())activeId=state.campaigns.find(c=>c.id===state.config.activeCampaignId)?.id||state.campaigns[0]?.id;render();scrollToLatest();}
 function stopVoice(){speechPrefetch.clear();activeSpeechRequest?.abort();activeSpeechRequest=null;speechDone?.(false);speechDone=null;speechVersion++;voiceActive=false;ambientEngine.setDucked(false);if(currentAudio){currentAudio.pause();currentAudio.remove();currentAudio=null;}if(currentAudioURL){URL.revokeObjectURL(currentAudioURL);currentAudioURL=null;}window.speechSynthesis?.cancel();window.webkit?.messageHandlers?.nativeVoice?.postMessage({stop:true});if(state)renderListening();}
 async function loadSpeech(text,preview,signal){
- if(!preview&&state.config.ttsProvider==='openai'){
+ const isEdgePreview=preview&&(preview.startsWith('ru-RU-')||preview==='edge');
+ if(!preview&&(state.config.ttsProvider==='openai'||state.config.ttsProvider==='edge')){
   const r=await fetch('/api/speech-prepare',{method:'POST',signal,headers:{'Content-Type':'application/json','x-app-token':token},body:JSON.stringify({text})});
   if(!r.ok)throw Error((await r.json()).error);const prepared=await r.json();
   const cancel=()=>api('speech-cancel',{ticket:prepared.url.split('/').at(-1)}).catch(()=>{});
@@ -82,17 +83,18 @@ async function loadSpeech(text,preview,signal){
   const audio=await fetch(prepared.url,{signal});if(!audio.ok)throw Error('Не удалось получить аудио: HTTP '+audio.status);
   const blob=await audio.blob();if(!blob.size)throw Error('Сервис вернул пустое аудио');return blob;
  }
- const r=await fetch('/api/speech',{method:'POST',signal,headers:{'Content-Type':'application/json','x-app-token':token},body:JSON.stringify({text,...(preview?{preview:'silero',speaker:preview}:{})})});
+ const r=await fetch('/api/speech',{method:'POST',signal,headers:{'Content-Type':'application/json','x-app-token':token},body:JSON.stringify({text,...(isEdgePreview?{preview:'edge',voice:preview}:preview?{preview:'silero',speaker:preview}:{})})});
  if(!r.ok)throw Error((await r.json()).error);return r.blob();
 }
 async function speak(text,preview=null,delivery=null){
  if(liveDelegating)return true;
  const prepared=delivery?speechPrefetch.take(delivery.key):null;
- stopVoice();const version=speechVersion,provider=preview?'silero':state.config.ttsProvider;if(provider==='off')return true;
+ const isEdgePreview=preview&&(preview.startsWith('ru-RU-')||preview==='edge');
+ stopVoice();const version=speechVersion,provider=isEdgePreview?'edge':preview?'silero':state.config.ttsProvider;if(provider==='off')return true;
  voiceActive=true;ambientEngine.setDucked(true);renderListening();
  const completed=new Promise(resolve=>{speechDone=resolve;});
  try{
-  if(provider==='openai'||provider==='silero'){
+  if(provider==='openai'||provider==='silero'||provider==='edge'){
    activeSpeechRequest=prepared?.controller||new AbortController();
    let blob;if(prepared){const result=await prepared.promise;if(!result.ok)throw result.error;blob=result.value;}else blob=await loadSpeech(text,preview,activeSpeechRequest.signal);
    if(version!==speechVersion)return false;
@@ -100,13 +102,16 @@ async function speak(text,preview=null,delivery=null){
    currentAudio.onplaying=()=>{$('voicePlayback').textContent='● Голос звучит';finishVoiceLatency();};
    currentAudio.onended=()=>voiceFinished(version);currentAudio.onerror=()=>{toast('Не удалось воспроизвести аудио · код '+(currentAudio?.error?.code||'неизвестен'));voiceFinished(version,false);};await currentAudio.play();
    if(version===speechVersion&&delivery?.nextText)speechPrefetch.warm(delivery.nextKey,delivery.nextText);
-   if(preview)$('sileroStatus').textContent='Воспроизводится выбранный голос.';
+   if(preview){
+    if(isEdgePreview)$('edgeStatus').textContent='Воспроизводится выбранный голос Edge.';
+    else $('sileroStatus').textContent='Воспроизводится выбранный голос Silero.';
+   }
   }else if(window.webkit?.messageHandlers?.nativeVoice){window.webkit.messageHandlers.nativeVoice.postMessage({text,speechId:version});}
   else{
    if(!window.speechSynthesis)throw Error('Системный голос недоступен');
    const u=new SpeechSynthesisUtterance(text);u.lang='ru-RU';u.onend=()=>voiceFinished(version);u.onerror=()=>voiceFinished(version,false);speechSynthesis.speak(u);
   }
- }catch(e){if(version===speechVersion){voiceFinished(version,false);toast('Озвучивание: '+e.message);if(preview)$('sileroStatus').textContent=e.message;}}
+ }catch(e){if(version===speechVersion){voiceFinished(version,false);toast('Озвучивание: '+e.message);if(preview){if(isEdgePreview)$('edgeStatus').textContent=e.message;else $('sileroStatus').textContent=e.message;}}}
  return completed;
 }
 async function cancelDelivery(){
@@ -174,7 +179,8 @@ function voiceControls(){
  $('sileroControls').hidden=live||tts!=='silero';f.elements.sileroSpeaker.disabled=tts!=='silero';
  $('testSilero').disabled=!state.localVoice?.installed;show('ttsModel',!live&&tts==='openai');show('voice',!live&&tts==='openai');
  $('sileroStatus').textContent=state.localVoice?.installed?'Silero установлен. Озвучивание на вашем компьютере, без API-ключа.':'Silero пока не установлен: нужна папка LocalVoice рядом с приложением.';
- const names={demo:'Учебный режим',openai:'OpenAI',gemini:'Gemini',compatible:sharedGroq?'Groq':'Совместимый API',groq:'Groq Whisper',silero:'Silero локально',system:'Системный голос',off:'Без озвучивания'};
+ $('edgeControls').hidden=live||tts!=='edge';if(f.elements.edgeVoice)f.elements.edgeVoice.disabled=tts!=='edge';
+ const names={demo:'Учебный режим',openai:'OpenAI',gemini:'Gemini',compatible:sharedGroq?'Groq':'Совместимый API',groq:'Groq Whisper',silero:'Silero локально',edge:'Edge Neural онлайн',system:'Системный голос',off:'Без озвучивания'};
  $('connectionSummary').textContent='Ведущий: '+names[text]+(live?' · Голосовой канал: OpenAI Live':' · Распознавание: '+names[stt]+' · Голос: '+names[tts]);
 }
 const poolNames={groq:'Groq',openai:'OpenAI',gemini:'Gemini',compatible:'Совместимый API'};
@@ -217,6 +223,7 @@ $('settingsForm').elements.voicePipeline.onchange=voiceControls;
 $('settingsForm').elements.imageProvider.onchange=voiceControls;
 $('settingsForm').elements.ttsProvider.onchange=e=>{const f=$('settingsForm');if(e.target.value==='openai'&&(!f.elements.ttsModel.value||f.elements.ttsModel.value==='gpt-4o-mini-tts'))f.elements.ttsModel.value='tts-1';voiceControls();};
 $('testSilero').onclick=async()=>{$('testSilero').disabled=true;$('sileroStatus').textContent='Готовим голос… Первая загрузка может занять несколько секунд.';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.sileroSpeaker.value);}finally{$('testSilero').disabled=false;}};
+$('testEdge').onclick=async()=>{$('testEdge').disabled=true;$('edgeStatus').textContent='Связываемся с нейросетью Edge…';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.edgeVoice.value);$('edgeStatus').textContent='Озвучено нейросетью Edge. Без ключей и оплаты.';}catch(err){$('edgeStatus').textContent='Ошибка Edge TTS: '+err.message;}finally{$('testEdge').disabled=false;}};
 $('settingsForm').elements.provider.onchange=e=>{const f=$('settingsForm');const presets={openai:['gpt-6-luna','https://api.openai.com/v1'],gemini:['gemini-2.0-flash','https://generativelanguage.googleapis.com'],compatible:['','https://openrouter.ai/api/v1']};if(presets[e.target.value]){[f.elements.model.value,f.elements.baseUrl.value]=presets[e.target.value];}if(e.target.value==='openai'){f.elements.reasoningEffort.value='low';$('keyPools').querySelector('[data-pool="openai"]').open=true;}voiceControls();};
 $('settingsForm').elements.sttProvider.onchange=e=>{$('settingsForm').elements.sttModel.value=({gemini:'gemini-2.0-flash',groq:'whisper-large-v3-turbo',openai:'gpt-4o-mini-transcribe'})[e.target.value];voiceControls();};
 $('settingsForm').elements.baseUrl.oninput=voiceControls;
