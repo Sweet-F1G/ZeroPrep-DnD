@@ -340,7 +340,7 @@ const server=http.createServer(async(req,res)=>{
     if(index<0)throw Error('Кампания не найдена');
     campaigns.splice(index,1);
     await campaignStore.delete(id);
-    if(config.activeCampaignId===id){
+    if(config.activeCampaignId===id||!config.activeCampaignId||!campaigns.some(c=>c.id===config.activeCampaignId)){
      newActiveId=campaigns[0]?.id||'';
      config.activeCampaignId=newActiveId;
      await save('settings',config);
@@ -355,8 +355,9 @@ const server=http.createServer(async(req,res)=>{
    let c;
    if(b.seed){const source=await fs.readFile(path.join(root,'seed','theon-alvari.md'),'utf8');c=makeCampaign({name:'Теон и Альвари',setting:'D&D 2024 Cinematic. Закат у старой башни на северном тракте. Встреча с Э ещё НЕ началась. Неизвестные тайны из файла остаются неизвестными. КД Альвари 12 — временно по предложенному варианту со щитом, подтвердить с игроком.',source,characters:[{name:'Теон',description:'Полуэльф · Artificer 4 · Artillerist',maxHp:31,ac:15,bonuses:{strength:0,dexterity:2,constitution:2,intelligence:4,wisdom:1,charisma:-1,perception:3,investigation:6,arcana:6,stealth:2,athletics:0,persuasion:-1,survival:1,insight:1}},{name:'Альвари',description:'Полуэльф · Druid 4 · Circle of Stars',maxHp:31,ac:12,bonuses:{strength:1,dexterity:-1,constitution:2,intelligence:2,wisdom:4,charisma:0,perception:6,investigation:2,arcana:2,stealth:-1,athletics:1,persuasion:0,survival:6,insight:6}}]});}
    else c=makeCampaign({...b,characters:Array.isArray(b.characters)?b.characters:[]});
-   if(b.dm)c.dm=dmState(b.dm);if(b.sessionZero===true)beginSessionZero(c);
-   await commitCampaign(c);return json(res,{...state(),activeId:c.id});
+   if(b.dm)c.dm=dmState(b.dm);if(b.sessionZero===true)beginSessionZero(c,config.provider);
+   config.activeCampaignId=c.id;
+   await commitCampaign(c);return json(res,{...state(),activeId:c.id,activeCampaignId:c.id});
   }
   if(url.pathname==='/api/import'){
    const imported=b.campaign;if(b.format!=='skazitel-v1'||!imported)throw Error('Нужен JSON-экспорт Сказителя');
@@ -488,13 +489,13 @@ updateReactionClock(c,b);}
     const used=new Set();const edited=b.characters.map(x=>{if(!c.characters.some(y=>y.id===x.id)||used.has(x.id))throw Error('Некорректный ID героя');used.add(x.id);return {...character({...c.characters.find(h=>h.id===x.id),...x}),id:x.id};});checkpoint(c);c.characters=edited;c.journal.push({id:randomUUID(),role:'system',text:'Игроки обновили листы персонажей.',at:new Date().toISOString()});
    }
    else if(url.pathname==='/api/proposal'){checkpoint(c);approveProposal(c,b.proposalId,b.accept===true);}
-   else if(url.pathname==='/api/turn'&&c.sessionZero&&!c.sessionZero.complete){
+   else if(url.pathname==='/api/turn'&&c.sessionZero&&!c.sessionZero.complete&&config.provider==='demo'){
     if(b.raw!==undefined||b.passReaction)throw Error('Сначала завершите нулевую сессию');
     checkpoint(c);sessionZeroTurn(c,b.text);
    }
    else if(url.pathname==='/api/turn'){
     interruptDelivery(c);
-    if(!c.characters.length)throw Error('Добавьте хотя бы одного героя');if(c.proposals.length)throw Error('Сначала подтвердите или отклоните изменения HP');
+    if(!c.characters.length&&(!c.sessionZero||c.sessionZero.complete))throw Error('Добавьте хотя бы одного героя');if(c.proposals.length)throw Error('Сначала подтвердите или отклоните изменения HP');
     if(b.reactionId&&b.reactionId!==c.reaction?.id)throw Error('Эта пауза уже завершена');
     if(b.timedOut&&(!c.reaction||c.reaction.paused||!c.reaction.deadlineAt||Date.now()<c.reaction.deadlineAt))throw Error('Таймер реакции ещё не истёк');
     if(b.passReaction&&!c.reaction)throw Error('Сейчас нет паузы для реакции');
@@ -502,9 +503,11 @@ updateReactionClock(c,b);}
     if(c.pending&&b.raw===undefined)throw Error('Сначала внесите ожидаемый бросок d20');
     checkpoint(c);let roll=null,localReply=null;
     if(b.raw!==undefined){roll=resolveRoll(c,b.raw);c.journal.push({id:randomUUID(),role:'system',text:'VERIFIED_ROLL '+JSON.stringify(roll),at:new Date().toISOString()});}
-    else {const text=String(b.text||'').trim();if(!text)throw Error('Опишите действие');if(text.length>6000)throw Error('Слишком длинное действие');const hero=c.characters.find(x=>x.id===b.characterId);if(!hero)throw Error('Выберите действующего персонажа');const event={id:randomUUID(),role:'user',text:`${hero.name}${b.interrupted?' (ПЕРЕБИВАЕТ МАСТЕРА)':''}: ${text}`,at:new Date().toISOString()};c.journal.push(event);
-     localReply=localCommand(c,text,hero.id,event.id);
-     if(!localReply&&/^(?:я\s+)?(?:обещаю|клянусь)(?:\s|$)/iu.test(playerSpeech(c,text,hero.id)))remember(c,{kind:'promise',text:playerSpeech(c,text,hero.id),actorId:hero.id},event.id);
+    else {const text=String(b.text||'').trim();if(!text)throw Error('Опишите действие');if(text.length>6000)throw Error('Слишком длинное действие');const hero=c.characters.find(x=>x.id===b.characterId);const speaker=hero?.name||(c.sessionZero&&!c.sessionZero.complete?'Игроки':null);if(!speaker)throw Error('Выберите действующего персонажа');const event={id:randomUUID(),role:'user',text:`${speaker}${b.interrupted?' (ПЕРЕБИВАЕТ МАСТЕРА)':''}: ${text}`,at:new Date().toISOString()};c.journal.push(event);
+     if(hero){
+      localReply=localCommand(c,text,hero.id,event.id);
+      if(!localReply&&/^(?:я\s+)?(?:обещаю|клянусь)(?:\s|$)/iu.test(playerSpeech(c,text,hero.id)))remember(c,{kind:'promise',text:playerSpeech(c,text,hero.id),actorId:hero.id},event.id);
+     }
     }
     if(config.provider!=='demo')await keysReady;
     const prepareFirst=text=>{const first=narrationParts(text)[0];if(first)audioStreams.prepare(first,audioScope());};

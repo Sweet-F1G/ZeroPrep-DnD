@@ -1,10 +1,14 @@
 import {randomUUID,randomInt} from 'node:crypto';
 import {integer} from './rules.mjs';
 export const itemCategories={weapon:'Оружие',armor:'Доспехи',potion:'Зелья',food:'Припасы',tool:'Инструменты',treasure:'Ценности',container:'Контейнеры',quest:'Сюжетные вещи',other:'Прочее'};
-const heroExists=(c,id)=>id==='group'||c.characters.some(h=>h.id===id);
+const heroExists=(c,id)=>id==='group'||c.characters.some(h=>h.id===id||h.name.toLowerCase()===String(id||'').toLowerCase());
 export function inventoryItem(c,input){
  const name=String(input.name||'').trim();if(!name||name.length>120)throw Error('Название вещи: от 1 до 120 символов');
- const ownerId=input.ownerId||'group',carrierId=input.carrierId||ownerId;if(!heroExists(c,ownerId)||!heroExists(c,carrierId))throw Error('Владелец или носитель вещи не найден');
+ const matchedOwner=c.characters.find(h=>h.id===input.ownerId||h.name.toLowerCase()===String(input.ownerId||'').toLowerCase());
+ const ownerId=matchedOwner?matchedOwner.id:(input.ownerId||'group');
+ const matchedCarrier=c.characters.find(h=>h.id===input.carrierId||h.name.toLowerCase()===String(input.carrierId||'').toLowerCase());
+ const carrierId=matchedCarrier?matchedCarrier.id:(input.carrierId||ownerId);
+ if(!heroExists(c,ownerId)||!heroExists(c,carrierId))throw Error('Владелец или носитель вещи не найден');
  const category=input.category||'other';if(!Object.hasOwn(itemCategories,category))throw Error('Неизвестная категория вещи');
  const weight=Number(input.weight??0);if(!Number.isFinite(weight)||weight<0||weight>100000)throw Error('Некорректный вес');
  return {id:String(input.id||randomUUID()).slice(0,100),name,category,quantity:integer(input.quantity??1,1,100000,'Количество вещей'),weight,valueCp:integer(input.valueCp??0,0,100000000,'Стоимость в медных монетах'),ownerId,carrierId,containerId:input.containerId||null,description:String(input.description||'').slice(0,1500),iconId:/^[a-z0-9-]{1,100}$/.test(input.iconId||'')?input.iconId:null,tags:(Array.isArray(input.tags)?input.tags:[]).slice(0,12).map(x=>String(x).slice(0,40)),equipped:input.equipped===true,attuned:input.attuned===true,charges:input.charges?{max:integer(input.charges.max,1,999),current:integer(input.charges.current,0,input.charges.max)}:null};

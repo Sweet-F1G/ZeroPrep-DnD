@@ -9,7 +9,11 @@ export const questions=[
 ];
 const fields=['world','style','boundaries','roster','sheets'];
 function entry(c,role,text){c.journal.push({id:randomUUID(),role,text,at:new Date().toISOString()});}
-export function beginSessionZero(c){c.sessionZero={version:1,step:0,answers:{},draft:[],complete:false,editing:false};entry(c,'assistant',questions[0]);}
+export function beginSessionZero(c,provider='demo'){
+ c.sessionZero={version:1,step:0,answers:{},draft:[],complete:false,editing:false};
+ const aiGreeting='Приветствую за игровым столом! Я ваш ИИ-Мастер.\n\nРасскажите, в каком мире и жанре хотите сыграть? Можно задать любую тему (например, комедийное приключение в деревне или мрачный гримдарк), назвать своих персонажей или просто сказать «Мастер, сгенерируй случайных героев и начни приключение!» — и я подстрою мир, создам персонажей и начну сцену.';
+ entry(c,'assistant',provider==='demo'?questions[0]:aiGreeting);
+}
 export function restoreSessionZero(value){
  if(!value||value.version!==1||!Number.isInteger(value.step)||value.step<0||value.step>5||typeof value.complete!=='boolean')throw Error('Некорректная нулевая сессия');
  const answers=Object.fromEntries(fields.map(k=>[k,String(value.answers?.[k]||'').slice(0,6000)]));

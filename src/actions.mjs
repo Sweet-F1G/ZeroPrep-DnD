@@ -1,10 +1,27 @@
 import {mapAction} from './maps.mjs';
-import {progressionAction,recordHero} from './progression.mjs';import {dmAction} from './dm-state.mjs';
+import {progressionAction,recordHero,heroRecords} from './progression.mjs';import {dmAction} from './dm-state.mjs';
 import {randomUUID} from 'node:crypto';import {useResource,rest,advanceTime,resource,sheet,integer} from './rules.mjs';import {remember,changeMemoryStatus,checkDeadlines,operationHash} from './memory.mjs';import {inventoryAction,rollLoot,claimLoot,validateInventory} from './inventory.mjs';
-const types=['map.update','map.remove','item.update','feature.remove','spell.remove','resource.remove','training.grant','progression.award','progression.configure','progression.levelup','hero.record','feature.learn','spell.learn','dm.configure','world.update','scene.update','boundary.start','encounter.end','resource.configure','sheet.patch','memory.add','memory.status','resource.use','resource.add','rest','time.advance','item.add','item.consume','item.transfer','item.equip','item.store','item.buy','wallet.change','loot.roll','loot.claim'];
+const types=['map.update','map.remove','item.update','feature.remove','spell.remove','resource.remove','training.grant','progression.award','progression.configure','progression.levelup','hero.record','hero.create','hero.delete','session.complete','feature.learn','spell.learn','dm.configure','world.update','scene.update','boundary.start','encounter.end','resource.configure','sheet.patch','memory.add','memory.status','resource.use','resource.add','rest','time.advance','item.add','item.consume','item.transfer','item.equip','item.store','item.buy','wallet.change','loot.roll','loot.claim'];
 export function executeAction(c,action,sourceId){
  if(!action||!types.includes(action.type))throw Error('Неизвестное игровое действие');let text;
  if(action.type.startsWith('map.'))text=mapAction(c,action);
+ else if(action.type==='hero.create'){
+  const ch=action.character;if(!ch||typeof ch!=='object')throw Error('Некорректные данные персонажа');
+  if(action.replaceParty)c.characters=[];
+  if(c.characters.length>=12)throw Error('В партии уже максимум 12 героев');
+  const name=String(ch.name||'Новый герой').trim().slice(0,80);
+  const maxHp=integer(ch.maxHp??12,1,9999,'Максимум HP');
+  const id=String(ch.id||randomUUID()).slice(0,100);
+  const h={id,name,description:String(ch.description||'Искатель приключений').slice(0,500),maxHp,hp:integer(ch.hp??maxHp,0,maxHp,'HP'),ac:integer(ch.ac??12,0,50,'КД'),...sheet(ch),...heroRecords(ch)};
+  c.characters.push(h);text=`Создан герой: ${h.name} (${h.className||'Искатель приключений'}, HP ${h.hp}/${h.maxHp}, КД ${h.ac})`;
+ }
+ else if(action.type==='hero.delete'){
+  const index=c.characters.findIndex(h=>h.id===action.characterId);if(index<0)throw Error('Герой не найден');
+  const name=c.characters[index].name;c.characters.splice(index,1);text=`Герой ${name} удалён из партии`;
+ }
+ else if(action.type==='session.complete'){
+  if(c.sessionZero)c.sessionZero.complete=true;text='Подготовка завершена. Приключение начинается!';
+ }
  else if(['feature.remove','spell.remove','resource.remove'].includes(action.type)){const h=c.characters.find(h=>h.id===action.characterId);if(!h)throw Error('Герой не найден');const field=({ 'feature.remove':'features','spell.remove':'spells','resource.remove':'resources'})[action.type];if(!h[field]?.some(x=>x.id===action.recordId))throw Error('Запись не найдена');h[field]=h[field].filter(x=>x.id!==action.recordId);text=`${h.name}: запись удалена`;}
  else if(action.type.startsWith('progression.'))text=progressionAction(c,action,sourceId);
  else if(['hero.record','feature.learn','spell.learn','training.grant'].includes(action.type))text=recordHero(c,action,sourceId);

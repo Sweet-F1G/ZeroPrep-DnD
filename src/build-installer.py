@@ -10,11 +10,11 @@ PYTHON=Path(os.environ.get('SKAZITEL_PYTHON', '/Users/sweet_f1g/.cache/codex-run
 NODE=Path(os.environ.get('SKAZITEL_NODE', '/Users/sweet_f1g/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node'))
 VOICE=Path(os.environ.get('SKAZITEL_VOICE_SOURCE',str(SRC.parent/'LocalVoice')))
 CACHE=Path(os.environ.get('SKAZITEL_BUILD_CACHE','/private/tmp/skazitel-installer-swift-cache'));CACHE.mkdir(exist_ok=True)
-VERSION='0.6.3'
+VERSION='0.6.4'
 def run(*args):subprocess.run([str(a) for a in args],check=True)
 def write(path,text):path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text)
 CODE.mkdir(parents=True);(APP/'Contents/MacOS').mkdir()
-for name in ['server.mjs','audio-stream.mjs','response-stream.mjs','maps.mjs','openai-context.mjs','cost.mjs','progression.mjs','dm-state.mjs','illustrations.mjs','rules.mjs','memory.mjs','inventory.mjs','actions.mjs','prompts.mjs','campaign-store.mjs','engine.mjs','session-zero.mjs','providers.mjs','credentials.mjs','usage.mjs','context.mjs','delivery.mjs','local-voice.mjs','silero-worker.py','voice_text.py','package.json']:
+for name in ['server.mjs','audio-stream.mjs','response-stream.mjs','maps.mjs','openai-context.mjs','cost.mjs','progression.mjs','dm-state.mjs','illustrations.mjs','rules.mjs','memory.mjs','inventory.mjs','actions.mjs','prompts.mjs','campaign-store.mjs','engine.mjs','session-zero.mjs','providers.mjs','credentials.mjs','usage.mjs','context.mjs','delivery.mjs','local-voice.mjs','edge-voice.mjs','edge-worker.py','silero-worker.py','voice_text.py','package.json']:
  shutil.copy2(SRC/name,CODE/name)
 shutil.copytree(SRC/'public',CODE/'public')
 # Never copy Saves, samples, seed campaigns, screenshots, legacy nested apps or local settings.

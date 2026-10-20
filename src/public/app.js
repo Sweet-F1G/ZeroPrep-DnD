@@ -34,11 +34,11 @@ function setBusy(value,label){busy=value;$('listeningMode').disabled=value||!!re
 function choose(id){if(busy||recording||recordStarting)return;stopListening();pauseReactionClock();haltNarration();interruptionActive=false;lastKnownMapHash='';activeId=id;localStorage.setItem('skazitel-active',id);api('settings',{activeCampaignId:id}).catch(()=>{});selectedId=null;render();scrollToLatest();}
 function scrollToLatest(){const target=current()?.pending?$('rollPanel'):$('journal').lastElementChild;target?.scrollIntoView({block:'end'});}
 function render(){
- const c=current();$('campaigns').innerHTML=state.campaigns.map(x=>`<button class="campaign-item ${x.id===activeId?'active':''}" data-campaign="${x.id}">${esc(x.name)}<small>${x.characters.length} героя · ${x.journal.length} событий</small></button>`).join('');
+ const c=current();$('campaigns').innerHTML=state.campaigns.map(x=>`<div class="campaign-item-row"><button class="campaign-item ${x.id===activeId?'active':''}" data-campaign="${x.id}">${esc(x.name)}<small>${x.characters.length} героя · ${x.journal.length} событий</small></button><button class="campaign-delete-btn" data-delete-campaign="${x.id}" title="Удалить партию «${esc(x.name)}»" aria-label="Удалить партию «${esc(x.name)}»" type="button">✕</button></div>`).join('');
  $('providerDot').textContent=state.config.provider==='demo'?'◌':'●';$('welcome').hidden=!!c;$('table').hidden=!c;$('export').disabled=!c;$('undo').disabled=!c?.canUndo||busy;
  renderSessionCost(state.usage);renderListening();if(!c)return;
  if(!c.characters.some(x=>x.id===selectedId))selectedId=c.characters[0]?.id;
- $('crumb').textContent=c.name;$('title').textContent=c.name;$('settingText').title=c.setting;$('settingText').textContent=c.sessionZero&&!c.sessionZero.complete?`Нулевая сессия · ${c.sessionZero.step===5?'проверка договорённостей':`вопрос ${c.sessionZero.step+1} из 5`} · отвечайте голосом или текстом`:c.setting;
+ $('crumb').textContent=c.name;$('title').textContent=c.name;$('settingText').title=c.setting;$('settingText').textContent=c.sessionZero&&!c.sessionZero.complete?(state.config.provider==='demo'?`Нулевая сессия · ${c.sessionZero.step===5?'проверка договорённостей':`вопрос ${c.sessionZero.step+1} из 5`} · отвечайте голосом или текстом`:'Подготовка приключения · Обсудите мир и героев с Мастером'):c.setting;
  $('modeBadge').hidden=state.config.provider!=='demo'&&state.lastTextRoute?.provider!=='openrouter.ai';$('modeBadge').title=(editions[c.edition]||editions.legacy)+' · '+(state.lastTextRoute?.model||state.config.model);$('modeBadge').textContent=state.lastTextRoute?.provider==='openrouter.ai'&&state.config.reserveProvider==='openrouter'?'БЕСПЛАТНЫЙ РЕЗЕРВ · GEMMA 4 31B':state.config.provider==='demo'?'УЧЕБНЫЙ РЕЖИМ · БЕЗ ИИ':`${state.config.provider.toUpperCase()} · ${state.config.model}`;
  const scene=(c.images||[]).findLast(i=>i.kind==='scene'&&i.status==='ready');$('sceneArt').hidden=!scene;if(scene){$('sceneArtImage').src='/images/'+scene.file;$('sceneArtImage').alt=scene.prompt;}
  $('entryCount').textContent=`${c.journalTotal??c.journal.length} СОБЫТИЙ`;
@@ -258,7 +258,27 @@ $('clearKeys').onclick=async()=>{
  finally{button.disabled=false;}
 };
 document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>x.closest('dialog').close());
-$('campaigns').onclick=e=>{const b=e.target.closest('[data-campaign]');if(b)choose(b.dataset.campaign);};
+$('campaigns').onclick=async e=>{
+ const del=e.target.closest('[data-delete-campaign]');
+ if(del){
+  e.stopPropagation();
+  const c=state.campaigns.find(x=>x.id===del.dataset.deleteCampaign);
+  if(!c)return;
+  if(!confirm(`Вы уверены, что хотите удалить кампанию «${c.name}»?\n\nВсе записи журнала, листы персонажей, карты и память этой кампании будут стёрты безвозвратно.`))return;
+  try{
+   const res=await api('campaign/delete',{id:c.id});
+   toast(`Кампания «${c.name}» удалена`);
+   state=res;
+   activeId=res.activeCampaignId||state.campaigns?.[0]?.id||null;
+   if(activeId)localStorage.setItem('skazitel-active',activeId);else localStorage.removeItem('skazitel-active');
+   render();
+  }catch(err){
+   toast('Ошибка удаления: '+err.message);
+  }
+  return;
+ }
+ const b=e.target.closest('[data-campaign]');if(b)choose(b.dataset.campaign);
+};
 $('characters').onclick=e=>{const growth=e.target.closest('[data-growth]');if(growth){openProgress(growth.dataset.growth);return;}const bag=e.target.closest('[data-inventory]'),portrait=e.target.closest('[data-portrait]');if(bag){openInventory(bag.dataset.inventory);return;}if(portrait){openIllustrations({kind:'portrait',characterId:portrait.dataset.portrait});return;}const sheet=e.target.closest('[data-sheet]');if(sheet){openSheet(sheet.dataset.sheet);return;}const b=e.target.closest('[data-hero]');if(b&&!busy&&!recording){selectedId=b.dataset.hero;render();}};
 $('characters').onkeydown=e=>{if(e.key==='Enter')e.target.click();};
 $('speaker').onchange=e=>{selectedId=e.target.value;render();};
@@ -503,11 +523,12 @@ $('deleteCampaign')?.addEventListener('click',async()=>{
  if(!c)return toast('Сначала откройте кампанию');
  if(!confirm(`Вы уверены, что хотите удалить кампанию «${c.name}»?\n\nВсе записи журнала, листы персонажей, карты и память этой кампании будут стёрты безвозвратно.`))return;
  try{
-  const res=await post('/api/campaign/delete',{id:c.id});
+  const res=await api('campaign/delete',{id:c.id});
   $('campaignToolsDialog').close();
   toast(`Кампания «${c.name}» удалена`);
-  state.campaigns=(state.campaigns||[]).filter(x=>x.id!==c.id);
-  activeId=res.activeCampaignId||state.campaigns[0]?.id||null;
+  state=res;
+  activeId=res.activeCampaignId||state.campaigns?.[0]?.id||null;
+  if(activeId)localStorage.setItem('skazitel-active',activeId);else localStorage.removeItem('skazitel-active');
   render();
  }catch(e){
   toast('Ошибка удаления: '+e.message);
