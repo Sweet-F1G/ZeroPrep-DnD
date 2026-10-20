@@ -181,12 +181,98 @@ $('seed').onclick=$('welcomeSeed').onclick=()=>created('create',{seed:true});
 $('campaignForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);$('campaignDialog').close();await created('create',{name:f.get('name'),edition:f.get('edition'),setting:f.get('setting'),source:f.get('source'),characters:readHeroes($('heroForms'))});};
 $('addHero').onclick=()=>{if($('heroForms').children.length>=6)return toast('В форме демо максимум 6 героев.');$('heroForms').insertAdjacentHTML('beforeend',heroFields());};
 $('sourceFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(f.size>200000)return toast('Файл должен быть не больше 200 КБ.');$('campaignForm').elements.source.value=await f.text();};
+let openAIModelsCache=null;
+async function loadOpenAIModels(force=false){
+ const sel=$('openaiModelSelect'),refreshBtn=$('refreshOpenAIModels'),statusEl=$('modelSelectStatus');
+ if(!sel)return;
+ if(openAIModelsCache&&!force){
+  renderOpenAIModelOptions(openAIModelsCache);
+  return;
+ }
+ if(refreshBtn){refreshBtn.disabled=true;refreshBtn.textContent='…';}
+ if(statusEl){statusEl.hidden=false;statusEl.textContent='Загрузка списка моделей по вашему API-ключу…';}
+ try{
+  const r=await fetch('/api/openai/models',{headers:{'x-app-token':token}});
+  const data=await r.json();
+  if(!r.ok||!data.ok)throw Error(data.error||'Не удалось загрузить модели');
+  openAIModelsCache=data.models||[];
+  renderOpenAIModelOptions(openAIModelsCache);
+  if(statusEl)statusEl.textContent=`Доступно моделей по вашему ключу: ${openAIModelsCache.length}`;
+ }catch(err){
+  renderOpenAIModelOptions(['gpt-6-luna','gpt-4o','gpt-4o-mini','o3','o3-mini','o1','o1-mini','gpt-5-preview']);
+  if(statusEl)statusEl.textContent=`Не удалось обновить список с сервера (${err.message}). Выберите из базовых или введите вручную.`;
+ }finally{
+  if(refreshBtn){refreshBtn.disabled=false;refreshBtn.textContent='↻';}
+ }
+}
+function renderOpenAIModelOptions(models){
+ const sel=$('openaiModelSelect'),f=$('settingsForm');
+ if(!sel||!f)return;
+ const currentVal=f.elements.model?.value||'gpt-6-luna';
+ const recommended=['gpt-6-luna','gpt-4o','gpt-4o-mini','o3','o3-mini','o1','o1-mini','gpt-5-preview','gpt-5.4-mini'];
+ const recSet=new Set(recommended);
+ const recAvailable=[],otherAvailable=[];
+ for(const id of models){
+  if(recSet.has(id))recAvailable.push(id);
+  else otherAvailable.push(id);
+ }
+ recAvailable.sort((a,b)=>recommended.indexOf(a)-recommended.indexOf(b));
+ if(!recAvailable.includes('gpt-6-luna'))recAvailable.unshift('gpt-6-luna');
+ otherAvailable.sort();
+ let html='';
+ if(recAvailable.length){
+  html+='<optgroup label="Рекомендуемые модели">';
+  for(const id of recAvailable){
+   const label=id==='gpt-6-luna'?'✦ gpt-6-luna (Основная для Сказителя)':id;
+   html+=`<option value="${esc(id)}">${esc(label)}</option>`;
+  }
+  html+='</optgroup>';
+ }
+ if(otherAvailable.length){
+  html+='<optgroup label="Все модели по вашему API-ключу">';
+  for(const id of otherAvailable){
+   html+=`<option value="${esc(id)}">${esc(id)}</option>`;
+  }
+  html+='</optgroup>';
+ }
+ html+='<optgroup label="Другой вариант"><option value="__custom__">✎ Ввести вручную…</option></optgroup>';
+ sel.innerHTML=html;
+ const hasOpt=[...sel.options].some(o=>o.value===currentVal);
+ if(hasOpt)sel.value=currentVal;
+ else sel.value='__custom__';
+ updateModelFieldVisibility();
+}
+function updateModelFieldVisibility(){
+ const f=$('settingsForm'),sel=$('openaiModelSelect'),refreshBtn=$('refreshOpenAIModels'),input=f?.elements?.model;
+ if(!f||!input)return;
+ const isOpenAI=f.elements.provider.value==='openai';
+ if(!isOpenAI){
+  if(sel)sel.hidden=true;
+  if(refreshBtn)refreshBtn.style.display='none';
+  if($('modelSelectStatus'))$('modelSelectStatus').hidden=true;
+  input.hidden=f.elements.provider.value==='demo';
+  input.required=f.elements.provider.value!=='demo';
+  return;
+ }
+ if(sel)sel.hidden=false;
+ if(refreshBtn)refreshBtn.style.display='';
+ if(sel&&sel.value==='__custom__'){
+  input.hidden=false;
+  input.required=true;
+  input.placeholder='Точный ID модели из кабинета провайдера';
+ }else{
+  input.hidden=true;
+  input.required=false;
+  if(sel&&sel.value)input.value=sel.value;
+ }
+}
 function voiceControls(){
  const f=$('settingsForm'),live=f.elements.voicePipeline.value==='live',text=f.elements.provider.value,stt=f.elements.sttProvider.value,tts=f.elements.ttsProvider.value;
  let sharedGroq=false;try{sharedGroq=text==='compatible'&&new URL(f.elements.baseUrl.value).hostname==='api.groq.com';}catch{}
  const show=(name,used)=>{const field=f.elements[name];field.disabled=!used;field.closest('label').hidden=!used;};
  show('serviceTier',text==='openai');show('liveModel',live);$('liveNote').hidden=!live;show('imageModel',f.elements.imageProvider.value==='openai');show('imageQuality',f.elements.imageProvider.value==='openai');show('sttProvider',!live);show('sttModel',!live);show('ttsProvider',!live);
  show('model',text!=='demo');show('baseUrl',text==='compatible');show('reasoningEffort',text==='openai'&&/^gpt-6(?:[.-]|$)/.test(f.elements.model.value));$('openaiCacheNote').hidden=text!=='openai';
+ updateModelFieldVisibility();
  for(const name of ['openai','gemini','compatible','groq']){
   const used=({openai:text==='openai'||stt==='openai'||tts==='openai',gemini:text==='gemini'||stt==='gemini',compatible:text==='compatible'&&!sharedGroq||f.elements.reserveProvider.value==='openrouter',groq:sharedGroq||stt==='groq'})[name];
   const section=$('keyPools').querySelector(`[data-pool="${name}"]`);
@@ -238,17 +324,19 @@ $('keyPools').onclick=e=>{
  renumberPool(section);
 };
 $('keyPools').oninput=e=>{const row=e.target.closest('.key-row');if(row)row.querySelector('.key-save-state').textContent=e.target.value.trim()?'Изменён · сохранится после нажатия «Сохранить настройки»':row.dataset.saved==='true'?'✓ Сохранённый ключ остаётся без изменений':'Новый · ещё не сохранён';};
-$('settings').onclick=async()=>{stopListening();pauseReactionClock();try{state=await api('state');}catch{}const f=$('settingsForm');for(const[k,v]of Object.entries(state.config))if(f.elements[k])f.elements[k].value=v;if(f.elements.ttsModel&&(f.elements.ttsModel.value==='gpt-4o-mini-tts'||!f.elements.ttsModel.value))f.elements.ttsModel.value='tts-1';keyFields();$('settingsDialog').showModal();};
+$('settings').onclick=async()=>{stopListening();pauseReactionClock();try{state=await api('state');}catch{}const f=$('settingsForm');for(const[k,v]of Object.entries(state.config))if(f.elements[k])f.elements[k].value=v;if(f.elements.ttsModel&&(f.elements.ttsModel.value==='gpt-4o-mini-tts'||!f.elements.ttsModel.value))f.elements.ttsModel.value='tts-1';keyFields();if(f.elements.provider.value==='openai')loadOpenAIModels();$('settingsDialog').showModal();};
 $('settingsForm').elements.voicePipeline.onchange=voiceControls;
 $('settingsForm').elements.imageProvider.onchange=voiceControls;
 $('settingsForm').elements.ttsProvider.onchange=e=>{const f=$('settingsForm');if(e.target.value==='openai'&&(!f.elements.ttsModel.value||f.elements.ttsModel.value==='gpt-4o-mini-tts'))f.elements.ttsModel.value='tts-1';voiceControls();};
 $('testSilero').onclick=async()=>{$('testSilero').disabled=true;$('sileroStatus').textContent='Готовим голос… Первая загрузка может занять несколько секунд.';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.sileroSpeaker.value);}finally{$('testSilero').disabled=false;}};
 $('testEdge').onclick=async()=>{$('testEdge').disabled=true;$('edgeStatus').textContent='Связываемся с нейросетью Edge…';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.edgeVoice.value);$('edgeStatus').textContent='Озвучено нейросетью Edge. Без ключей и оплаты.';}catch(err){$('edgeStatus').textContent='Ошибка Edge TTS: '+err.message;}finally{$('testEdge').disabled=false;}};
 $('testOpenAI').onclick=async()=>{$('testOpenAI').disabled=true;$('openaiStatus').textContent='Связываемся с OpenAI…';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?','openai:'+$('settingsForm').elements.voice.value);$('openaiStatus').textContent='Озвучено выбранным голосом OpenAI ('+$('settingsForm').elements.voice.value+').';}catch(err){$('openaiStatus').textContent='Ошибка OpenAI TTS: '+err.message;}finally{$('testOpenAI').disabled=false;}};
-$('settingsForm').elements.provider.onchange=e=>{const f=$('settingsForm');const presets={openai:['gpt-6-luna','https://api.openai.com/v1'],gemini:['gemini-2.0-flash','https://generativelanguage.googleapis.com'],compatible:['','https://openrouter.ai/api/v1']};if(presets[e.target.value]){[f.elements.model.value,f.elements.baseUrl.value]=presets[e.target.value];}if(e.target.value==='openai'){f.elements.reasoningEffort.value='low';$('keyPools').querySelector('[data-pool="openai"]').open=true;}voiceControls();};
+$('openaiModelSelect').onchange=()=>{const f=$('settingsForm'),sel=$('openaiModelSelect');if(sel.value==='__custom__'){f.elements.model.hidden=false;f.elements.model.required=true;f.elements.model.focus();}else{f.elements.model.hidden=true;f.elements.model.required=false;f.elements.model.value=sel.value;}voiceControls();};
+$('refreshOpenAIModels').onclick=()=>loadOpenAIModels(true);
+$('settingsForm').elements.provider.onchange=e=>{const f=$('settingsForm');const presets={openai:['gpt-6-luna','https://api.openai.com/v1'],gemini:['gemini-2.0-flash','https://generativelanguage.googleapis.com'],compatible:['','https://openrouter.ai/api/v1']};if(presets[e.target.value]){[f.elements.model.value,f.elements.baseUrl.value]=presets[e.target.value];}if(e.target.value==='openai'){f.elements.reasoningEffort.value='low';$('keyPools').querySelector('[data-pool="openai"]').open=true;loadOpenAIModels();}voiceControls();};
 $('settingsForm').elements.sttProvider.onchange=e=>{$('settingsForm').elements.sttModel.value=({gemini:'gemini-2.0-flash',groq:'whisper-large-v3-turbo',openai:'gpt-4o-mini-transcribe'})[e.target.value];voiceControls();};
 $('settingsForm').elements.baseUrl.oninput=voiceControls;
-$('settingsForm').elements.model.oninput=voiceControls;
+$('settingsForm').elements.model.oninput=()=>{const f=$('settingsForm'),sel=$('openaiModelSelect');if(f.elements.provider.value==='openai'&&sel){const match=[...sel.options].find(o=>o.value===f.elements.model.value);if(match)sel.value=match.value;else sel.value='__custom__';}voiceControls();};
 $('settingsForm').elements.reserveProvider.onchange=voiceControls;
 $('settingsForm').onsubmit=async e=>{
  e.preventDefault();const data=Object.fromEntries(new FormData(e.target));if(data.ttsModel==='gpt-4o-mini-tts'||!data.ttsModel)data.ttsModel='tts-1';data.keyPools={};

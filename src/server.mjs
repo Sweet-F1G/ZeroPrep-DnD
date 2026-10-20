@@ -275,6 +275,53 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&url.pathname==='/api/voice-latency')return json(res,{recent:voiceLatencies});
   if(req.method==='GET'&&url.pathname==='/api/usage')return json(res,{...usageStore.report(),error:usageError});
   if(req.method==='GET'&&url.pathname==='/api/export') {const c=campaigns.find(x=>x.id===url.searchParams.get('id'));if(!c)throw Error('Кампания не найдена');return json(res,{format:'skazitel-v1',campaign:c});}
+  if(url.pathname==='/api/openai/models'){
+   await keysReady;
+   let apiKey;
+   if(req.method==='POST'){
+    const b=await body(req);
+    apiKey=b.apiKey?.trim();
+   }
+   if(!apiKey){
+    const pool=keyPool(keys,'openai');
+    apiKey=pool[0]?.key;
+   }
+   if(!apiKey)return json(res,{ok:false,error:'OpenAI API-ключ не найден в настройках',models:[]});
+   try{
+    const r=await fetch('https://api.openai.com/v1/models',{
+     headers:{Authorization:'Bearer '+apiKey},
+     signal:AbortSignal.timeout(8000)
+    });
+    if(!r.ok){
+     const errData=await r.json().catch(()=>({}));
+     return json(res,{ok:false,error:errData.error?.message||`Ошибка OpenAI (${r.status})`,models:[]});
+    }
+    const data=await r.json();
+    const exclude=/(whisper|tts|transcribe|embedding|moderation|dall-e|babbage|davinci|realtime|audio|clip)/i;
+    const prio=m=>{
+     if(m.startsWith('gpt-6-luna'))return 1;
+     if(m==='gpt-4o')return 2;
+     if(m==='gpt-4o-mini')return 3;
+     if(m.startsWith('o3'))return 4;
+     if(m.startsWith('o1'))return 5;
+     if(m.startsWith('gpt-5'))return 6;
+     if(m.startsWith('gpt-4.1'))return 7;
+     if(m.startsWith('gpt-4'))return 8;
+     return 20;
+    };
+    const models=(data.data||[])
+     .map(m=>m.id)
+     .filter(id=>!exclude.test(id))
+     .sort((a,b)=>{
+      const pa=prio(a),pb=prio(b);
+      if(pa!==pb)return pa-pb;
+      return a.localeCompare(b);
+     });
+    return json(res,{ok:true,models});
+   }catch(err){
+    return json(res,{ok:false,error:err.message||'Не удалось связаться с OpenAI',models:[]});
+   }
+  }
   if(req.method!=='POST')return json(res,{error:'Метод не поддерживается'},405);
   if(['/api/turn','/api/summary','/api/speech','/api/transcribe','/api/image-request','/api/live-start','/api/latency-probe','/api/generate-map'].includes(url.pathname)){costSensitive=true;costRequests++;}
   const b=await body(req);

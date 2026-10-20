@@ -276,6 +276,10 @@ body.sidebar-collapsed .sidebar-toggle-btn{background:#243627;border-color:var(-
 .campaign-delete-btn{opacity:0.4;transition:all .15s ease;color:#a89f81;padding:0 10px;min-width:32px;font-size:16px;border-radius:4px;display:grid;place-items:center;background:none;border:none;cursor:pointer}
 .campaign-item-row:hover .campaign-delete-btn{opacity:0.8;color:#fca5a5}
 .campaign-delete-btn:hover{opacity:1!important;color:#f87171!important;background:rgba(239,68,68,.18)!important}
+.model-select-row{display:flex;gap:6px;align-items:stretch;width:100%}
+.model-select-row select{flex:1;min-width:0}
+.model-select-row input{flex:1;min-width:0}
+.model-select-row button{padding:0 12px;font-size:16px;min-width:38px}
 
 
 
