@@ -1,5 +1,110 @@
 [
   {
+    "at": "2026-10-20T16:03:06.729Z",
+    "totalMs": 6663,
+    "sttMs": 1297,
+    "turnMs": 5135,
+    "speechMs": 225
+  },
+  {
+    "at": "2026-10-20T14:29:10.467Z",
+    "totalMs": 4858,
+    "sttMs": 899,
+    "turnMs": 3931,
+    "speechMs": 24
+  },
+  {
+    "at": "2026-10-20T14:26:19.790Z",
+    "totalMs": 6265,
+    "sttMs": 2927,
+    "turnMs": 2818,
+    "speechMs": 517
+  },
+  {
+    "at": "2026-10-20T14:24:18.026Z",
+    "totalMs": 6057,
+    "sttMs": 1448,
+    "turnMs": 4585,
+    "speechMs": 20
+  },
+  {
+    "at": "2026-10-20T14:23:35.875Z",
+    "totalMs": 5926,
+    "sttMs": 1334,
+    "turnMs": 2907,
+    "speechMs": 1683
+  },
+  {
+    "at": "2026-10-20T14:22:00.133Z",
+    "totalMs": 14122,
+    "sttMs": 3663,
+    "turnMs": 10425,
+    "speechMs": 32
+  },
+  {
+    "at": "2026-10-20T13:50:35.078Z",
+    "totalMs": 4474,
+    "sttMs": 966,
+    "turnMs": 2777,
+    "speechMs": 728
+  },
+  {
+    "at": "2026-10-20T13:10:59.064Z",
+    "totalMs": 3572,
+    "sttMs": 871,
+    "turnMs": 58,
+    "speechMs": 0
+  },
+  {
+    "at": "2026-10-20T13:10:18.745Z",
+    "totalMs": 6445,
+    "sttMs": 636,
+    "turnMs": 36,
+    "speechMs": 0
+  },
+  {
+    "at": "2026-10-20T13:10:08.983Z",
+    "totalMs": 3375,
+    "sttMs": 635,
+    "turnMs": 46,
+    "speechMs": 0
+  },
+  {
+    "at": "2026-10-20T13:09:33.115Z",
+    "totalMs": 9034,
+    "sttMs": 956,
+    "turnMs": 45,
+    "speechMs": 0
+  },
+  {
+    "at": "2026-10-20T13:09:00.094Z",
+    "totalMs": 4315,
+    "sttMs": 1001,
+    "turnMs": 45,
+    "speechMs": 0
+  },
+  {
+    "at": "2026-10-20T13:08:41.746Z",
+    "totalMs": 2871,
+    "sttMs": 691,
+    "turnMs": 40,
+    "speechMs": 0
+  },
+  {
+    "at": "2026-10-20T13:08:28.100Z",
+    "totalMs": 3694,
+    "sttMs": 711,
+    "turnMs": 38,
+    "speechMs": 0
+  },
+  {
+    "at": "2026-10-20T13:08:10.438Z",
+    "totalMs": 3167,
+    "sttMs": 934,
+    "turnMs": 55,
+    "speechMs": 0
+  },
+  {
     "at": "2026-10-19T18:50:31.898Z",
     "totalMs": 4080,
     "sttMs": 882,

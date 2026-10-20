@@ -21,6 +21,7 @@ LocalVoice/venv/
 # Backup snapshots and temporary journals
 Saves/Backups/
 Saves/*.pem
+src/data/*.pem
 src/data/*.sqlite-wal
 src/data/*.sqlite-shm
 

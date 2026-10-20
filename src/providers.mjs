@@ -381,10 +381,10 @@ export async function transcribe(config,keys,audio,mime,names=[],observe) {
 }
 export async function speech(config,keys,text,observe) {
  const cleanText=cleanNarrationForTTS(text);
- if(config.ttsProvider==='edge')return edgeSpeech(cleanText,config.forceVoice?(config.edgeVoice||config.voice||'ru-RU-DmitryNeural'):resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',cleanText));
+ if(config.ttsProvider==='edge')return edgeSpeech(cleanText,config.forceVoice?(config.edgeVoice||config.voice||'ru-RU-DmitryNeural'):resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',text));
  const ttsModel=(config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel;
  const log=telemetry(config,'tts',ttsModel,observe);
- const voice=config.forceVoice?(config.voice||'onyx'):resolveOpenAiVoice(config.voice,cleanText);
+ const voice=config.forceVoice?(config.voice||'onyx'):resolveOpenAiVoice(config.voice,text);
  const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice,input:cleanText.slice(0,4000),response_format:'mp3'})},log);try{return Buffer.from(await r.arrayBuffer());}finally{await log(r,{});}
 }
 
@@ -405,12 +405,12 @@ export async function generateImage(config,keys,prompt,observe){
 export async function* speechChunks(config,keys,text,observe,signal){
  const cleanText=cleanNarrationForTTS(text);
  if(config.ttsProvider==='edge'){
-  yield* edgeSpeechChunks(cleanText,config.forceVoice?(config.edgeVoice||config.voice||'ru-RU-DmitryNeural'):resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',cleanText),signal);
+  yield* edgeSpeechChunks(cleanText,config.forceVoice?(config.edgeVoice||config.voice||'ru-RU-DmitryNeural'):resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',text),signal);
   return;
  }
  const ttsModel=(config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel;
  const log=telemetry(config,'tts',ttsModel,observe);
- const voice=config.forceVoice?(config.voice||'onyx'):resolveOpenAiVoice(config.voice,cleanText);
+ const voice=config.forceVoice?(config.voice||'onyx'):resolveOpenAiVoice(config.voice,text);
  const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice,input:cleanText.slice(0,4000),response_format:'mp3'})},log);
  try{for await(const chunk of r.body)yield chunk;}finally{await log(r,{});}
 }

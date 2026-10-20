@@ -5,8 +5,8 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import https from 'node:https';
 import os from 'node:os';
 import path from 'node:path';
-import {cleanNarrationForTTS,resolveOpenAiVoice,resolveEdgeVoice} from '../delivery.mjs';
-import {buildSystem,ttsVoiceSystem} from '../prompts.mjs';
+import {cleanNarrationForTTS,resolveOpenAiVoice,resolveEdgeVoice,extractSpeaker,narrationParts} from '../delivery.mjs';
+import {buildSystem,ttsVoiceSystem,coreSystem} from '../prompts.mjs';
 
 test('cleanNarrationForTTS cleans markdown symbols while keeping dramatic pauses and punctuation', () => {
   const dirty = `### Вход в склеп\n**Дверь со скрипом** открывается... В темноте видны *два янтарных глаза*.\n- Не подходи, ` + '`чужак`' + `! — шепчет голос.\n## Что вы делаете?..`;
@@ -21,11 +21,64 @@ test('cleanNarrationForTTS cleans markdown symbols while keeping dramatic pauses
   assert.ok(clean.includes('Что вы делаете?..'));
 });
 
-test('ttsVoiceSystem is included in prompt buildSystem', () => {
+test('cleanNarrationForTTS strips speaker prefixes so names are never read aloud by TTS', () => {
+  assert.equal(cleanNarrationForTTS('[Старуха] А теперь гляньте, чего он там высмотрел.'), 'А теперь гляньте, чего он там высмотрел.');
+  assert.equal(cleanNarrationForTTS('Старуха: «А ну не сметь трогать кувшин!»'), 'А ну не сметь трогать кувшин!');
+  assert.equal(cleanNarrationForTTS('**Старуха:** «Куда лезешь?»'), 'Куда лезешь?');
+  assert.equal(cleanNarrationForTTS('**Старуха**: «Куда лезешь?»'), 'Куда лезешь?');
+  assert.equal(cleanNarrationForTTS('*Старуха:* «Куда лезешь?»'), 'Куда лезешь?');
+  assert.equal(cleanNarrationForTTS('**Баба-Яга:** Уходи отсюда!'), 'Уходи отсюда!');
+  assert.equal(cleanNarrationForTTS('Старуха — «А ну не сметь!»'), 'А ну не сметь!');
+  assert.equal(cleanNarrationForTTS('Фёдор: Ну и пошло оно всё!'), 'Ну и пошло оно всё!');
+  assert.equal(cleanNarrationForTTS('[speaker:Марта]: Да точно, бабушка права.'), 'Да точно, бабушка права.');
+  assert.equal(cleanNarrationForTTS('«Марта: Да точно!»'), 'Да точно!');
+});
+
+test('narrationParts preserves speaker across multi-sentence dialogue without saying names aloud', () => {
+  const dialogue = 'Старуха: «Ну, хоть слушать перестал. А теперь гляньте, чего он там высмотрел.»';
+  const parts = narrationParts(dialogue);
+  assert.equal(parts.length, 2);
+  assert.equal(parts[0], '[Старуха] «Ну, хоть слушать перестал.');
+  assert.equal(parts[1], '[Старуха] А теперь гляньте, чего он там высмотрел.»');
+
+  // Both sentences resolve to female voice (Nova)
+  assert.equal(resolveOpenAiVoice('onyx', parts[0]), 'nova');
+  assert.equal(resolveOpenAiVoice('onyx', parts[1]), 'nova');
+
+  // Neither sentence will have the word "Старуха" read aloud
+  assert.equal(cleanNarrationForTTS(parts[0]), 'Ну, хоть слушать перестал.');
+  assert.equal(cleanNarrationForTTS(parts[1]), 'А теперь гляньте, чего он там высмотрел.');
+
+  // Markdown bolded dialogue splits cleanly and preserves speaker voice
+  const boldDialogue = '**Старуха:** «Ну, хоть слушать перестал. А теперь гляньте, чего он там высмотрел.»';
+  const boldParts = narrationParts(boldDialogue);
+  assert.equal(boldParts.length, 2);
+  assert.equal(boldParts[0], '[Старуха] «Ну, хоть слушать перестал.');
+  assert.equal(boldParts[1], '[Старуха] А теперь гляньте, чего он там высмотрел.»');
+  assert.equal(resolveOpenAiVoice('onyx', boldParts[0]), 'nova');
+  assert.equal(resolveOpenAiVoice('onyx', boldParts[1]), 'nova');
+  assert.equal(cleanNarrationForTTS(boldParts[0]), 'Ну, хоть слушать перестал.');
+  assert.equal(cleanNarrationForTTS(boldParts[1]), 'А теперь гляньте, чего он там высмотрел.');
+
+  // Multi-speaker on one line splits cleanly into distinct voices
+  const multi = 'Фёдор: Ну и пошло оно всё! Марта: Да точно! Старуха: А ну не сметь!';
+  const multiParts = narrationParts(multi);
+  assert.equal(multiParts.length, 3);
+  assert.equal(resolveOpenAiVoice('onyx', multiParts[0]), 'onyx');
+  assert.equal(resolveOpenAiVoice('onyx', multiParts[1]), 'nova');
+  assert.equal(resolveOpenAiVoice('onyx', multiParts[2]), 'nova');
+  assert.equal(cleanNarrationForTTS(multiParts[0]), 'Ну и пошло оно всё!');
+  assert.equal(cleanNarrationForTTS(multiParts[1]), 'Да точно!');
+  assert.equal(cleanNarrationForTTS(multiParts[2]), 'А ну не сметь!');
+});
+
+test('ttsVoiceSystem is included in prompt buildSystem and coreSystem forbids DM self-arguing', () => {
   const system = buildSystem({edition: '2024'});
   assert.ok(system.includes('АДАПТАЦИЯ ТЕКСТА ПОД НЕЙРОСЕТЕВОГО ЧТЕЦА (TTS)'));
   assert.ok(system.includes('НИКАКОЙ СЛУЖЕБНОЙ И ТЕХНИЧЕСКОЙ РАЗМЕТКИ'));
   assert.ok(system.includes('ПАУЗЫ, ДЫХАНИЕ И ДРАМАТИЧЕСКИЙ РИТМ'));
+  assert.ok(system.includes('РАЗМЕТКА МНОГОГОЛОСИЯ И ДИАЛОГОВ'));
+  assert.ok(coreSystem.includes('КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО СПОРИТЬ С САМИМ СОБОЙ'));
 });
 
 test('resolveOpenAiVoice routes voices dynamically by character and dialogue cues', () => {
@@ -51,6 +104,8 @@ test('resolveEdgeVoice routes voices dynamically between male and female', () =>
   assert.equal(resolveEdgeVoice('ru-RU-DmitryNeural', 'Лес погружается во мрак.'), 'ru-RU-DmitryNeural');
   assert.equal(resolveEdgeVoice('ru-RU-DmitryNeural', '«Будьте осторожны», — тихо произносит жрица.'), 'ru-RU-SvetlanaNeural');
   assert.equal(resolveEdgeVoice('ru-RU-SvetlanaNeural', 'Голос рассказчика спокоен и глубок.'), 'ru-RU-SvetlanaNeural');
+  assert.equal(resolveEdgeVoice('ru-RU-DmitryNeural', '[Старуха] А ну не сметь!'), 'ru-RU-SvetlanaNeural');
+  assert.equal(resolveEdgeVoice('ru-RU-DmitryNeural', '[Фёдор] Пошли!'), 'ru-RU-DmitryNeural');
 });
 
 test('LAN Companion: /api/player/ptt and /api/player/turn dispatch action for the active character', async () => {

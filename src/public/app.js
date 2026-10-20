@@ -60,7 +60,7 @@ function render(){
  $('entryCount').textContent=`${c.journalTotal??c.journal.length} СОБЫТИЙ`;
  $('journal').innerHTML=c.journal.map((x,i)=>{if(x.role==='user'&&x.text==='Игрок подтвердил операцию с листом, памятью или вещами.')return '';let text=x.text;const verified=x.role==='system'&&text.startsWith('VERIFIED_ROLL ');if(verified){try{const r=JSON.parse(text.slice(14));text=`${r.character} · ${r.kind==='save'?'Спасбросок · ':r.kind==='death'?'От смерти · ':''}${skills[r.skill]}: d20 ${r.dice?.length===2?'['+r.dice.join(', ')+'] → ':''}${r.raw} ${r.bonus>=0?'+':'−'} ${Math.abs(r.bonus)} = ${r.total} / Сл ${r.dc} · ${r.success?'Успех':'Провал'}`;}catch{}}
  if(x.role==='system'&&!verified)return `<details class="compact-event"><summary>◇ ${esc(text.split('\n')[0].slice(0,140))}</summary><p>${esc(text)}</p></details>`;
-  return `<article class="entry ${esc(x.role)}${x.isWhisper?' is-whisper':''}"><div class="entry-label"><span>${x.isWhisper?'<span class="whisper-badge">🤫 ШЁПОТ</span>':''}${x.role==='assistant'?'✦ СКАЗИТЕЛЬ':x.role==='user'?'ДЕЙСТВИЕ ГЕРОЯ':'◇ ИГРОВОЕ СОБЫТИЕ'}</span><time>${new Date(x.at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</time></div><p>${esc(text)}${c.delivery?.entryId===x.id?`<span class="narrating">${text?' ':''}${esc(c.delivery.text)}</span>`:''}</p>${x.role==='assistant'?`<button class="replay" data-replay="${i}">▷ Озвучить</button>`:''}${x.automaticChanges?.length?`<details class="automatic-changes"><summary>✓ Записано мастером · ${x.automaticChanges.length}</summary>${x.automaticChanges.map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}${x.tacticalHints?.length?`<div class="tactical-hints">${x.tacticalHints.map(h=>`<p>✦ ${esc(h.text)}</p>`).join('')}</div>`:''}${x.illustrationSuggestion?`<div class="image-suggestion"><span>✧ ${esc(x.illustrationSuggestion.reason)}</span><button class="quiet" data-suggest-image="${x.id}">Предлагаю иллюстрацию ↗</button></div>`:''}</article>`;}).slice(-50).join('');
+  return `<article class="entry ${esc(x.role)}${x.isWhisper?' is-whisper':''}"><div class="entry-label"><span>${x.isWhisper?'<span class="whisper-badge">🤫 ШЁПОТ</span>':''}${x.role==='assistant'?'✦ СКАЗИТЕЛЬ':x.role==='user'?'ДЕЙСТВИЕ ГЕРОЯ':'◇ ИГРОВОЕ СОБЫТИЕ'}</span><time>${new Date(x.at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</time></div><p>${esc(text)}${c.delivery?.entryId===x.id?`<span class="narrating">${text?' ':''}${esc(c.delivery.displayText||c.delivery.text?.replace(/^\[[^\]]+\]\s*/,'')||'')}</span>`:''}</p>${x.role==='assistant'?`<button class="replay" data-replay="${i}">▷ Озвучить</button>`:''}${x.automaticChanges?.length?`<details class="automatic-changes"><summary>✓ Записано мастером · ${x.automaticChanges.length}</summary>${x.automaticChanges.map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}${x.tacticalHints?.length?`<div class="tactical-hints">${x.tacticalHints.map(h=>`<p>✦ ${esc(h.text)}</p>`).join('')}</div>`:''}${x.illustrationSuggestion?`<div class="image-suggestion"><span>✧ ${esc(x.illustrationSuggestion.reason)}</span><button class="quiet" data-suggest-image="${x.id}">Предлагаю иллюстрацию ↗</button></div>`:''}</article>`;}).slice(-50).join('');
  $('partyWallet').textContent=money(c.wallet?.group||0);$('characters').innerHTML=c.characters.map(renderHero).join('');if(lastVisibleHeroId!==selectedId){document.querySelector('.hero.selected')?.scrollIntoView({block:'nearest'});lastVisibleHeroId=selectedId;}
  $('speaker').innerHTML=c.characters.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');$('speaker').value=selectedId;
  $('sessionZeroGuide').hidden=!c.sessionZero||c.sessionZero.complete;$('partyHints').hidden=true;$('speaker').hidden=!!c.sessionZero&&!c.sessionZero.complete;$('editHeroes').disabled=busy||!c.characters.length;
@@ -447,9 +447,52 @@ function cleanNarration(text){
   .replace(/[ \t]+/g,' ')
   .trim();
 }
+function normalizeSpeakerPrefix(line) {
+ return line
+  .replace(/^(\*{1,2}|_{1,2})([А-ЯЁ][А-ЯЁа-яёA-Za-z0-9 _-]+)\1\s*:/u, '$2:')
+  .replace(/^(\*{1,2}|_{1,2})([А-ЯЁ][А-ЯЁа-яёA-Za-z0-9 _-]+):\1\s*/u, '$2: ')
+  .replace(/^(\*{1,2}|_{1,2})\[([А-ЯЁа-яёA-Za-z0-9 _-]+)\]\1\s*:/u, '[$2]:')
+  .replace(/^([А-ЯЁ][А-ЯЁа-яёA-Za-z0-9 _-]+)\s*—\s*([«"“])/u, '$1: $2');
+}
 function splitNarration(text){
- const cleaned=cleanNarration(text);
- return cleaned.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«“])/u).map(s=>s.trim()).filter(Boolean).reduce((a,s)=>{if(s.length>650){const words=s.split(/\s+/);let part='';for(const w of words){if(part.length+w.length>600){a.push(part);part='';}part+=(part?' ':'')+w;}if(part)a.push(part);}else a.push(s);return a;},[]);
+ if(!text)return [];
+ const raw=String(text);
+ const normalized=raw
+  .replace(/(?<=[.!?…»”])\s+(?=(?:\[[А-ЯЁа-яёA-Za-z0-9 _-]+\]|(?:\*{1,2}|_{1,2})?[А-ЯЁ][А-ЯЁа-яёA-Za-z0-9 _-]+(?:\*{1,2}|_{1,2})?\s*:))/gu,'\n');
+ const lines=normalized.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+ const parts=[];
+ for(let line of lines){
+  line=normalizeSpeakerPrefix(line);
+  const tagMatch=line.match(/^[«"“]?\[([А-ЯЁа-яёA-Za-z0-9 _-]+)\][:\s—-]*(.*)$/u)
+              ||line.match(/^[«"“]?([А-ЯЁ][А-ЯЁа-яёA-Za-z0-9 _-]+)\s*:\s*(?:—\s*)?(.*)$/u);
+  if(tagMatch){
+   const speaker=tagMatch[1].trim(),speech=tagMatch[2].trim();
+   if(!speech)continue;
+   const sents=speech.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«“])/u).map(s=>s.trim()).filter(Boolean);
+   for(const s of sents)parts.push(`[${speaker}] ${s}`);
+   continue;
+  }
+  const sents=line.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«“—])/u).map(s=>s.trim()).filter(Boolean);
+  let activeSpeaker=null;
+  for(let i=0;i<sents.length;i++){
+   const s=sents[i];
+   const isQuote=s.startsWith('—')||s.startsWith('«')||s.startsWith('"');
+   if(isQuote&&!activeSpeaker&&i>0){
+    const prev=sents[i-1];
+    const m=prev.match(/(?<!\p{L})(Старуха|Марта|Фёдор|Теон|Альвари|жрица|девушка|женщина|бабка|ведьма|орк|рыцарь|кузнец|трактирщица|хозяйка)(?!\p{L})/iu);
+    if(m)activeSpeaker=m[1];
+   }
+   if(isQuote&&activeSpeaker){
+    parts.push(`[${activeSpeaker}] ${s}`);
+   }else if(activeSpeaker&&!/^(?:Она|Он|Они|Мастер|Ведущий|Брось|Что|Внезапно|Но|И|Тогда|После)\b/u.test(s)){
+    parts.push(`[${activeSpeaker}] ${s}`);
+   }else{
+    activeSpeaker=null;
+    parts.push(s);
+   }
+  }
+ }
+ return parts.reduce((a,s)=>{if(s.length>650){const words=s.split(/\s+/);let part='';for(const w of words){if(part.length+w.length>600){a.push(part);part='';}part+=(part?' ':'')+w;}if(part)a.push(part);}else a.push(s);return a;},[]);
 }
 async function replayEntry(text){
  const parts=splitNarration(text);

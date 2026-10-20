@@ -43,8 +43,8 @@ cat > "$TASK_APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Сказитель</string>
 <key>CFBundleDisplayName</key><string>Сказитель</string>
 <key>CFBundleIconFile</key><string>Skazitel.icns</string>
-<key>CFBundleVersion</key><string>18</string>
-<key>CFBundleShortVersionString</key><string>0.7.0</string>
+<key>CFBundleVersion</key><string>19</string>
+<key>CFBundleShortVersionString</key><string>0.8.0</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSMicrophoneUsageDescription</key><string>Распознавать игровые реплики: по кнопке или при включённом постоянном прослушивании.</string>
