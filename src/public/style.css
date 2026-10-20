@@ -293,6 +293,60 @@ body.sidebar-collapsed .sidebar-toggle-btn{background:#243627;border-color:var(-
 .model-select-row input{flex:1;min-width:0}
 .model-select-row button{padding:0 12px;font-size:16px;min-width:38px}
 
+/* SFX Toggle Button */
+.sfx-toggle-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid #546a56;border-radius:8px;background:#17251d;color:var(--text);font-size:12px;cursor:pointer;transition:all .15s ease;white-space:nowrap}
+.sfx-toggle-btn:hover{background:#233729;border-color:var(--gold);color:var(--gold)}
+.sfx-toggle-btn.muted{opacity:0.5;filter:grayscale(1);text-decoration:line-through}
 
+/* Combat Tracker Bar */
+.combat-tracker-bar{display:flex;align-items:center;gap:12px;padding:8px 16px;background:linear-gradient(90deg,#241010,#1c1214,#141e17);border-bottom:1px solid #783535;box-shadow:0 4px 16px rgba(0,0,0,0.4);position:relative;z-index:10;animation:combatSlideDown .25s ease-out;overflow-x:auto}
+@keyframes combatSlideDown{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.combat-info{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.combat-badge{background:#dc2626;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px;letter-spacing:0.5px}
+.combat-round-text{font-size:12px;font-weight:700;color:var(--gold)}
+.combat-order-list{display:flex;align-items:center;gap:8px;flex:1;min-width:0;overflow-x:auto;padding:2px 0}
+.combat-turn-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#18221a;border:1px solid #3d4f40;border-radius:6px;font-size:12px;color:var(--text);white-space:nowrap;transition:all .2s ease;flex-shrink:0}
+.combat-turn-chip.enemy{background:#281515;border-color:#5c2d2d;color:#fca5a5}
+.combat-turn-chip.hero{background:#15241b;border-color:#3d5e44;color:#a7f3d0}
+.combat-turn-chip.active{background:#2f2211;border-color:var(--gold);color:#fff;box-shadow:0 0 12px rgba(201,169,115,.45);transform:scale(1.05);font-weight:700}
+.combat-turn-chip .init-val{font-size:10px;color:var(--gold);background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px}
+.combat-turn-chip .hp-val{font-size:10px;color:var(--muted);margin-left:2px}
+.combat-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.combat-btn{padding:5px 12px;font-size:12px;font-weight:600;border-radius:5px;cursor:pointer;transition:all .15s ease}
+.combat-btn.primary{background:linear-gradient(180deg,#dc2626,#991b1b);border:1px solid #ef4444;color:#fff}
+.combat-btn.primary:hover{background:linear-gradient(180deg,#ef4444,#b91c1c);box-shadow:0 0 10px rgba(239,68,68,0.4)}
+.combat-btn.quiet{background:#1a231d;border:1px solid #3c4d3e;color:var(--muted)}
+.combat-btn.quiet:hover{background:#2a3a2e;color:var(--text);border-color:var(--gold)}
 
+/* Fog of War Tactical Cells */
+.tactical-grid-cell.cell-fog-shrouded{background:repeating-linear-gradient(45deg,rgba(11,20,14,0.85),rgba(11,20,14,0.85) 6px,rgba(20,32,24,0.85) 6px,rgba(20,32,24,0.85) 12px)!important;opacity:0.65;position:relative}
+.tactical-grid-cell.cell-fog-shrouded::after{content:'🌫️';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;opacity:0.4;pointer-events:none}
 
+/* Whispers in Journal */
+.entry.is-whisper{background:rgba(139,92,246,0.1)!important;border-left:3px solid #a855f7!important}
+.entry.is-whisper .entry-label span{color:#c084fc!important}
+.whisper-badge{display:inline-block;background:#7e22ce;color:#f3e8ff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-right:6px}
+
+/* Random Generator Dialog */
+#randomGenDialog{max-width:540px;width:95vw}
+.random-gen-tabs{display:flex;gap:6px;background:#0d1410;padding:4px;border-radius:8px;border:1px solid #233327;margin-bottom:14px}
+.random-gen-tabs .tab-btn{flex:1;background:transparent;border:none;color:#8fa08e;padding:7px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease;text-align:center}
+.random-gen-tabs .tab-btn.active{background:#1d3023;color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.random-gen-result{min-height:160px;background:#0e1711;border:1px solid #2d4231;border-radius:8px;padding:14px;margin-bottom:14px}
+.random-gen-card h4{margin:0 0 6px;color:var(--gold);font-family:Georgia,serif;font-size:16px}
+.random-gen-card .card-subtitle{font-size:12px;color:var(--muted);margin-bottom:10px}
+.random-gen-card p{font-size:13px;line-height:1.5;color:var(--text);margin-bottom:8px}
+.random-gen-card ul{padding-left:18px;margin:8px 0;font-size:12px;color:var(--text)}
+.random-gen-card ul li{margin-bottom:4px}
+.random-gen-card .reward-tag{display:inline-block;padding:2px 8px;background:rgba(201,169,115,0.15);border:1px solid var(--gold);color:var(--gold);border-radius:4px;font-size:11px;font-weight:600;margin-top:8px}
+
+/* Quest Log Cards */
+.quest-card{background:#142219;border:1px solid #2a3c2e;border-left:3px solid #38bdf8;border-radius:6px;padding:10px 12px;margin-bottom:8px}
+.quest-card.completed{border-left-color:#22c55e;opacity:0.75}
+.quest-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px}
+.quest-card-title{font-size:13px;font-weight:600;color:var(--text)}
+.quest-status-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700}
+.quest-status-badge.active{background:#0369a1;color:#e0f2fe}
+.quest-status-badge.completed{background:#15803d;color:#dcfce7}
+.quest-desc{font-size:12px;color:var(--muted);line-height:1.4;margin:4px 0}
+.quest-reward{font-size:11px;color:var(--gold);margin-top:4px}

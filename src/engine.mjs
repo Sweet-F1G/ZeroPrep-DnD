@@ -8,7 +8,8 @@ export {baseSystem as SYSTEM} from './prompts.mjs';
 export function character(c={}) {
  const name=String(c.name||'Новый герой').trim().slice(0,80); if(!name) throw Error('Укажите имя героя');
  const maxHp=integer(c.maxHp??20,1,9999,'Максимум HP');
- return {id:randomUUID(),name,description:String(c.description||'Искатель приключений').slice(0,500),maxHp,hp:integer(c.hp??maxHp,0,maxHp,'HP'),ac:integer(c.ac??12,0,50,'КД'),...sheet(c),...heroRecords(c)};
+ const avatar=typeof c.avatar==='string'?c.avatar.slice(0,250000):'';
+ return {id:randomUUID(),name,avatar,description:String(c.description||'Искатель приключений').slice(0,500),maxHp,hp:integer(c.hp??maxHp,0,maxHp,'HP'),ac:integer(c.ac??12,0,50,'КД'),...sheet(c),...heroRecords(c)};
 }
 export function makeCampaign({name,setting,source='',characters=[],edition='legacy'}) {
  if(!Array.isArray(characters)||characters.length>12)throw Error('В партии должно быть не больше 12 героев');

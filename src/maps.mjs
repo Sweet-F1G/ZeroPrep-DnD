@@ -5,8 +5,9 @@ export function gameMap(value,c){
  const width=integer(value.width??12,2,40),height=integer(value.height??12,2,40);
  if(!Array.isArray(value.tokens||[])||(value.tokens||[]).length>100)throw Error('Не больше 100 маркеров на карте');
  const tokens=(value.tokens||[]).map(t=>{const characterId=t.characterId||null;if(characterId&&!c.characters.some(h=>h.id===characterId))throw Error('Герой маркера не найден');const id=text(t.id,100);if(!id)throw Error('Маркер требует id');return {id,label:text(t.label,80),characterId,x:integer(t.x,0,width-1),y:integer(t.y,0,height-1),kind:['hero','enemy','object'].includes(t.kind)?t.kind:'object'};});
- if(new Set(tokens.map(t=>t.id)).size!==tokens.length)throw Error('Повторяющиеся маркеры');
- return {id,name,width,height,feetPerCell:integer(value.feetPerCell??5,1,100000),description:text(value.description,3000),tokens};
+ const fogOfWar=typeof value.fogOfWar==='boolean'?value.fogOfWar:false;
+ const revealedCells=Array.isArray(value.revealedCells)?value.revealedCells.slice(0,1600):[];
+ return {id,name,width,height,feetPerCell:integer(value.feetPerCell??5,1,100000),description:text(value.description,3000),tokens,fogOfWar,revealedCells};
 }
 export function mapAction(c,a){
  c.maps??=[];

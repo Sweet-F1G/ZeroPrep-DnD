@@ -16,7 +16,7 @@ import {createCampaignStore} from './campaign-store.mjs';
 import {applyActions,approveAction,localCommand,proposeActions,playerSpeech} from './actions.mjs';
 import {memoryRecord,searchArchive,operationHash,remember} from './memory.mjs';
 import {validateInventory,inventoryItem} from './inventory.mjs';
-import {integer} from './rules.mjs';
+import {integer,useResource,rest} from './rules.mjs';
 import {makeCampaign,character,checkpoint,undo,resolveRoll,acceptReply,approveProposal,demoReply,updateReactionClock} from './engine.mjs';
 import {defaults,generate,summarize,transcribe,speech,poolMetadata,usesGroqKey,createLiveSession,generateImage,speechChunks,generateTacticalMap} from './providers.mjs';
 import {localVoiceStatus,sileroSpeech,sileroSpeakers,closeLocalVoice} from './local-voice.mjs';
@@ -144,7 +144,7 @@ const serverHandler=async(req,res)=>{
      }
     }catch{res.writeHead(404);return res.end();}
    }
-    const assets={'/':'index.html','/app.js':'app.js','/ambient-sound.mjs':'ambient-sound.mjs','/style.css':'style.css','/voice-input.mjs':'voice-input.mjs','/speech-prefetch.mjs':'speech-prefetch.mjs','/live-voice.mjs':'live-voice.mjs','/rule-data.mjs':'rule-data.mjs','/attribution.txt':'attribution.txt','/player':'player.html','/player.html':'player.html','/player.js':'player.js','/player.css':'player.css','/qrcode.js':'qrcode.js'};const file=assets[url.pathname];if(!file){res.writeHead(404);return res.end();}
+    const assets={'/':'index.html','/app.js':'app.js','/ambient-sound.mjs':'ambient-sound.mjs','/sfx.mjs':'sfx.mjs','/style.css':'style.css','/voice-input.mjs':'voice-input.mjs','/speech-prefetch.mjs':'speech-prefetch.mjs','/live-voice.mjs':'live-voice.mjs','/rule-data.mjs':'rule-data.mjs','/attribution.txt':'attribution.txt','/player':'player.html','/player.html':'player.html','/player.js':'player.js','/player.css':'player.css','/qrcode.js':'qrcode.js'};const file=assets[url.pathname];if(!file){res.writeHead(404);return res.end();}
     let content=await fs.readFile(path.join(root,'public',file));if(file==='index.html')content=Buffer.from(content.toString().replace('__APP_TOKEN__',token));
     if(file==='player.html')content=Buffer.from(content.toString().replace(/__PLAYER_TOKEN__/g,playerToken).replace(/__APP_TOKEN__/g,playerToken));
     res.writeHead(200,{'Content-Type':file.endsWith('html')?'text/html; charset=utf-8':file.endsWith('js')||file.endsWith('mjs')?'text/javascript; charset=utf-8':file.endsWith('.txt')?'text/plain; charset=utf-8':'text/css; charset=utf-8','Cache-Control':'no-store'});return res.end(content);
@@ -173,14 +173,21 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token']||url.searchParams.get('token');
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const campaignId=url.searchParams.get('id');
+    const heroId=url.searchParams.get('heroId');
     const c=(campaignId?campaigns.find(x=>x.id===campaignId):null)||(config.activeCampaignId?campaigns.find(x=>x.id===config.activeCampaignId):null)||campaigns[0];
     const httpsPort=httpsServer?.address()?.port||null;
     if(!c)return json(res,{campaign:null,campaigns:[],httpsPort});
+    const journalSlice=(c.journal||[]).slice(-40).map(j=>{
+     if(j.isWhisper&&auth===playerToken&&heroId&&j.characterId!==heroId){
+      return {...j,text:`🤫 ${j.characterName||'Герой'} что-то шепчет Мастеру...`};
+     }
+     return j;
+    });
     return json(res,{
      activeCampaignId:config.activeCampaignId||c.id,
      httpsPort,
      campaign:{
-      id:c.id,name:c.name,setting:c.setting,characters:c.characters,inventory:c.inventory||[],wallet:c.wallet||{group:0},loot:c.loot||[],maps:c.maps||[],journal:(c.journal||[]).slice(-30),images:(c.images||[]).filter(i=>i.status==='ready')
+      id:c.id,name:c.name,setting:c.setting,characters:c.characters,inventory:c.inventory||[],wallet:c.wallet||{group:0},loot:c.loot||[],maps:c.maps||[],journal:journalSlice,initiative:c.initiative||null,encounter:c.encounter||null,images:(c.images||[]).filter(i=>i.status==='ready')
      },
      campaigns:campaigns.map(x=>({id:x.id,name:x.name,heroesCount:x.characters?.length||0}))
     });
@@ -235,6 +242,206 @@ const serverHandler=async(req,res)=>{
     }
     throw Error('Неизвестное действие');
    }
+   if(req.method==='POST'&&url.pathname==='/api/player/resource'){
+    const auth=req.headers['x-app-token']||req.headers['x-player-token'];
+    if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
+    const b=await body(req);
+    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
+    if(!c)throw Error('Кампания не найдена');
+    const hero=c.characters.find(h=>h.id===b.characterId);
+    if(!hero)throw Error('Герой не найден');
+    const r=(hero.resources||[]).find(res=>res.id===b.resourceId);
+    if(!r)throw Error('Ресурс не найден');
+    const action=b.action||'use';
+    if(action==='use'){
+     if(r.current<=0)throw Error(`Ресурс «${r.name}» исчерпан`);
+     r.current=Math.max(0,r.current-(b.amount||1));
+    }else if(action==='recover'){
+     r.current=Math.min(r.max,r.current+(b.amount||1));
+    }else if(action==='set'){
+     r.current=Math.max(0,Math.min(r.max,Number(b.amount)||0));
+    }
+    const logMsg=`✨ ${hero.name}: «${r.name}» (${r.current}/${r.max})`;
+    c.journal.push({id:randomUUID(),role:'user',text:logMsg,at:new Date().toISOString()});
+    await commitCampaign(c);
+    broadcast('campaign',{campaignId:c.id});
+    return json(res,{ok:true,resource:r,log:logMsg});
+   }
+   if(req.method==='POST'&&url.pathname==='/api/player/rest'){
+    const auth=req.headers['x-app-token']||req.headers['x-player-token'];
+    if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
+    const b=await body(req);
+    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
+    if(!c)throw Error('Кампания не найдена');
+    const kind=b.kind==='short'?'short':'long';
+    const heroId=b.characterId||null;
+    const hero=c.characters.find(h=>h.id===heroId);
+    const msg=rest(c,kind,heroId);
+    let healText='';
+    if(kind==='short'&&hero&&b.spendHitDice&&hero.hitDice?.current>0){
+     hero.hitDice.current-=1;
+     const conMod=Math.floor(((hero.abilityScores?.constitution||10)-10)/2);
+     const dieSides=hero.hitDice?.size||8;
+     const roll=Math.floor(Math.random()*dieSides)+1;
+     const heal=Math.max(1,roll+conMod);
+     const old=hero.hp;
+     hero.hp=Math.min(hero.maxHp,hero.hp+heal);
+     healText=` ${hero.name} потратил d${dieSides} кость здоровья и восстановил ${heal} ОЗ (${old} → ${hero.hp}).`;
+    }
+    c.journal.push({id:randomUUID(),role:'system',text:`⛺ ${msg}${healText}`,at:new Date().toISOString()});
+    await commitCampaign(c);
+    broadcast('campaign',{campaignId:c.id});
+    return json(res,{ok:true,message:`${msg}${healText}`});
+   }
+   if(req.method==='POST'&&url.pathname==='/api/combat/start'){
+    const auth=req.headers['x-app-token']||req.headers['x-player-token'];
+    if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
+    const b=await body(req);
+    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
+    if(!c)throw Error('Кампания не найдена');
+    const combatants=[];
+    for(const h of c.characters){
+     const dex=h.abilityScores?.dexterity||h.stats?.dex||10;
+     const mod=Math.floor((dex-10)/2);
+     const roll=Math.floor(Math.random()*20)+1;
+     combatants.push({id:h.id,characterId:h.id,name:h.name,initiative:roll+mod,roll,mod,kind:'hero',hp:h.hp,maxHp:h.maxHp,avatar:h.avatar||''});
+    }
+    const map=c.maps?.[0];
+    if(Array.isArray(b.enemies)&&b.enemies.length){
+     for(const en of b.enemies){
+      const roll=Math.floor(Math.random()*20)+1;
+      combatants.push({id:en.id||randomUUID(),name:en.name||en.label||'Враг',initiative:roll+(en.mod||0),roll,mod:en.mod||0,kind:'enemy',hp:en.hp||15,maxHp:en.maxHp||15});
+     }
+    }else if(map?.tokens){
+     const enemies=map.tokens.filter(t=>t.kind==='enemy');
+     for(const en of enemies){
+      const roll=Math.floor(Math.random()*20)+1;
+      combatants.push({id:en.id,name:en.label||'Враг',initiative:roll,roll,mod:0,kind:'enemy',hp:15,maxHp:15});
+     }
+    }
+    if(!combatants.some(x=>x.kind==='enemy')){
+     const roll=Math.floor(Math.random()*20)+1;
+     combatants.push({id:randomUUID(),name:'Противник',initiative:roll,roll,mod:0,kind:'enemy',hp:20,maxHp:20});
+    }
+    combatants.sort((a,b)=>b.initiative-a.initiative);
+    c.initiative={active:true,round:1,turnIndex:0,combatants};
+    c.encounter={active:true,id:randomUUID(),key:'combat-'+Date.now()};
+    if(c.dm)c.dm.ambient='battle';
+    const startMsg=`⚔️ Начало боя! Раунд 1. Очередь ходов: ${combatants.map(cb=>`${cb.name} (${cb.initiative})`).join(', ')}. Ход: ${combatants[0]?.name}.`;
+    c.journal.push({id:randomUUID(),role:'system',text:startMsg,at:new Date().toISOString()});
+    await commitCampaign(c);
+    broadcast('combat-update',{campaignId:c.id,initiative:c.initiative});
+    broadcast('campaign',{campaignId:c.id});
+    return json(res,{ok:true,initiative:c.initiative,message:startMsg});
+   }
+   if(req.method==='POST'&&url.pathname==='/api/combat/next'){
+    const auth=req.headers['x-app-token']||req.headers['x-player-token'];
+    if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
+    const b=await body(req);
+    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
+    if(!c)throw Error('Кампания не найдена');
+    if(!c.initiative||!c.initiative.combatants?.length)throw Error('Бой не активен');
+    let {round,turnIndex,combatants}=c.initiative;
+    turnIndex++;
+    if(turnIndex>=combatants.length){round++;turnIndex=0;}
+    c.initiative.round=round;c.initiative.turnIndex=turnIndex;
+    const current=combatants[turnIndex];
+    const turnMsg=`⚔️ Раунд ${round} · Ход переходит к: ${current.name}!`;
+    c.journal.push({id:randomUUID(),role:'system',text:turnMsg,at:new Date().toISOString()});
+    await commitCampaign(c);
+    broadcast('combat-update',{campaignId:c.id,initiative:c.initiative,current});
+    broadcast('campaign',{campaignId:c.id});
+    return json(res,{ok:true,initiative:c.initiative,current});
+   }
+   if(req.method==='POST'&&url.pathname==='/api/combat/end'){
+    const auth=req.headers['x-app-token']||req.headers['x-player-token'];
+    if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
+    const b=await body(req);
+    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
+    if(!c)throw Error('Кампания не найдена');
+    c.initiative=null;
+    if(c.encounter)c.encounter.active=false;
+    if(c.dm)c.dm.ambient='camp';
+    const endMsg=`🕊️ Бой завершён! Опасность миновала.`;
+    c.journal.push({id:randomUUID(),role:'system',text:endMsg,at:new Date().toISOString()});
+    await commitCampaign(c);
+    broadcast('combat-update',{campaignId:c.id,initiative:null});
+    broadcast('campaign',{campaignId:c.id});
+    return json(res,{ok:true,message:endMsg});
+   }
+   if(req.method==='POST'&&url.pathname==='/api/generate/random'){
+    const auth=req.headers['x-app-token']||req.headers['x-player-token'];
+    if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
+    const b=await body(req);
+    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
+    if(!c)throw Error('Кампания не найдена');
+    const type=b.type||'encounter';
+    let result={};
+    if(type==='encounter'){
+     const loc=c.dm?.location||c.setting||'окрестности';
+     const list=[
+      {name:'Засада гоблинов-лучников',desc:`В зарослях у дороги (${loc}) натянуты тетивы! Трое гоблинов приготовились стрелять из укрытия.`,enemies:[{label:'Гоблин-лучник A',kind:'enemy'},{label:'Гоблин-лучник B',kind:'enemy'},{label:'Вожак банды',kind:'enemy'}]},
+      {name:'Стая лютых волков',desc:`Ветер доносит глухой рык. Из тумана выходят волки с горящими голодными глазами, окружающие отряд.`,enemies:[{label:'Лютый вожак',kind:'enemy'},{label:'Серый волк A',kind:'enemy'},{label:'Серый волк B',kind:'enemy'}]},
+      {name:'Заброшенный алтарь предков',desc:`Среди замшелых камней пульсирует забытая руна. Воздух дрожит от магического напряжения.`,enemies:[{label:'Каменный страж',kind:'enemy'}]},
+      {name:'Караван торговца в беде',desc:`Телега купца застряла в глубокой колее со сломанной осью. Из темноты уже приближаются тени мародёров.`,enemies:[{label:'Головорез',kind:'enemy'},{label:'Разбойник',kind:'enemy'}]}
+     ];
+     result=list[Math.floor(Math.random()*list.length)];
+    }else if(type==='loot'){
+     const gp=Math.floor(Math.random()*35)+10;
+     const sp=Math.floor(Math.random()*50)+15;
+     const items=[
+      {name:'Зелье лечения (2d4+2 ОЗ)',category:'potion',description:'Красная шипящая жидкость с ароматом корицы.'},
+      {name:'Свиток доспеха мага',category:'scroll',description:'Пергамент с лазурными защитными рунами.'},
+      {name:'Ограненный агат (50 зм)',category:'treasure',description:'Глубокий полупрозрачный самоцвет с полосчатым узором.'},
+      {name:'Походная фляга гномьего эля',category:'food',description:'Крепкий бодрящий напиток, согревающий в долгом походе.'},
+      {name:'Серебряный перстень с соколом',category:'treasure',description:'Тонкая работа мастера с печатью благородного дома.'}
+     ];
+     const item=items[Math.floor(Math.random()*items.length)];
+     result={gp,sp,item,text:`Найдено: ${gp} зм, ${sp} см и «${item.name}»!`};
+     if(b.applyToParty){
+      c.wallet=c.wallet||{group:0};
+      c.wallet.group=(c.wallet.group||0)+(gp*100)+(sp*10);
+      c.inventory=c.inventory||[];
+      c.inventory.push({id:randomUUID(),name:item.name,category:item.category,description:item.description,quantity:1,ownerId:'group',carrierId:'group',equipped:false});
+      await commitCampaign(c);
+      broadcast('campaign',{campaignId:c.id});
+     }
+    }else if(type==='npc'){
+     const names=['Элрик Железнорук','Мириэль Теневая','Бромми Пузатый','Валтейн Седой','Каэлия Ветер','Дорн Молотобоец'];
+     const roles=['Странствующий бард','Осторожный травник','Бывший наёмник','Беглый послушник','Тайный агент гильдии воров'];
+     const traits=['Говорит тихим шёпотом, постоянно оглядываясь','Неприлично весел и сыплет старыми пословицами','Имеет глубокий шрам через бровь и мрачный взгляд','Ищет редкое снадобье для спасения родного дома'];
+     const name=names[Math.floor(Math.random()*names.length)];
+     const role=roles[Math.floor(Math.random()*roles.length)];
+     const trait=traits[Math.floor(Math.random()*traits.length)];
+     result={name,role,trait,text:`${name} (${role}). Характер: ${trait}.`};
+     if(b.saveToWorld){
+      c.dm=dmState(c.dm);
+      c.dm.world.push(worldRecord({kind:'npc',name,description:`${role}. ${trait}`,attitude:'Нейтрален'},'dm-generator'));
+      await commitCampaign(c);
+      broadcast('campaign',{campaignId:c.id});
+     }
+    }
+    return json(res,{ok:true,type,result});
+   }
+   if(req.method==='POST'&&url.pathname==='/api/map/fog'){
+    const auth=req.headers['x-app-token']||req.headers['x-player-token'];
+    if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
+    const b=await body(req);
+    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
+    if(!c)throw Error('Кампания не найдена');
+    const map=(c.maps||[]).find(m=>m.id===b.mapId)||c.maps?.[0];
+    if(!map)throw Error('Карта не найдена');
+    if(b.toggleFog!==undefined)map.fogOfWar=!!b.toggleFog;
+    if(b.revealAll){
+     map.revealedCells=[];
+     for(let x=0;x<map.width;x++)for(let y=0;y<map.height;y++)map.revealedCells.push(`${x},${y}`);
+    }else if(b.resetFog){
+     map.revealedCells=[];
+    }
+    await commitCampaign(c);
+    broadcast('campaign',{campaignId:c.id});
+    return json(res,{ok:true,map});
+   }
    if(req.method==='POST'&&(url.pathname==='/api/player/ptt'||url.pathname==='/api/player/turn'||url.pathname==='/api/player/transcribe')){
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
@@ -273,7 +480,9 @@ const serverHandler=async(req,res)=>{
     if(c.proposals?.length)throw Error('Сначала подтвердите или отклоните изменения HP');
     if(c.pending)throw Error('Сначала завершите ожидаемый бросок d20 на вкладке «Кубики»');
     checkpoint(c);
-    const event={id:randomUUID(),role:'user',text:`${hero.name}: ${text}`,at:new Date().toISOString()};
+    const isWhisper=b.isWhisper===true;
+    const whisperPrefix=isWhisper?'🤫 [ШЁПОТ] ':'';
+    const event={id:randomUUID(),role:'user',text:`${whisperPrefix}${hero.name}: ${text}`,isWhisper,characterId:hero.id,characterName:hero.name,at:new Date().toISOString()};
     c.journal.push(event);
     let localReply=localCommand(c,text,hero.id,event.id);
     if(!localReply&&/^(?:я\s+)?(?:обещаю|клянусь)(?:\s|$)/iu.test(playerSpeech(c,text,hero.id))){
@@ -286,6 +495,9 @@ const serverHandler=async(req,res)=>{
     let reply;
     try{
      reply=localReply?{narration:localReply,changes:[]}:config.provider==='demo'?demoReply(c,b,null):await generate({...config},{...keys},c,observe,speechCallback,speechCallback);
+     if(isWhisper&&reply?.narration){
+      reply.narration=`🤫 [Шёпотом для ${hero.name}]: `+reply.narration;
+     }
     }finally{
      costRequests--;
     }
@@ -475,7 +687,13 @@ const serverHandler=async(req,res)=>{
     res.writeHead(200,{'Content-Type':'audio/wav','Cache-Control':'no-store','X-Synthesis-Ms':String(Math.round(result.synthesisSeconds*1000))});return res.end(result.audio);
    }
    if(config.ttsProvider==='edge'||b.preview==='edge'){
-    const voice=b.preview==='edge'?(b.voice||config.edgeVoice||'ru-RU-DmitryNeural'):(config.edgeVoice||'ru-RU-DmitryNeural');
+    let voice=b.preview==='edge'?(b.voice||config.edgeVoice||'ru-RU-DmitryNeural'):(config.edgeVoice||'ru-RU-DmitryNeural');
+    if(!b.preview&&config.ttsProvider==='edge'){
+     const textStr=String(b.text||'');
+     if(/(?:^|\n)\s*(?:[«"]?[А-ЯЁ][а-яё]+(?:а|я|ия|эль|етта|ис|ин|ова|ева)\s*(?::|—|говорит|отвечает|шепчет|восклицает)|женщин|девушк|эльфийк|жриц|трактирщиц|ведьм|королев|старух|девочк)/iu.test(textStr)){
+      voice='ru-RU-SvetlanaNeural';
+     }
+    }
     try{
      const audio=await edgeSpeech(String(b.text||''),voice);
      res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store'});return res.end(audio);

@@ -1,6 +1,4 @@
-// ============================================================================
-// СКАЗИТЕЛЬ · КАРМАННЫЙ КОМПАНЬОН ДЛЯ СМАРТФОНОВ ИГРОКОВ (LAN)
-// ============================================================================
+import { playSfx } from '/sfx.mjs';
 
 const token = document.querySelector('meta[name="player-token"]')?.getAttribute('content') || '';
 const headers = {
@@ -20,6 +18,7 @@ let mapPixelTheme = localStorage.getItem('skazitel_map_pixel_theme') === 'true';
 let rollMode = 'normal'; // 'normal' | 'adv' | 'dis'
 let recentRolls = [];
 let eventSource = null;
+let isWhisperMode = false;
 
 // DOM Elements
 const connStatus = document.getElementById('connStatus');
@@ -42,6 +41,7 @@ initTabs();
 initDiceControls();
 initMapControls();
 initPttControls();
+initRestControls();
 loadInitialState();
 connectSSE();
 
@@ -110,9 +110,10 @@ function checkHttpsPromo(httpsPort) {
 
 async function loadInitialState() {
   try {
-    const url = selectedCampaignId 
-      ? `/api/player/state?id=${encodeURIComponent(selectedCampaignId)}` 
-      : `/api/player/state`;
+    const query = new URLSearchParams();
+    if (selectedCampaignId) query.set('id', selectedCampaignId);
+    if (selectedHeroId) query.set('heroId', selectedHeroId);
+    const url = `/api/player/state` + (query.toString() ? `?${query.toString()}` : '');
     const res = await fetch(url, { headers });
     if (!res.ok) throw new Error('Ошибка связи с сервером');
     const data = await res.json();
@@ -128,6 +129,7 @@ async function loadInitialState() {
       renderActiveHero();
       renderInventory();
       renderMap();
+      renderCombatBanner();
     }
   } catch (e) {
     showToast('Не удалось загрузить данные игры');
@@ -150,6 +152,25 @@ function connectSSE() {
   eventSource.addEventListener('campaign', async () => {
     // Campaign updated on PC Master screen
     await refreshCampaignState();
+  });
+
+  eventSource.addEventListener('combat-update', async (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (campaign && data.campaignId === campaign.id) {
+        campaign.initiative = data.initiative;
+        renderCombatBanner();
+        const activeHero = getActiveHero();
+        const currentCombatant = (data.initiative?.order || [])[data.initiative?.turnIndex || 0];
+        if (currentCombatant && activeHero && (
+          currentCombatant.id === activeHero.id ||
+          currentCombatant.name?.toLowerCase() === activeHero.name?.toLowerCase()
+        )) {
+          showToast('⚔️ ТВОЙ ХОД в бою!');
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        }
+      }
+    } catch {}
   });
 
   eventSource.addEventListener('campaign-switch', async (e) => {
@@ -183,9 +204,10 @@ function connectSSE() {
 async function refreshCampaignState(targetCampaignId = null) {
   try {
     const idToFetch = targetCampaignId || selectedCampaignId;
-    const url = idToFetch 
-      ? `/api/player/state?id=${encodeURIComponent(idToFetch)}` 
-      : `/api/player/state`;
+    const query = new URLSearchParams();
+    if (idToFetch) query.set('id', idToFetch);
+    if (selectedHeroId) query.set('heroId', selectedHeroId);
+    const url = `/api/player/state` + (query.toString() ? `?${query.toString()}` : '');
     const res = await fetch(url, { headers });
     if (!res.ok) return;
     const data = await res.json();
@@ -202,6 +224,7 @@ async function refreshCampaignState(targetCampaignId = null) {
       renderActiveHero();
       renderInventory();
       renderMap();
+      renderCombatBanner();
     }
   } catch {}
 }
@@ -298,8 +321,8 @@ function renderActiveHero() {
     const readyPortrait = (campaign?.images || []).filter(i => i.status === 'ready' && i.kind === 'portrait' && i.characterId === hero.id).slice(-1)[0];
     if (readyPortrait && readyPortrait.file) {
       heroPortraitEl.innerHTML = `<img class="hero-portrait-img" src="/images/${readyPortrait.file}" alt="${escapeHtml(hero.name)}">`;
-    } else if (hero.portraitUrl) {
-      heroPortraitEl.innerHTML = `<img class="hero-portrait-img" src="${hero.portraitUrl}" alt="${escapeHtml(hero.name)}">`;
+    } else if (hero.portraitUrl || hero.avatar) {
+      heroPortraitEl.innerHTML = `<img class="hero-portrait-img" src="${escapeHtml(hero.portraitUrl || hero.avatar)}" alt="${escapeHtml(hero.name)}">`;
     } else {
       const icon = getClassIcon(hero);
       const initials = (hero.name || 'Г').charAt(0).toUpperCase();
@@ -375,6 +398,8 @@ function renderActiveHero() {
 
   renderStatsGrid(hero);
   renderSkillsList(hero);
+  renderSpellSlots(hero);
+  renderCombatBanner();
 
   // Features / Notes
   const featuresEl = document.getElementById('heroFeatures');
@@ -521,6 +546,150 @@ function renderSkillsList(hero) {
   });
 }
 
+function renderSpellSlots(hero) {
+  const list = document.getElementById('spellSlotsList');
+  if (!list) return;
+  const res = hero.resources || [];
+  if (res.length === 0) {
+    list.innerHTML = '<p class="empty-note">У героя нет активных ячеек или классовых способностей.</p>';
+    return;
+  }
+
+  list.innerHTML = res.map(r => {
+    const current = r.current !== undefined ? r.current : r.max;
+    const max = r.max || 1;
+    let pipsHtml = '';
+    for (let i = 0; i < max; i++) {
+      const isExpended = i >= current;
+      pipsHtml += `<span class="slot-pip ${isExpended ? 'expended' : ''}" data-resource-id="${escapeHtml(r.id)}" data-index="${i}" title="${escapeHtml(r.name)}: ${current}/${max}"></span>`;
+    }
+    return `
+      <div class="slot-row">
+        <div class="slot-info">
+          <span class="slot-name">${escapeHtml(r.name)}</span>
+          <small style="color:var(--text-muted);font-size:0.75rem;">(${current}/${max})</small>
+        </div>
+        <div class="slot-pips">
+          ${pipsHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.slot-pip').forEach(pip => {
+    pip.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const resId = pip.dataset.resourceId;
+      const targetRes = res.find(r => r.id === resId);
+      if (!targetRes) return;
+      const cur = targetRes.current !== undefined ? targetRes.current : targetRes.max;
+      const isExpended = pip.classList.contains('expended');
+      const nextVal = isExpended ? Math.min(targetRes.max, cur + 1) : Math.max(0, cur - 1);
+      
+      targetRes.current = nextVal;
+      playSfx('magic');
+      renderSpellSlots(hero);
+
+      try {
+        await fetch('/api/player/resource', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            campaignId: campaign?.id,
+            characterId: hero.id,
+            resourceId: resId,
+            current: nextVal
+          })
+        });
+        showToast(`${targetRes.name}: ${nextVal}/${targetRes.max}`);
+      } catch (err) {
+        showToast(err.message || 'Ошибка обновления ресурса');
+      }
+    });
+  });
+}
+
+function initRestControls() {
+  const shortBtn = document.getElementById('shortRestBtn');
+  const longBtn = document.getElementById('longRestBtn');
+
+  if (shortBtn) {
+    shortBtn.addEventListener('click', async () => {
+      const hero = getActiveHero();
+      if (!hero) return;
+      playSfx('rest');
+      showToast('☕ Короткий отдых: восстанавливаем силы...');
+      try {
+        const res = await fetch('/api/player/rest', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            campaignId: campaign?.id,
+            characterId: hero.id,
+            kind: 'short'
+          })
+        });
+        if (!res.ok) throw new Error('Ошибка отдыха');
+        showToast('☕ Короткий отдых завершён!');
+        await refreshCampaignState();
+      } catch (e) {
+        showToast(e.message);
+      }
+    });
+  }
+
+  if (longBtn) {
+    longBtn.addEventListener('click', async () => {
+      const hero = getActiveHero();
+      if (!hero) return;
+      playSfx('rest');
+      showToast('🌙 Долгий отдых: полный покой...');
+      try {
+        const res = await fetch('/api/player/rest', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            campaignId: campaign?.id,
+            characterId: hero.id,
+            kind: 'long'
+          })
+        });
+        if (!res.ok) throw new Error('Ошибка отдыха');
+        showToast('🌙 Долгий отдых: здоровье и ячейки восстановлены!');
+        await refreshCampaignState();
+      } catch (e) {
+        showToast(e.message);
+      }
+    });
+  }
+}
+
+function renderCombatBanner() {
+  const banner = document.getElementById('playerCombatBanner');
+  if (!banner) return;
+  const init = campaign?.initiative;
+  if (!init || !init.active) {
+    banner.hidden = true;
+    return;
+  }
+  banner.hidden = false;
+  const roundEl = document.getElementById('playerCombatRound');
+  const turnEl = document.getElementById('playerCombatTurn');
+  if (roundEl) roundEl.textContent = `Раунд ${init.round || 1}`;
+  
+  const currentCombatant = (init.order || [])[init.turnIndex || 0];
+  const activeHero = getActiveHero();
+  const isMyTurn = currentCombatant && activeHero && (
+    currentCombatant.id === activeHero.id ||
+    currentCombatant.name?.toLowerCase() === activeHero.name?.toLowerCase()
+  );
+
+  banner.classList.toggle('your-turn', !!isMyTurn);
+  if (turnEl) {
+    turnEl.textContent = isMyTurn ? '🔥 ТВОЙ ХОД!' : `Ходит: ${currentCombatant?.name || '—'}`;
+  }
+}
+
 // ----------------------------------------------------------------------------
 // Map Controls & Zoom / Theme
 // ----------------------------------------------------------------------------
@@ -627,15 +796,35 @@ async function executeRoll(sides, modifier, title) {
   const isCrit = sides === 20 && finalDie === 20;
   const isFumble = sides === 20 && finalDie === 1;
 
-  // Haptic feedback if supported on mobile
+  // Multi-step physical dice vibration
   if (window.navigator?.vibrate) {
-    if (isCrit) window.navigator.vibrate([40, 30, 80]);
-    else if (isFumble) window.navigator.vibrate([100]);
-    else window.navigator.vibrate(30);
+    if (isCrit) window.navigator.vibrate([50, 40, 50, 40, 100, 50, 150]);
+    else if (isFumble) window.navigator.vibrate([120, 80, 200]);
+    else window.navigator.vibrate([35, 45, 30, 40, 20]);
   }
+
+  // Procedural Web Audio SFX
+  playSfx('dice');
+  if (isCrit) setTimeout(() => playSfx('crit'), 300);
+  else if (isFumble) setTimeout(() => playSfx('fumble'), 300);
 
   // Switch to Dice tab to show showcase
   switchToTab('dice');
+
+  // 3D Animated Tumbling Physical Die
+  const dice3d = document.getElementById('dice3dOverlay');
+  const dice3dVal = document.getElementById('dice3dValue');
+  const dice3dCube = document.getElementById('dice3dCube');
+  if (dice3d && dice3dVal && dice3dCube) {
+    dice3d.hidden = false;
+    dice3dCube.style.animation = 'none';
+    void dice3dCube.offsetWidth;
+    dice3dCube.style.animation = 'rollTumble 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2)';
+    dice3dVal.textContent = finalDie;
+    setTimeout(() => {
+      dice3d.hidden = true;
+    }, 1800);
+  }
 
   // Update Showcase
   const showcase = document.getElementById('rollShowcase');
@@ -958,7 +1147,20 @@ function renderMap() {
       const coordLabel = `${colLabels[x]}${y + 1}`;
       const terrainClass = getCellTerrainClass(cellTokens);
 
-      if (cellTokens.length > 0) {
+      let isShrouded = false;
+      if (activeMap.fogOfWar) {
+        const coordKey = `${x},${y}`;
+        const isRevealed = activeMap.revealedCells && activeMap.revealedCells.includes(coordKey);
+        if (!isRevealed) {
+          const heroTokens = tokens.filter(t => t.kind === 'hero');
+          const inHeroVision = heroTokens.some(h => Math.max(Math.abs(h.x - x), Math.abs(h.y - y)) <= 6);
+          if (!inHeroVision) isShrouded = true;
+        }
+      }
+
+      if (isShrouded) {
+        html += `<td class="tactical-grid-cell cell-player-fog ${terrainClass}" data-coord="${coordLabel}" data-x="${x}" data-y="${y}" title="${coordLabel}: Туман войны">🌫️</td>`;
+      } else if (cellTokens.length > 0) {
         const topToken = cellTokens[0];
         const kind = topToken.kind || 'object';
         const icon = getTokenIcon(topToken);
@@ -1235,6 +1437,21 @@ function initPttControls() {
     setPttCollapsed(false);
   });
 
+  const whisperBtn = document.getElementById('pttWhisperToggleBtn');
+  if (whisperBtn) {
+    whisperBtn.addEventListener('click', () => {
+      isWhisperMode = !isWhisperMode;
+      whisperBtn.classList.toggle('whisper-active', isWhisperMode);
+      pttBar?.classList.toggle('whisper-mode', isWhisperMode);
+      if (isWhisperMode) {
+        showToast('🤫 Режим тайного шёпота включён: действие услышит только Мастер');
+        if (navigator.vibrate) navigator.vibrate([25, 25]);
+      } else {
+        showToast('🗣️ Обычный ход: действие услышит весь стол');
+      }
+    });
+  }
+
   if (audioInput) {
     audioInput.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
@@ -1279,7 +1496,8 @@ function initPttControls() {
             campaignId: campaign?.id,
             characterId: hero.id,
             audio: base64,
-            mime
+            mime,
+            isWhisper: isWhisperMode
           })
         });
 
@@ -1555,7 +1773,8 @@ async function stopPttRecording() {
         campaignId: campaign?.id,
         characterId: r.hero.id,
         audio: btoa(binary),
-        mime: 'audio/wav'
+        mime: 'audio/wav',
+        isWhisper: isWhisperMode
       })
     });
     if (!res.ok) {
@@ -1563,7 +1782,7 @@ async function stopPttRecording() {
       throw new Error(err.error || 'Ошибка отправки хода');
     }
     const data = await res.json();
-    showToast(`✨ ${r.hero.name}: «${data.text}» отправлено!`);
+    showToast(isWhisperMode ? `🤫 ${r.hero.name}: «${data.text}» шепнули Мастеру!` : `✨ ${r.hero.name}: «${data.text}» отправлено!`);
     if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
     await refreshCampaignState();
   } catch (e) {
@@ -1588,7 +1807,7 @@ async function sendPttTextAction() {
   pttBusy = true;
   const pttBtn = document.getElementById('playerPttBtn');
   if (pttBtn) pttBtn.classList.add('busy');
-  showToast(`Отправляем ход за ${hero.name}...`);
+  showToast(isWhisperMode ? `Шепчем ход за ${hero.name}...` : `Отправляем ход за ${hero.name}...`);
   try {
     const res = await fetch('/api/player/turn', {
       method: 'POST',
@@ -1596,7 +1815,8 @@ async function sendPttTextAction() {
       body: JSON.stringify({
         campaignId: campaign?.id,
         characterId: hero.id,
-        text
+        text,
+        isWhisper: isWhisperMode
       })
     });
     if (!res.ok) {
@@ -1605,7 +1825,7 @@ async function sendPttTextAction() {
     }
     const data = await res.json();
     input.value = '';
-    showToast(`✨ ${hero.name}: «${text}» отправлено!`);
+    showToast(isWhisperMode ? `🤫 ${hero.name}: «${text}» шепнули Мастеру!` : `✨ ${hero.name}: «${text}» отправлено!`);
     await refreshCampaignState();
   } catch (e) {
     showToast(e.message || 'Не удалось передать ход');

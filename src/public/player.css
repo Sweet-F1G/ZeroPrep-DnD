@@ -1693,3 +1693,197 @@ body {
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+
+/* Combat Banner */
+.player-combat-banner {
+  background: linear-gradient(135deg, #2b1111, #180d0d);
+  border: 1px solid #783535;
+  border-radius: var(--radius-md);
+  margin: 10px 14px 0;
+  padding: 8px 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  animation: fadeIn 0.2s ease-out;
+}
+.player-combat-banner.your-turn {
+  border-color: var(--accent-gold);
+  background: linear-gradient(135deg, #3d230d, #241305);
+  box-shadow: 0 0 16px rgba(196, 162, 101, 0.4);
+  animation: combatPulse 1.5s infinite;
+}
+@keyframes combatPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+.combat-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.combat-banner-badge {
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+.combat-banner-round {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+.combat-banner-turn {
+  font-size: 0.75rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spell Slots & Rest */
+.spell-slots-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.rest-actions {
+  display: flex;
+  gap: 6px;
+}
+.rest-btn {
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--accent-gold);
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.rest-btn:active {
+  border-color: var(--accent-gold);
+  background-color: var(--accent-gold-bg);
+}
+.spell-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.slot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-surface);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+.slot-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.slot-pips {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.slot-pip {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-gold);
+  background-color: var(--accent-gold);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.slot-pip.expended {
+  background-color: transparent;
+  border-color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* Secret Whispers */
+.ptt-toggle-btn.whisper-active {
+  background-color: #581c87 !important;
+  border-color: #a855f7 !important;
+  color: #f3e8ff !important;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.45) !important;
+}
+.player-ptt-bar.whisper-mode {
+  border-top-color: #a855f7 !important;
+  box-shadow: 0 -4px 18px rgba(168, 85, 247, 0.25) !important;
+}
+.player-ptt-bar.whisper-mode .ptt-hero-badge {
+  border-color: #a855f7 !important;
+  color: #d8b4fe !important;
+}
+
+/* 3D Tumbling Physical Die */
+.dice-3d-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 800px;
+  margin: 16px 0;
+}
+.dice-3d-cube {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+  border: 2px solid #ef4444;
+  border-radius: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6), inset 0 2px 6px rgba(255,255,255,0.25);
+  transform-style: preserve-3d;
+  animation: rollTumble 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+@keyframes rollTumble {
+  0% {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg) scale(1.2);
+  }
+  65% {
+    transform: rotateX(540deg) rotateY(450deg) rotateZ(270deg) scale(0.95);
+  }
+  85% {
+    transform: rotateX(720deg) rotateY(700deg) rotateZ(350deg) scale(1.05);
+  }
+  100% {
+    transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1);
+    opacity: 1;
+  }
+}
+.dice-3d-val {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Fog of War for Player Map */
+.tactical-grid-cell.cell-player-fog {
+  background-color: #080d09 !important;
+  border-color: #121d15 !important;
+  cursor: not-allowed !important;
+  color: #1a2a1f !important;
+}
+.tactical-grid-cell.cell-player-fog .token-icon,
+.tactical-grid-cell.cell-player-fog .cell-multi-badge {
+  display: none !important;
+}

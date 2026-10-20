@@ -4,6 +4,7 @@ import {skills,abilities,skillAbilities,editions} from '/rule-data.mjs';
 import {LiveVoice} from '/live-voice.mjs';
 import {SpeechPrefetch} from '/speech-prefetch.mjs';
 import {ambientEngine} from '/ambient-sound.mjs';
+import {playSfx, toggleSfx, isSfxEnabled} from '/sfx.mjs';
 let activeSpeechRequest=null;
 const speechPrefetch=new SpeechPrefetch((text,signal)=>loadSpeech(text,null,signal));
 let liveDelegating=false;
@@ -59,7 +60,7 @@ function render(){
  $('entryCount').textContent=`${c.journalTotal??c.journal.length} СОБЫТИЙ`;
  $('journal').innerHTML=c.journal.map((x,i)=>{if(x.role==='user'&&x.text==='Игрок подтвердил операцию с листом, памятью или вещами.')return '';let text=x.text;const verified=x.role==='system'&&text.startsWith('VERIFIED_ROLL ');if(verified){try{const r=JSON.parse(text.slice(14));text=`${r.character} · ${r.kind==='save'?'Спасбросок · ':r.kind==='death'?'От смерти · ':''}${skills[r.skill]}: d20 ${r.dice?.length===2?'['+r.dice.join(', ')+'] → ':''}${r.raw} ${r.bonus>=0?'+':'−'} ${Math.abs(r.bonus)} = ${r.total} / Сл ${r.dc} · ${r.success?'Успех':'Провал'}`;}catch{}}
  if(x.role==='system'&&!verified)return `<details class="compact-event"><summary>◇ ${esc(text.split('\n')[0].slice(0,140))}</summary><p>${esc(text)}</p></details>`;
- return `<article class="entry ${esc(x.role)}"><div class="entry-label"><span>${x.role==='assistant'?'✦ СКАЗИТЕЛЬ':x.role==='user'?'ДЕЙСТВИЕ ГЕРОЯ':'◇ ИГРОВОЕ СОБЫТИЕ'}</span><time>${new Date(x.at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</time></div><p>${esc(text)}${c.delivery?.entryId===x.id?`<span class="narrating">${text?' ':''}${esc(c.delivery.text)}</span>`:''}</p>${x.role==='assistant'?`<button class="replay" data-replay="${i}">▷ Озвучить</button>`:''}${x.automaticChanges?.length?`<details class="automatic-changes"><summary>✓ Записано мастером · ${x.automaticChanges.length}</summary>${x.automaticChanges.map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}${x.tacticalHints?.length?`<div class="tactical-hints">${x.tacticalHints.map(h=>`<p>✦ ${esc(h.text)}</p>`).join('')}</div>`:''}${x.illustrationSuggestion?`<div class="image-suggestion"><span>✧ ${esc(x.illustrationSuggestion.reason)}</span><button class="quiet" data-suggest-image="${x.id}">Предлагаю иллюстрацию ↗</button></div>`:''}</article>`;}).slice(-50).join('');
+  return `<article class="entry ${esc(x.role)}${x.isWhisper?' is-whisper':''}"><div class="entry-label"><span>${x.isWhisper?'<span class="whisper-badge">🤫 ШЁПОТ</span>':''}${x.role==='assistant'?'✦ СКАЗИТЕЛЬ':x.role==='user'?'ДЕЙСТВИЕ ГЕРОЯ':'◇ ИГРОВОЕ СОБЫТИЕ'}</span><time>${new Date(x.at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</time></div><p>${esc(text)}${c.delivery?.entryId===x.id?`<span class="narrating">${text?' ':''}${esc(c.delivery.text)}</span>`:''}</p>${x.role==='assistant'?`<button class="replay" data-replay="${i}">▷ Озвучить</button>`:''}${x.automaticChanges?.length?`<details class="automatic-changes"><summary>✓ Записано мастером · ${x.automaticChanges.length}</summary>${x.automaticChanges.map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}${x.tacticalHints?.length?`<div class="tactical-hints">${x.tacticalHints.map(h=>`<p>✦ ${esc(h.text)}</p>`).join('')}</div>`:''}${x.illustrationSuggestion?`<div class="image-suggestion"><span>✧ ${esc(x.illustrationSuggestion.reason)}</span><button class="quiet" data-suggest-image="${x.id}">Предлагаю иллюстрацию ↗</button></div>`:''}</article>`;}).slice(-50).join('');
  $('partyWallet').textContent=money(c.wallet?.group||0);$('characters').innerHTML=c.characters.map(renderHero).join('');if(lastVisibleHeroId!==selectedId){document.querySelector('.hero.selected')?.scrollIntoView({block:'nearest'});lastVisibleHeroId=selectedId;}
  $('speaker').innerHTML=c.characters.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');$('speaker').value=selectedId;
  $('sessionZeroGuide').hidden=!c.sessionZero||c.sessionZero.complete;$('partyHints').hidden=true;$('speaker').hidden=!!c.sessionZero&&!c.sessionZero.complete;$('editHeroes').disabled=busy||!c.characters.length;
@@ -71,6 +72,7 @@ function render(){
  $('passReaction').disabled=busy;$('reactNow').disabled=busy;
  if(!busy&&!recording)$('status').textContent=c.reaction?'Сцена на паузе — ждём решения игроков':interruptionActive?'Мастер прерван — ваша реплика':state.config.listeningMode==='continuous'?(ambientMic.active?'Мастер слушает игроков':'Включите микрофон для постоянного прослушивания'):'Мастер слушает по кнопке';
  $('send').disabled=busy||!!c.pending||!!c.proposals.length;$('message').disabled=!!c.pending||!!c.proposals.length;$('mic').disabled=busy;
+ renderCombatTracker();
  renderTacticalHud();
  const mapCount=c.maps?.length||0,mapTokensCount=(c.maps||[]).reduce((acc,m)=>acc+(m.tokens?.length||0),0),currentMapHash=`${mapCount}:${mapTokensCount}`;
  if(lastKnownMapHash&&lastKnownMapHash!==currentMapHash&&mapCount>0){
@@ -394,7 +396,17 @@ $('characters').onkeydown=e=>{if(e.key==='Enter')e.target.click();};
 $('speaker').onchange=e=>{selectedId=e.target.value;render();};
 $('send').onclick=async()=>{const text=$('message').value;if(current()?.sessionZero&&!current().sessionZero.complete){await turn({text});return;}if(await handleTableSpeech(text))$('message').value='';else await turn({text});};
 $('begin').onclick=()=>turn({text:'Опиши стартовую сцену, учитывая материалы кампании. Не продолжай за игроков.'});
-$('rollForm').onsubmit=e=>{e.preventDefault();ambientEngine.playDiceSound();turn({raw:$('secondDieLabel').hidden?Number($('raw').value):[Number($('raw').value),Number($('raw2').value)]});};
+$('rollForm').onsubmit=e=>{
+  e.preventDefault();
+  ambientEngine.playDiceSound();
+  playSfx('dice');
+  const v1=Number($('raw').value);
+  const v2=$('secondDieLabel').hidden?null:Number($('raw2').value);
+  const chosen=v2!==null?Math.max(v1,v2):v1;
+  if(chosen===20)setTimeout(()=>playSfx('crit'),250);
+  else if(chosen===1)setTimeout(()=>playSfx('fumble'),250);
+  turn({raw:$('secondDieLabel').hidden?v1:[v1,v2]});
+};
 $('undo').onclick=async()=>{if(busy)return;await haltNarration();try{state=await api('undo',{id:activeId});render();toast('Последнее действие отменено.');}catch(e){toast(e.message);}};
 $('proposals').onclick=async e=>{const b=e.target.closest('[data-proposal]');if(!b||busy)return;try{state=await api('proposal',{id:activeId,proposalId:b.dataset.proposal,accept:b.dataset.accept==='yes'});render();}catch(err){toast(err.message);}};
 $('editHeroes').onclick=()=>openSheet(selectedId||current()?.characters[0]?.id);
@@ -947,7 +959,17 @@ function renderHudMap(){
         const cellTokens = (m.tokens || []).filter(t => t.x === x && t.y === y);
         const terrainClass = getCellTerrainClass(cellTokens);
         const tokensJson = esc(JSON.stringify(cellTokens));
-        return `<td class="tactical-grid-cell ${terrainClass}" data-coord="${colLabels[x]}${y + 1}" data-x="${x}" data-y="${y}" data-tokens="${tokensJson}">
+        let isFogShrouded = false;
+        if (m.fogOfWar) {
+          const coordKey = `${x},${y}`;
+          const isRevealed = m.revealedCells && m.revealedCells.includes(coordKey);
+          if (!isRevealed) {
+            const inVision = heroTokens.some(h => Math.max(Math.abs(h.x - x), Math.abs(h.y - y)) <= 6);
+            if (!inVision) isFogShrouded = true;
+          }
+        }
+        const fogClass = isFogShrouded ? ' cell-fog-shrouded' : '';
+        return `<td class="tactical-grid-cell ${terrainClass}${fogClass}" data-coord="${colLabels[x]}${y + 1}" data-x="${x}" data-y="${y}" data-tokens="${tokensJson}">
          ${cellTokens.map(t => {
           const kind = t.kind || 'object';
           const label = t.label || t.id;
@@ -1006,6 +1028,11 @@ function renderHudMap(){
 
  $('mapZoomFit')?.classList.toggle('active', mapZoomMode === 'fit');
  $('mapZoomToggle')?.classList.toggle('active', mapZoomMode === '100%');
+ const activeMap = (c.maps || [])[0];
+ if ($('hudFogToggle')) {
+  $('hudFogToggle').classList.toggle('active', !!activeMap?.fogOfWar);
+  $('hudFogToggle').textContent = activeMap?.fogOfWar ? '🌫️ Туман: ВКЛ' : '🌫️ Туман: ВЫКЛ';
+ }
 }
 
 function renderHudDiary(){
@@ -1399,6 +1426,17 @@ function connectMasterSSE() {
       render();
     } catch {}
   });
+
+  lanEventSource.addEventListener('combat-update', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (current() && data.campaignId === activeId) {
+        current().initiative = data.initiative;
+        renderCombatTracker();
+        playSfx('turn');
+      }
+    } catch {}
+  });
 }
 
 let activeLanInfo = null, activeLanMode = 'https';
@@ -1484,4 +1522,206 @@ $('copyLanUrlBtn')?.addEventListener('click', () => {
 });
 
 connectMasterSSE();
+
+// SFX Toggle
+const sfxBtn = $('sfxToggleBtn');
+if (sfxBtn) {
+  sfxBtn.classList.toggle('muted', !isSfxEnabled());
+  sfxBtn.textContent = isSfxEnabled() ? '🔊 SFX' : '🔇 SFX';
+  sfxBtn.onclick = () => {
+    const enabled = toggleSfx();
+    sfxBtn.classList.toggle('muted', !enabled);
+    sfxBtn.textContent = enabled ? '🔊 SFX' : '🔇 SFX';
+    toast(enabled ? '🔊 Звуковые эффекты включены' : '🔇 Звуковые эффекты выключены');
+  };
+}
+
+// Combat Tracker
+function renderCombatTracker() {
+  const c = current();
+  const bar = $('combatTracker');
+  if (!bar) return;
+  if (!c || !c.initiative?.active) {
+    bar.hidden = true;
+    return;
+  }
+  bar.hidden = false;
+  const roundEl = $('combatRoundText');
+  if (roundEl) roundEl.textContent = `Раунд ${c.initiative.round || 1}`;
+
+  const orderList = $('combatOrderList');
+  if (orderList) {
+    orderList.innerHTML = (c.initiative.order || []).map((cb, idx) => {
+      const isTurn = idx === (c.initiative.turnIndex || 0);
+      const isHero = cb.kind === 'hero';
+      const hpStr = cb.hp != null && cb.maxHp ? ` · ❤️ ${cb.hp}/${cb.maxHp}` : '';
+      return `<div class="combat-turn-chip ${isHero ? 'hero' : 'enemy'} ${isTurn ? 'active' : ''}">
+        ${isTurn ? '<span style="color:var(--gold);">▶</span> ' : ''}
+        <span>${esc(cb.name)}</span>
+        <span class="init-val">⚡ ${cb.initiative}</span>
+        ${hpStr ? `<span class="hp-val">${hpStr}</span>` : ''}
+      </div>`;
+    }).join('');
+  }
+}
+
+$('combatNextTurnBtn')?.addEventListener('click', async () => {
+  if (busy || !activeId) return;
+  try {
+    const res = await api('combat/next', { id: activeId });
+    if (current()) current().initiative = res.initiative;
+    renderCombatTracker();
+    playSfx('turn');
+  } catch (e) {
+    toast(e.message);
+  }
+});
+
+$('combatEndBtn')?.addEventListener('click', async () => {
+  if (busy || !activeId) return;
+  const ok = await askConfirm({
+    title: 'Завершить бой',
+    message: 'Завершить текущий бой и очистить инициативу?',
+    okText: 'Завершить бой'
+  });
+  if (!ok) return;
+  try {
+    const res = await api('combat/end', { id: activeId });
+    if (current()) current().initiative = res.initiative;
+    renderCombatTracker();
+    toast('Бой завершён.');
+  } catch (e) {
+    toast(e.message);
+  }
+});
+
+$('hudCombatStartBtn')?.addEventListener('click', async () => {
+  if (busy || !activeId) return;
+  try {
+    playSfx('sword');
+    const res = await api('combat/start', { id: activeId });
+    if (current()) current().initiative = res.initiative;
+    renderCombatTracker();
+    toast('⚔️ Тактический бой начат! Инициатива подсчитана.');
+  } catch (e) {
+    toast(e.message);
+  }
+});
+
+// Fog of War Toggle
+$('hudFogToggle')?.addEventListener('click', async () => {
+  if (busy || !activeId) return;
+  const c = current();
+  const m = (c.maps || [])[0];
+  if (!m) return toast('Нет активной карты');
+  try {
+    const res = await api('map/fog', { id: activeId, mapId: m.id, action: 'toggle' });
+    if (res.map) {
+      const idx = (c.maps || []).findIndex(x => x.id === res.map.id);
+      if (idx >= 0) c.maps[idx] = res.map;
+    }
+    renderHudMap();
+    toast(res.map?.fogOfWar ? '🌫️ Туман войны активирован' : '☀️ Туман войны рассеян');
+  } catch (e) {
+    toast(e.message);
+  }
+});
+
+// Random Generator Dialog
+let currentGenType = 'encounter';
+let lastGenResult = null;
+
+$('hudRandomGenBtn')?.addEventListener('click', () => {
+  const dlg = $('randomGenDialog');
+  if (dlg) dlg.showModal();
+});
+
+document.querySelectorAll('.random-gen-tabs .tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.random-gen-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentGenType = btn.dataset.gen;
+    const applyBtn = $('randomGenApplyBtn');
+    if (applyBtn) applyBtn.hidden = true;
+    $('randomGenResult').innerHTML = '<p class="dialog-note">Нажмите «Сгенерировать», чтобы создать случайное событие или награду.</p>';
+  });
+});
+
+$('randomGenRollBtn')?.addEventListener('click', async () => {
+  if (!activeId) return toast('Откройте кампанию');
+  playSfx('dice');
+  $('randomGenResult').innerHTML = '<p class="dialog-note">Создаём генерацию на основе мира...</p>';
+  try {
+    const res = await api('generate/random', { id: activeId, type: currentGenType, apply: false });
+    lastGenResult = res;
+    renderGenResult(res);
+  } catch (err) {
+    $('randomGenResult').innerHTML = `<p class="dialog-note" style="color:var(--danger-crimson);">${esc(err.message)}</p>`;
+  }
+});
+
+$('randomGenApplyBtn')?.addEventListener('click', async () => {
+  if (!activeId || !lastGenResult) return;
+  try {
+    const res = await api('generate/random', { id: activeId, type: currentGenType, apply: true, ...lastGenResult });
+    playSfx('magic');
+    toast('✓ Успешно применено к кампании!');
+    $('randomGenDialog').close();
+    await refresh();
+  } catch (err) {
+    toast('Ошибка применения: ' + err.message);
+  }
+});
+
+function renderGenResult(res) {
+  const container = $('randomGenResult');
+  const applyBtn = $('randomGenApplyBtn');
+  if (!container) return;
+
+  if (res.type === 'encounter' && res.encounter) {
+    const enc = res.encounter;
+    container.innerHTML = `
+      <div class="random-gen-card">
+        <h4>⚔️ ${esc(enc.name)}</h4>
+        <div class="card-subtitle">Опасность (CR): ${esc(enc.cr || '1')} · Опыт: ${enc.xp || 200} XP</div>
+        <p>${esc(enc.description || '')}</p>
+        ${enc.tactics ? `<p><strong>Тактика врагов:</strong> ${esc(enc.tactics)}</p>` : ''}
+        ${enc.enemies?.length ? `<ul>${enc.enemies.map(e => `<li><strong>${esc(e.name)}</strong> (КД ${e.ac}, HP ${e.hp}, инициатива +${e.initiativeBonus||0})</li>`).join('')}</ul>` : ''}
+      </div>
+    `;
+    if (applyBtn) {
+      applyBtn.hidden = false;
+      applyBtn.textContent = '⚔️ Развернуть на карте и начать бой';
+    }
+  } else if (res.type === 'loot' && res.loot) {
+    const loot = res.loot;
+    container.innerHTML = `
+      <div class="random-gen-card">
+        <h4>💎 ${esc(loot.name)}</h4>
+        <div class="card-subtitle">Уровень сокровищ: ${esc(loot.tier || 'Обычный')}</div>
+        <p><strong>Золотые монеты:</strong> ${loot.gold || 0} зм</p>
+        ${loot.items?.length ? `<strong>Предметы:</strong><ul>${loot.items.map(it => `<li>${esc(it.name)}: <small>${esc(it.description || '')}</small></li>`).join('')}</ul>` : ''}
+      </div>
+    `;
+    if (applyBtn) {
+      applyBtn.hidden = false;
+      applyBtn.textContent = '💎 Положить в казну и инвентарь';
+    }
+  } else if (res.type === 'npc' && res.npc) {
+    const npc = res.npc;
+    container.innerHTML = `
+      <div class="random-gen-card">
+        <h4>👤 ${esc(npc.name)}</h4>
+        <div class="card-subtitle">${esc(npc.race || '')} · ${esc(npc.role || '')} · Отношение: ${esc(npc.attitude || 'Нейтрален')}</div>
+        ${npc.trait ? `<p><strong>Особенность:</strong> ${esc(npc.trait)}</p>` : ''}
+        ${npc.secret ? `<p><strong>Секрет / Тайна:</strong> ${esc(npc.secret)}</p>` : ''}
+      </div>
+    `;
+    if (applyBtn) {
+      applyBtn.hidden = false;
+      applyBtn.textContent = '📜 Записать в картотеку мира';
+    }
+  }
+}
+
 

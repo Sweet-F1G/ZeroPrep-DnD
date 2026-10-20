@@ -42,6 +42,15 @@
       </div>
     </div>
 
+    <!-- Combat / Initiative Banner -->
+    <div id="playerCombatBanner" class="player-combat-banner" hidden>
+      <div class="combat-banner-inner">
+        <span class="combat-banner-badge">⚔️ ИДЁТ БОЙ</span>
+        <span id="playerCombatRound" class="combat-banner-round">Раунд 1</span>
+        <span id="playerCombatTurn" class="combat-banner-turn">Ход: —</span>
+      </div>
+    </div>
+
     <!-- HTTPS Switcher Banner for Seamless Audio -->
     <div id="httpsPromoBanner" class="https-promo-banner" hidden>
       <div class="https-promo-content">
@@ -146,6 +155,20 @@
             </div>
           </details>
 
+          <!-- Spell Slots & Resources -->
+          <div id="playerSpellSlotsSection" class="spell-slots-section">
+            <div class="section-title-row">
+              <span class="section-title" style="margin-bottom:0;">ЯЧЕЙКИ И СПОСОБНОСТИ</span>
+              <div class="rest-actions">
+                <button type="button" id="shortRestBtn" class="rest-btn" title="Короткий отдых (трата костей хит)">☕ Короткий</button>
+                <button type="button" id="longRestBtn" class="rest-btn" title="Долгий отдых (восстановление)">🌙 Долгий</button>
+              </div>
+            </div>
+            <div id="spellSlotsList" class="spell-slots-list">
+              <!-- Dynamically rendered slot rows with clickable pips -->
+            </div>
+          </div>
+
           <!-- Notes / Features -->
           <details class="features-details">
             <summary class="section-title-summary">ОСОБЕННОСТИ И ЗАМЕТКИ</summary>
@@ -207,6 +230,13 @@
               <span class="die-face">d100</span>
               <span class="die-label">Проценты</span>
             </button>
+          </div>
+
+          <!-- 3D Animated Tumbling Die -->
+          <div id="dice3dOverlay" class="dice-3d-overlay" hidden>
+            <div id="dice3dCube" class="dice-3d-cube">
+              <span id="dice3dValue" class="dice-3d-val">20</span>
+            </div>
           </div>
 
           <!-- Roll Result Showcase -->
@@ -305,6 +335,9 @@
           <button type="button" id="playerPttBtn" class="player-ptt-btn" aria-label="Удерживайте, чтобы сказать действие за героя">
             <span class="ptt-btn-icon" id="pttBtnIcon">🎙️</span>
             <span class="ptt-btn-text" id="pttBtnText">Удерживайте для хода</span>
+          </button>
+          <button type="button" id="pttWhisperToggleBtn" class="ptt-toggle-btn" title="Шепнуть Мастеру (секретное действие)" aria-label="Шепнуть Мастеру">
+            🤫
           </button>
           <button type="button" id="pttTextToggleBtn" class="ptt-toggle-btn" title="Ввести действие текстом" aria-label="Ввести действие текстом">
             ✏️
