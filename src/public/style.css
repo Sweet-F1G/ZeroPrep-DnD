@@ -268,5 +268,10 @@ body.sidebar-collapsed .sidebar-toggle-btn{background:#243627;border-color:var(-
 .lan-input-row input{flex:1;background:#111a14;border:1px solid #2d3e30;color:#fff;padding:8px 10px;border-radius:6px;font-family:monospace;font-size:13px}
 .lan-chips{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .lan-chip{background:#16241c;border:1px solid #2a3c2e;color:var(--text);padding:5px 10px;border-radius:6px;font-size:12px}
+.danger-zone{border-color:#5c2222!important;margin-top:20px;padding-top:14px}
+.danger-zone summary{color:#f87171!important}
+.danger-button{background:#451a1a;color:#fca5a5;border:1px solid #7f1d1d;padding:10px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:100%;text-align:left;margin-top:10px;transition:all .15s ease}
+.danger-button:hover{background:#5c2222;border-color:#b91c1c;color:#fee2e2}
+
 
 

@@ -6,3 +6,23 @@ test('SQLite migrates without losing JSON, persists, indexes and rejects stale w
  b=await createCampaignStore(dir);c.characters[0].hp=7;await a.save([c]);await assert.rejects(b.save([c]),/другим окном/);b.close();b=null;a.close();a=await createCampaignStore(dir);assert.equal(a.load()[0].characters[0].hp,7);assert.equal(JSON.parse(await fs.readFile(path.join(dir,'campaigns.json'),'utf8'))[0].characters[0].hp,7);
  }finally{a?.close();b?.close();await fs.rm(dir,{recursive:true,force:true});}
 });
+test('SQLite explicitly deletes campaign from tables, archive, and mirrors to JSON',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'skazitel-delete-'));let store;
+ try{
+  const c1=makeCampaign({name:'Первая партия',characters:[{name:'Герой 1'}]});
+  const c2=makeCampaign({name:'Вторая партия',characters:[{name:'Герой 2'}]});
+  store=await createCampaignStore(dir);
+  await store.save([c1,c2]);
+  assert.equal(store.load().length,2);
+  await store.delete(c1.id);
+  const remaining=store.load();
+  assert.equal(remaining.length,1);
+  assert.equal(remaining[0].id,c2.id);
+  const mirrored=JSON.parse(await fs.readFile(path.join(dir,'campaigns.json'),'utf8'));
+  assert.equal(mirrored.length,1);
+  assert.equal(mirrored[0].id,c2.id);
+  assert.equal(store.search(c1.id,'Первая').length,0);
+ }finally{
+  store?.close();await fs.rm(dir,{recursive:true,force:true});
+ }
+});

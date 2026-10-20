@@ -332,6 +332,25 @@ const server=http.createServer(async(req,res)=>{
    await save('settings',next);config=next;keys=nextKeys;return json(res,state());
    }finally{releaseSettings();}
   }
+  if(url.pathname==='/api/campaign/delete'){
+   const id=b.id;if(!id)throw Error('ID кампании не указан');
+   let newActiveId=config.activeCampaignId;
+   const task=commitQueue.then(async()=>{
+    const index=campaigns.findIndex(c=>c.id===id);
+    if(index<0)throw Error('Кампания не найдена');
+    campaigns.splice(index,1);
+    await campaignStore.delete(id);
+    if(config.activeCampaignId===id){
+     newActiveId=campaigns[0]?.id||'';
+     config.activeCampaignId=newActiveId;
+     await save('settings',config);
+    }
+    broadcast('campaign-deleted',{campaignId:id,activeCampaignId:newActiveId});
+   });
+   commitQueue=task.catch(()=>{});
+   await task;
+   return json(res,{ok:true,activeCampaignId:newActiveId,...state()});
+  }
   if(url.pathname==='/api/create'){
    let c;
    if(b.seed){const source=await fs.readFile(path.join(root,'seed','theon-alvari.md'),'utf8');c=makeCampaign({name:'Теон и Альвари',setting:'D&D 2024 Cinematic. Закат у старой башни на северном тракте. Встреча с Э ещё НЕ началась. Неизвестные тайны из файла остаются неизвестными. КД Альвари 12 — временно по предложенному варианту со щитом, подтвердить с игроком.',source,characters:[{name:'Теон',description:'Полуэльф · Artificer 4 · Artillerist',maxHp:31,ac:15,bonuses:{strength:0,dexterity:2,constitution:2,intelligence:4,wisdom:1,charisma:-1,perception:3,investigation:6,arcana:6,stealth:2,athletics:0,persuasion:-1,survival:1,insight:1}},{name:'Альвари',description:'Полуэльф · Druid 4 · Circle of Stars',maxHp:31,ac:12,bonuses:{strength:1,dexterity:-1,constitution:2,intelligence:2,wisdom:4,charisma:0,perception:6,investigation:2,arcana:2,stealth:-1,athletics:1,persuasion:0,survival:6,insight:6}}]});}

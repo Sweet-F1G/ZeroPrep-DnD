@@ -498,6 +498,21 @@ $('actionProposals').onclick=e=>{const b=e.target.closest('[data-action-proposal
 function openTool(id){if(!current())return toast('Сначала откройте игру');stopListening();pauseReactionClock();$('campaignToolsDialog').close();$(id).showModal();}
 $('campaignTools').onclick=()=>{stopListening();pauseReactionClock();$('storageNote').textContent=current()?`${editions[current().edition]||editions.legacy}. Игровое время: ${Math.floor((current().clockMinutes||0)/60)} ч ${(current().clockMinutes||0)%60} мин. Сохранение в SQLite; исходная JSON-копия сохранена в Backups. ${state.storage?.mirrorError||''}`:'Откройте или создайте игру.';$('campaignToolsDialog').showModal();};
 for(const id of ['usage','memory','new','import','export','seed','editHeroes']){const handler=$(id).onclick;$(id).onclick=e=>{$('campaignToolsDialog').close();handler?.(e);};}
+$('deleteCampaign')?.addEventListener('click',async()=>{
+ const c=current();
+ if(!c)return toast('Сначала откройте кампанию');
+ if(!confirm(`Вы уверены, что хотите удалить кампанию «${c.name}»?\n\nВсе записи журнала, листы персонажей, карты и память этой кампании будут стёрты безвозвратно.`))return;
+ try{
+  const res=await post('/api/campaign/delete',{id:c.id});
+  $('campaignToolsDialog').close();
+  toast(`Кампания «${c.name}» удалена`);
+  state.campaigns=(state.campaigns||[]).filter(x=>x.id!==c.id);
+  activeId=res.activeCampaignId||state.campaigns[0]?.id||null;
+  render();
+ }catch(e){
+  toast('Ошибка удаления: '+e.message);
+ }
+});
 const noteKinds={fact:'Факт',promise:'Обещание',quest:'Задание',npc:'Персонаж',place:'Место',rumor:'Слух'},noteStatuses={active:'Открыто',fulfilled:'Выполнено',broken:'Нарушено',closed:'Закрыто',overdue:'Просрочено'};
 function renderNotebook(){const notes=current()?.memory||[];$('notebookList').innerHTML=notes.length?notes.toReversed().map(n=>`<article class="notebook-card"><small>${noteKinds[n.kind]} · ${noteStatuses[n.status]}${n.deadlineMinutes!==null?' · срок: '+n.deadlineMinutes+' игровых мин.':''}</small><p>${esc(n.text)}</p><small>Источник: ${esc(n.sourceId?.slice(0,8)||'импорт')}</small>${['active','overdue'].includes(n.status)?`<button class="quiet" data-note="${n.id}" data-note-status="${['promise','quest'].includes(n.kind)?'fulfilled':'closed'}">${['promise','quest'].includes(n.kind)?'Отметить выполнение':'Закрыть'}</button>`:''}</article>`).join(''):'<p class="dialog-note">Записей пока нет. Обещания и задания сохраняются здесь отдельно от рассказа.</p>';}
 $('notebook').onclick=()=>{renderNotebook();openTool('notebookDialog');};
@@ -1140,6 +1155,17 @@ function connectMasterSSE() {
 
   lanEventSource.addEventListener('campaign', () => {
     refresh();
+  });
+
+  lanEventSource.addEventListener('campaign-deleted', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      state.campaigns = (state.campaigns || []).filter(x => x.id !== data.campaignId);
+      if (activeId === data.campaignId) {
+        activeId = data.activeCampaignId || state.campaigns[0]?.id || null;
+      }
+      render();
+    } catch {}
   });
 }
 

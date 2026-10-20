@@ -26,6 +26,16 @@ export async function createCampaignStore(directory){
    db.prepare("INSERT INTO metadata VALUES('generation',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(String(actual+1));
   });generation++;
  }
+ function deleteCampaignRecord(campaignId){
+  transaction(()=>{
+   const actual=Number(db.prepare("SELECT value FROM metadata WHERE key='generation'").get()?.value||0);
+   db.prepare('DELETE FROM campaigns WHERE id=?').run(campaignId);
+   db.prepare('DELETE FROM audit WHERE campaign_id=?').run(campaignId);
+   db.prepare('DELETE FROM journal_archive WHERE campaign_id=?').run(campaignId);
+   db.prepare('DELETE FROM archive WHERE campaign_id=?').run(campaignId);
+   db.prepare("INSERT INTO metadata VALUES('generation',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(String(actual+1));
+  });generation++;
+ }
  if(!migrated){
   let legacy=[],raw;try{raw=await fs.readFile(path.join(directory,'campaigns.json'),'utf8');legacy=JSON.parse(raw);if(!Array.isArray(legacy))throw Error();}catch(e){if(e.code!=='ENOENT'){db.close();throw Error('Повреждён campaigns.json. Миграция остановлена; исходный файл сохранён.');}}
   if(raw!==undefined){const backups=path.join(directory,'Backups');await fs.mkdir(backups,{recursive:true});await fs.writeFile(path.join(backups,'campaigns-before-sqlite-'+Date.now()+'.json'),raw,{mode:0o600,flag:'wx'});}
@@ -38,6 +48,7 @@ export async function createCampaignStore(directory){
  return {
   load,
   async save(campaigns){writeCampaigns(campaigns);const temp=path.join(directory,'campaigns.json.'+randomUUID()+'.tmp');try{await fs.writeFile(temp,JSON.stringify(load(),null,2),{mode:0o600});await fs.rename(temp,path.join(directory,'campaigns.json'));mirrorError='';}catch{await fs.rm(temp,{force:true}).catch(()=>{});mirrorError='Основная база сохранена, но JSON-копия не обновилась. Проверьте свободное место.';}},
+  async delete(campaignId){deleteCampaignRecord(campaignId);const temp=path.join(directory,'campaigns.json.'+randomUUID()+'.tmp');try{await fs.writeFile(temp,JSON.stringify(load(),null,2),{mode:0o600});await fs.rename(temp,path.join(directory,'campaigns.json'));mirrorError='';}catch{await fs.rm(temp,{force:true}).catch(()=>{});mirrorError='Основная база сохранена, но JSON-копия не обновилась. Проверьте свободное место.';}},
   status:()=>({engine:'SQLite',schema:1,generation,mirrorError,backups:'Saves/Backups',auditEvents:Number(db.prepare('SELECT count(*) AS n FROM audit').get().n)}),
   search(campaignId,query){const terms=String(query).match(/[\p{L}\d]{3,}/gu)?.slice(0,12);if(!terms?.length)return [];const match=terms.map(t=>'"'+t.replaceAll('"','')+'"*').join(' OR ');return db.prepare('SELECT event_id AS id,text FROM archive WHERE archive MATCH ? AND campaign_id=? ORDER BY rank LIMIT 20').all(match,campaignId);},
   close:()=>db.close()
