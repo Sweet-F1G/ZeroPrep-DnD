@@ -152,8 +152,17 @@ input[type="checkbox"]{width:24px;height:24px;min-width:24px;accent-color:var(--
 .tactical-grid-table{border-collapse:collapse;margin:auto;font-size:11px}
 .tactical-grid-table th{background:#152219;color:#8fa08e;font-size:9px;font-weight:600;padding:4px 6px;border:1px solid #243427;position:sticky;top:0;z-index:2;user-select:none}
 .tactical-grid-table th.row-header{position:sticky;left:0;z-index:3;width:24px;min-width:24px;text-align:center}
-.tactical-grid-cell{border:1px solid #243426;width:48px;min-width:48px;height:48px;min-height:48px;vertical-align:middle;text-align:center;padding:2px;position:relative;background:rgba(18,28,21,0.4);transition:background .15s ease}
+.tactical-grid-cell{border:1px solid #243426;width:48px;min-width:48px;height:48px;min-height:48px;vertical-align:middle;text-align:center;padding:2px;position:relative;background:rgba(18,28,21,0.4);transition:background .15s ease;cursor:pointer}
 .tactical-grid-cell:hover{background:rgba(201,169,115,0.09)}
+.tactical-grid-cell.selected-cell{outline:2px solid var(--gold)!important;outline-offset:-2px;box-shadow:0 0 10px rgba(201,169,115,.45);background:rgba(201,169,115,0.18)!important}
+.tactical-grid-cell.cell-terrain-fire{background:rgba(239,68,68,.18)!important;border-color:rgba(239,68,68,.4)!important}
+.tactical-grid-cell.cell-terrain-water{background:rgba(56,189,248,.18)!important;border-color:rgba(56,189,248,.4)!important}
+.tactical-grid-cell.cell-terrain-nature{background:rgba(34,197,94,.18)!important;border-color:rgba(34,197,94,.4)!important}
+.tactical-grid-cell.cell-terrain-trap{background:rgba(234,179,8,.22)!important;border-color:rgba(234,179,8,.5)!important}
+.tactical-grid-cell.cell-terrain-stone{background:rgba(148,163,184,.2)!important;border-color:rgba(148,163,184,.45)!important}
+.tactical-cell-inspect-bar{display:flex;align-items:center;justify-content:space-between;background:#131e17;border:1px solid #2d4232;padding:6px 12px;border-radius:6px;margin:8px 0;font-size:12px;color:var(--text)}
+.tactical-cell-inspect-bar strong{color:var(--gold)}
+.tactical-cell-inspect-bar small{color:var(--muted)}
 
 .token-badge{display:inline-flex;align-items:center;justify-content:center;gap:2px;border-radius:50%;width:34px;height:34px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.5);transition:transform .15s ease;user-select:none;line-height:1;overflow:hidden;text-overflow:ellipsis;padding:1px}
 .token-badge:hover{transform:scale(1.15);z-index:5}
@@ -259,6 +268,9 @@ body.sidebar-collapsed .sidebar-toggle-btn{background:#243627;border-color:var(-
 .lan-companion-btn:hover{background:#223727;border-color:var(--gold);box-shadow:0 0 10px rgba(201,169,115,.25)}
 .lan-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;background:#22c55e;color:#0b140e;border-radius:10px;font-size:11px;font-weight:800;line-height:1}
 #lanDialog{max-width:580px;width:95vw}
+.lan-mode-toggle{display:flex;gap:6px;margin:12px 0 4px;background:#0d1410;padding:4px;border-radius:8px;border:1px solid #233327}
+.lan-mode-btn{flex:1;background:transparent;border:none;color:#8fa08e;padding:7px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease;text-align:center}
+.lan-mode-btn.active{background:#1d3023;color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .lan-modal-body{display:flex;gap:20px;align-items:center;margin-top:14px}
 @media(max-width:600px){.lan-modal-body{flex-direction:column}}
 .lan-qr-wrapper{flex-shrink:0;background:#fff;padding:12px;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.4)}

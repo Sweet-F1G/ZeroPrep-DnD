@@ -42,6 +42,19 @@
       </div>
     </div>
 
+    <!-- HTTPS Switcher Banner for Seamless Audio -->
+    <div id="httpsPromoBanner" class="https-promo-banner" hidden>
+      <div class="https-promo-content">
+        <span class="https-promo-icon">🔒</span>
+        <div class="https-promo-text">
+          <strong>Бесшовный микрофон</strong>
+          <small>Перейдите на HTTPS для прямого ввода речи без диктофона</small>
+        </div>
+      </div>
+      <a id="switchToHttpsLink" href="#" class="https-promo-btn">Включить ↗</a>
+      <button type="button" id="closeHttpsBannerBtn" class="https-promo-close" aria-label="Закрыть">×</button>
+    </div>
+
     <!-- Navigation Tabs -->
     <nav class="nav-tabs" role="tablist">
       <button type="button" class="tab-btn active" data-tab="hero" role="tab" aria-selected="true">
@@ -276,25 +289,41 @@
 
     <!-- Floating Push-to-Talk Bar (LAN Mobile Companion) -->
     <div id="playerPttBar" class="player-ptt-bar">
-      <div id="pttStatusHint" class="ptt-status-hint">
-        <span class="ptt-hero-badge">👤 <span id="pttHeroBadgeName">—</span></span>
-        <span id="pttStatusText" class="ptt-status-text">Зажмите кнопку для хода</span>
+      <!-- Expanded Dock Body -->
+      <div id="pttExpandedBody" class="ptt-expanded-body">
+        <div class="ptt-status-hint">
+          <div class="ptt-status-info">
+            <span class="ptt-hero-badge">👤 <span id="pttHeroBadgeName">—</span></span>
+            <span id="pttStatusText" class="ptt-status-text">Зажмите кнопку для хода</span>
+          </div>
+          <button type="button" id="pttCollapseBtn" class="ptt-collapse-btn" title="Свернуть панель хода" aria-label="Свернуть панель хода">
+            <span id="pttCollapseIcon">▾</span>
+          </button>
+        </div>
+
+        <div class="ptt-controls-row">
+          <button type="button" id="playerPttBtn" class="player-ptt-btn" aria-label="Удерживайте, чтобы сказать действие за героя">
+            <span class="ptt-btn-icon" id="pttBtnIcon">🎙️</span>
+            <span class="ptt-btn-text" id="pttBtnText">Удерживайте для хода</span>
+          </button>
+          <button type="button" id="pttTextToggleBtn" class="ptt-toggle-btn" title="Ввести действие текстом" aria-label="Ввести действие текстом">
+            ✏️
+          </button>
+        </div>
+
+        <div id="pttTextInputRow" class="ptt-text-input-row" hidden>
+          <input type="text" id="pttTextInput" class="ptt-text-input" placeholder="Опишите действие героя..." maxlength="1000">
+          <button type="button" id="pttSendTextBtn" class="ptt-send-text-btn" aria-label="Отправить действие">↗</button>
+        </div>
       </div>
 
-      <div class="ptt-controls-row">
-        <button type="button" id="playerPttBtn" class="player-ptt-btn" aria-label="Удерживайте, чтобы сказать действие за героя">
-          <span class="ptt-btn-icon" id="pttBtnIcon">🎙️</span>
-          <span class="ptt-btn-text" id="pttBtnText">Удерживайте для хода</span>
-        </button>
-        <button type="button" id="pttTextToggleBtn" class="ptt-toggle-btn" title="Ввести действие текстом" aria-label="Ввести действие текстом">
-          ✏️
-        </button>
+      <!-- Collapsed Pill (One-tap expand floating bar) -->
+      <div id="pttCollapsedPill" class="ptt-collapsed-pill" hidden>
+        <span class="collapsed-pill-icon">🎙️</span>
+        <span class="collapsed-pill-label">Сделать ход (<strong id="pttCollapsedHeroName">—</strong>)</span>
+        <span class="collapsed-pill-arrow">▴</span>
       </div>
 
-      <div id="pttTextInputRow" class="ptt-text-input-row" hidden>
-        <input type="text" id="pttTextInput" class="ptt-text-input" placeholder="Опишите действие героя..." maxlength="1000">
-        <button type="button" id="pttSendTextBtn" class="ptt-send-text-btn" aria-label="Отправить действие">↗</button>
-      </div>
       <input type="file" id="playerAudioInput" accept="audio/*,audio/mp4,audio/m4a,audio/wav,audio/aac,audio/webm" capture="microphone" hidden>
     </div>
   </div>

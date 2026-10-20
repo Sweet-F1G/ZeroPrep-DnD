@@ -102,8 +102,9 @@ export async function* edgeSpeechChunks(text,voice='ru-RU-DmitryNeural',signal=n
 }
 
 export async function edgeSpeech(text,voice='ru-RU-DmitryNeural',signal=null){
+ const timeoutSignal=signal||AbortSignal.timeout(12000);
  const chunks=[];
- for await(const chunk of edgeSpeechChunks(text,voice,signal)){
+ for await(const chunk of edgeSpeechChunks(text,voice,timeoutSignal)){
   chunks.push(chunk);
  }
  if(!chunks.length)throw Error('Edge TTS не вернул аудиоданные');

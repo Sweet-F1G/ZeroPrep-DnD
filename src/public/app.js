@@ -766,40 +766,93 @@ function toggleHudWide(forceState){
  }
 }
 
+function getCellTerrainClass(tokens){
+ if(!tokens||!tokens.length) return '';
+ for(const t of tokens){
+  const label = (t.label || t.id || '').toLowerCase();
+  if(/(?:костер|огонь|пламя|факел|жар|лава|печь|fire|flame|torch|lava)/i.test(label)) return 'cell-terrain-fire';
+  if(/(?:фонтан|колодец|вода|водоем|озеро|ручей|бассейн|река|fountain|well|water|river|pond)/i.test(label)) return 'cell-terrain-water';
+  if(/(?:дерево|куст|заросли|трава|лес|растение|tree|bush|forest|vine|plant)/i.test(label)) return 'cell-terrain-nature';
+  if(/(?:ловушка|растяжка|нажим|мина|яма|trap|pit)/i.test(label)) return 'cell-terrain-trap';
+  if(/(?:колонна|стена|завал|столб|камень|валун|скала|обвал|pillar|column|wall|rock|stone|boulder)/i.test(label)) return 'cell-terrain-stone';
+ }
+ return '';
+}
+
 function getTokenIcon(token){
+ if(!token) return '◇';
  const kind = token.kind || 'object';
  const label = (token.label || token.id || '').toLowerCase();
  if(kind === 'hero'){
-  if(/(?:плут|вор|разбой|следопыт|ловк|роуг|rogue|слава|стрэндж)/i.test(label)) return '🗡️';
-  if(/(?:жрец|клирик|паладин|храмов|священ|альвари|cleric|paladin)/i.test(label)) return '🛡️';
-  if(/(?:воин|боец|рыцар|солдат|варвар|теон|fighter|warrior|barbarian)/i.test(label)) return '⚔️';
-  if(/(?:маг|чародей|колдун|волшебн|иллюз|wizard|sorcerer|mage|warlock)/i.test(label)) return '🧙';
-  if(/(?:лучник|стрелок|егерь|рейнджер|ranger|archer)/i.test(label)) return '🏹';
-  if(/(?:бард|певец|музык|bard)/i.test(label)) return '🪕';
-  if(/(?:друид|шаман|druid)/i.test(label)) return '🌿';
-  if(/(?:монах|monk)/i.test(label)) return '🥋';
-  return '⚔️';
+  if(/(?:арт|изобрет|инженер|алхим|теон|artificer)/i.test(label)) return '⚙️';
+  if(/(?:друид|шаман|травник|альвари|druid)/i.test(label)) return '🌿';
+  if(/(?:бард|скальд|певец|музык|лира|bard)/i.test(label)) return '🪕';
+  if(/(?:жрец|клирик|священ|целител|капеллан|cleric)/i.test(label)) return '🛡️';
+  if(/(?:паладин|храмов|крестонос|paladin)/i.test(label)) return '⚜️';
+  if(/(?:воин|боец|рыцар|солдат|варвар|берсерк|fighter|warrior|barbarian)/i.test(label)) return '⚔️';
+  if(/(?:плут|вор|разбой|следопыт|ловк|ассасин|роуг|rogue|стрэндж)/i.test(label)) return '🗡️';
+  if(/(?:лучник|стрелок|егерь|охотник|рейнджер|ranger|archer)/i.test(label)) return '🏹';
+  if(/(?:монах|единобор|кунг|monk)/i.test(label)) return '🥋';
+  if(/(?:чародей|sorcerer)/i.test(label)) return '🔮';
+  if(/(?:колдун|чернокниж|warlock)/i.test(label)) return '🧿';
+  if(/(?:маг|волшебн|иллюз|архимаг|wizard|mage)/i.test(label)) return '🧙';
+  return '👤';
  }
  if(kind === 'enemy'){
-  if(/(?:волк|пес|собак|зверь|гонч|wolf|hound|beast)/i.test(label)) return '🐺';
-  if(/(?:скелет|нежить|зомби|мертв|упырь|гуль|ghoul|skeleton|zombie|undead)/i.test(label)) return '💀';
-  if(/(?:гоблин|орк|кобольд|тролль|огр|демон|бес|goblin|orc|kobold|demon|devil|fiend)/i.test(label)) return '👹';
-  if(/(?:паук|паучи|spider)/i.test(label)) return '🕷️';
-  if(/(?:дракон|виверн|змий|dragon|wyvern)/i.test(label)) return '🐉';
-  if(/(?:культист|разбой|бандит|наемник|граби|bandit|thug|cultist)/i.test(label)) return '🗡️';
-  if(/(?:призрак|дух|тень|фантом|ghost|specter|shadow|wraith)/i.test(label)) return '👻';
-  if(/(?:босс|главарь|вождь|капитан|boss|король)/i.test(label)) return '👑';
+  // Undead
+  if(/(?:скелет|костяк|skeleton)/i.test(label)) return '💀';
+  if(/(?:зомби|упырь|гуль|мертв|ghoul|zombie|undead)/i.test(label)) return '🧟';
+  if(/(?:вампир|князь\s+тьмы|vampire)/i.test(label)) return '🧛';
+  if(/(?:лич|некромант|lich|necromancer)/i.test(label)) return '☠️';
+  if(/(?:призрак|дух|тень|фантом|банши|ghost|specter|shadow|wraith|banshee)/i.test(label)) return '👻';
+  // Beasts / Animals
+  if(/(?:волк|пес|собак|зверь|гонч|wolf|hound)/i.test(label)) return '🐺';
+  if(/(?:медведь|гризли|bear)/i.test(label)) return '🐻';
+  if(/(?:кабан|вепрь|секач|boar)/i.test(label)) return '🐗';
+  if(/(?:паук|паучи|тарантул|spider|arachnid)/i.test(label)) return '🕷️';
+  if(/(?:змея|гадюка|василиск|кобра|snake|viper|basilisk)/i.test(label)) return '🐍';
+  if(/(?:крыса|мышь|грызун|rat)/i.test(label)) return '🐀';
+  if(/(?:летучая\s+мышь|нетопырь|bat)/i.test(label)) return '🦇';
+  // Humanoid enemies
+  if(/(?:гоблин|кобольд|goblin|kobold)/i.test(label)) return '👺';
+  if(/(?:орк|варг|полуорк|orc)/i.test(label)) return '👹';
+  if(/(?:тролль|огр|великан|гигант|циклоп|troll|ogre|giant|cyclops)/i.test(label)) return '🧌';
+  if(/(?:культист|фанатик|сектан|cultist)/i.test(label)) return '🕯️';
+  if(/(?:разбой|бандит|наемник|граби|головорез|thug|bandit|mercenary)/i.test(label)) return '🗡️';
+  if(/(?:ассасин|наемный\s+убийца|assassin|ninja)/i.test(label)) return '🥷';
+  if(/(?:снайпер|стрелок|арбалетчик|archer|crossbowman)/i.test(label)) return '🎯';
+  if(/(?:всадник|кавалерист|rider|cavalry)/i.test(label)) return '🏇';
+  // Monsters & Bosses
+  if(/(?:дракон|виверн|змий|тиамат|dragon|wyvern|drake)/i.test(label)) return '🐉';
+  if(/(?:демон|бес|черт|дьявол|имп|demon|devil|fiend|imp)/i.test(label)) return '👿';
+  if(/(?:мимик|слизь|студень|желе|mimic|ooze|slime|cube)/i.test(label)) return '🧪';
+  if(/(?:элементаль|голем|elemental|golem)/i.test(label)) return '🗿';
+  if(/(?:энт|дендроид|леший|treant)/i.test(label)) return '🪵';
+  if(/(?:босс|главарь|вождь|капитан|король|командир|boss|chief|lord)/i.test(label)) return '👑';
   return '💀';
  }
- if(/(?:сундук|ларь|ящик|бочка|трофей|chest|crate|barrel|box)/i.test(label)) return '📦';
- if(/(?:дверь|ворота|проход|решетка|люк|door|gate|hatch)/i.test(label)) return '🚪';
- if(/(?:костер|огонь|пламя|факел|жар|fire|flame|torch)/i.test(label)) return '🔥';
- if(/(?:ловушка|растяжка|нажим|trap)/i.test(label)) return '⚠️';
- if(/(?:алтарь|статуя|монумент|altar|statue)/i.test(label)) return '🗿';
- if(/(?:фонтан|колодец|вода|водоем|fountain|well|water)/i.test(label)) return '⛲';
- if(/(?:дерево|куст|заросли|tree|bush)/i.test(label)) return '🌲';
- if(/(?:колонна|стена|завал|столб|pillar|column|wall)/i.test(label)) return '🏛️';
- if(/(?:стол|стул|бар|стойка|table|chair)/i.test(label)) return '🪑';
+ // Objects & Terrain
+ if(/(?:сундук|ларь|ящик|короб|сейф|трофей|chest|crate|box|safe)/i.test(label)) return '📦';
+ if(/(?:сокровищ|золото|клад|монеты|драгоцен|алмаз|treasure|gold|gem)/i.test(label)) return '💎';
+ if(/(?:дверь|ворота|проход|решетка|люк|door|gate|hatch|portal)/i.test(label)) return '🚪';
+ if(/(?:костер|огонь|пламя|факел|жар|печь|жаровня|fire|flame|torch)/i.test(label)) return '🔥';
+ if(/(?:ловушка|растяжка|нажим|мина|яма|trap|pit)/i.test(label)) return '⚠️';
+ if(/(?:алтарь|саркофаг|гробниц|могила|святилищ|altar|tomb|shrine|sarcophagus)/i.test(label)) return '⚰️';
+ if(/(?:фонтан|колодец|вода|водоем|озеро|бассейн|fountain|well|water|pool)/i.test(label)) return '⛲';
+ if(/(?:дерево|дуб|сосна|роща|лес|tree|forest|wood)/i.test(label)) return '🌲';
+ if(/(?:куст|заросли|трава|кустарник|bush|vine)/i.test(label)) return '🌿';
+ if(/(?:колонна|столб|стена|обелиск|pillar|column|wall|obelisk)/i.test(label)) return '🏛️';
+ if(/(?:камень|валун|скала|завал|обвал|rock|boulder|rubble)/i.test(label)) return '🪨';
+ if(/(?:стол|стул|бар|стойка|мебель|скамья|table|chair|bench)/i.test(label)) return '🪑';
+ if(/(?:лестниц|трап|ступен|подъем|спуск|ladder|stairs)/i.test(label)) return '🪜';
+ if(/(?:мост|переправа|bridge)/i.test(label)) return '🌉';
+ if(/(?:книга|свиток|фолиант|записка|гримуар|book|scroll|tome)/i.test(label)) return '📜';
+ if(/(?:зелье|флакон|колба|эликсир|снадобье|potion|flask|vial)/i.test(label)) return '🧪';
+ if(/(?:кровать|нары|спальник|постель|bed|cot)/i.test(label)) return '🛏️';
+ if(/(?:повозка|телега|карета|фургон|wagon|cart|carriage)/i.test(label)) return '🛒';
+ if(/(?:клетка|темница|решетка|цепи|cage|chains)/i.test(label)) return '⛓️';
+ if(/(?:гриб|споры|mushroom|fungus)/i.test(label)) return '🍄';
+ if(/(?:портал|разлом|руна|магический\s+круг|portal|rift|rune)/i.test(label)) return '🌀';
  return '◇';
 }
 
@@ -875,6 +928,10 @@ function renderHudMap(){
     </div>
    </div>
    ${m.description ? `<p class="tactical-map-desc">${esc(m.description)}</p>` : ''}
+   <div class="tactical-cell-inspect-bar" id="inspectBar_${m.id}">
+    <span>Коснитесь любой клетки сетки, чтобы узнать расстояние и объекты</span>
+    <small>${scaleText}</small>
+   </div>
    <div class="map-grid-container ${mapZoomMode === 'fit' ? 'zoom-fit' : ''}">
     <table class="tactical-grid-table">
      <thead>
@@ -888,7 +945,9 @@ function renderHudMap(){
        <th class="row-header">${y + 1}</th>
        ${Array.from({length: m.width}, (_, x) => {
         const cellTokens = (m.tokens || []).filter(t => t.x === x && t.y === y);
-        return `<td class="tactical-grid-cell" data-coord="${colLabels[x]}${y + 1}">
+        const terrainClass = getCellTerrainClass(cellTokens);
+        const tokensJson = esc(JSON.stringify(cellTokens));
+        return `<td class="tactical-grid-cell ${terrainClass}" data-coord="${colLabels[x]}${y + 1}" data-x="${x}" data-y="${y}" data-tokens="${tokensJson}">
          ${cellTokens.map(t => {
           const kind = t.kind || 'object';
           const label = t.label || t.id;
@@ -909,6 +968,42 @@ function renderHudMap(){
    </div>
   </article>`;
  }).join('');
+
+ panel.querySelectorAll('.tactical-grid-cell').forEach(cell => {
+  cell.addEventListener('click', () => {
+   const card = cell.closest('.tactical-map-card');
+   if (!card) return;
+   card.querySelectorAll('.tactical-grid-cell.selected-cell').forEach(c => c.classList.remove('selected-cell'));
+   cell.classList.add('selected-cell');
+
+   const coord = cell.dataset.coord;
+   const x = parseInt(cell.dataset.x, 10);
+   const y = parseInt(cell.dataset.y, 10);
+   const tokens = cell.dataset.tokens ? JSON.parse(cell.dataset.tokens) : [];
+   const inspectBar = card.querySelector('.tactical-cell-inspect-bar');
+
+   const activeMap = (c.maps || [])[0];
+   const heroTokens = (activeMap?.tokens || []).filter(t => t.kind === 'hero');
+   let distStr = '';
+   if (heroTokens.length > 0) {
+    const hero = heroTokens[0];
+    const dx = Math.abs(x - hero.x), dy = Math.abs(y - hero.y);
+    const cellsDist = Math.max(dx, dy);
+    const feetDist = cellsDist * (activeMap.feetPerCell || 5);
+    distStr = ` · Расстояние от ${esc(hero.label || hero.id)}: <strong>${feetDist} фт</strong> (${cellsDist} кл)`;
+   }
+
+   if (inspectBar) {
+    if (tokens.length > 0) {
+     const tokensDesc = tokens.map(t => `${getTokenIcon(t)} ${esc(t.label || t.id)}`).join(', ');
+     inspectBar.innerHTML = `<span>Клетка <strong>${coord}</strong>: ${tokensDesc}${distStr}</span><small>${scaleText}</small>`;
+    } else {
+     inspectBar.innerHTML = `<span>Клетка <strong>${coord}</strong>: свободное пространство${distStr}</span><small>${scaleText}</small>`;
+    }
+   }
+  });
+ });
+
  $('mapZoomFit')?.classList.toggle('active', mapZoomMode === 'fit');
  $('mapZoomToggle')?.classList.toggle('active', mapZoomMode === '100%');
 }
@@ -1306,6 +1401,61 @@ function connectMasterSSE() {
   });
 }
 
+let activeLanInfo = null, activeLanMode = 'https';
+
+function renderLanModal() {
+  if (!activeLanInfo) return;
+  const info = activeLanInfo;
+  const input = $('lanUrlInput');
+  const statusNote = $('lanStatusNote');
+  const qrContainer = $('lanQrCode');
+  const hint = $('lanModeHint');
+  const btnHttps = $('lanModeHttps');
+  const btnHttp = $('lanModeHttp');
+
+  const useHttps = activeLanMode === 'https' && !!info.playerHttpsUrl;
+  const targetUrl = useHttps ? info.playerHttpsUrl : info.playerUrl;
+
+  if (btnHttps) btnHttps.classList.toggle('active', useHttps);
+  if (btnHttp) btnHttp.classList.toggle('active', !useHttps);
+
+  if (input) input.value = targetUrl;
+  if (statusNote) {
+    statusNote.textContent = info.ips.length > 0 
+      ? `Локальный IP: ${info.primaryIp} · Порт: ${useHttps ? info.httpsPort : info.port}. Подключено смартфонов: ${Math.max(0, (info.clientsCount || 1) - 1)}` 
+      : 'Wi-Fi / LAN IP не обнаружен. Проверьте подключение к роутеру.';
+  }
+
+  if (hint) {
+    if (useHttps) {
+      hint.innerHTML = '✦ <strong>Бесшовный микрофон:</strong> удерживайте кнопку на экране телефона и говорите прямо в браузере.<br><em>При первом входе:</em> телефон покажет предупреждение локального сертификата — нажмите <strong>«Подробнее / Дополнительно» → «Перейти на сайт»</strong>.';
+    } else {
+      hint.innerHTML = 'Обычный режим без предупреждений безопасности. Аудиозапись будет использовать вызов диктофона телефона или текстовый ввод действий.';
+    }
+  }
+
+  if (qrContainer && typeof qrcode === 'function') {
+    try {
+      const qr = qrcode(0, 'M');
+      qr.addData(targetUrl);
+      qr.make();
+      qrContainer.innerHTML = qr.createSvgTag(5, 10);
+    } catch (err) {
+      qrContainer.innerHTML = '<p class="dialog-note">Не удалось создать QR</p>';
+    }
+  }
+}
+
+$('lanModeHttps')?.addEventListener('click', () => {
+  activeLanMode = 'https';
+  renderLanModal();
+});
+
+$('lanModeHttp')?.addEventListener('click', () => {
+  activeLanMode = 'http';
+  renderLanModal();
+});
+
 $('lanCompanionBtn')?.addEventListener('click', async () => {
   const dialog = $('lanDialog');
   if (!dialog) return;
@@ -1313,27 +1463,9 @@ $('lanCompanionBtn')?.addEventListener('click', async () => {
 
   try {
     const info = await api('lan-info');
-    const input = $('lanUrlInput');
-    const statusNote = $('lanStatusNote');
-    const qrContainer = $('lanQrCode');
-
-    if (input) input.value = info.playerUrl;
-    if (statusNote) {
-      statusNote.textContent = info.ips.length > 0 
-        ? `Локальный IP: ${info.primaryIp} · Порт: ${info.port}. Подключено смартфонов: ${Math.max(0, (info.clientsCount || 1) - 1)}` 
-        : 'Wi-Fi / LAN IP не обнаружен. Проверьте подключение к роутеру.';
-    }
-
-    if (qrContainer && typeof qrcode === 'function') {
-      try {
-        const qr = qrcode(0, 'M');
-        qr.addData(info.playerUrl);
-        qr.make();
-        qrContainer.innerHTML = qr.createSvgTag(5, 10);
-      } catch (err) {
-        qrContainer.innerHTML = '<p class="dialog-note">Не удалось создать QR</p>';
-      }
-    }
+    activeLanInfo = info;
+    activeLanMode = info.playerHttpsUrl ? 'https' : 'http';
+    renderLanModal();
   } catch (err) {
     toast('Не удалось получить сетевой адрес: ' + err.message);
   }

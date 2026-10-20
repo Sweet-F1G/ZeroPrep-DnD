@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {mkdtemp,rm} from 'node:fs/promises';
+import https from 'node:https';
 import os from 'node:os';
 import path from 'node:path';
 import {cleanNarrationForTTS} from '../delivery.mjs';
@@ -163,6 +164,24 @@ test('LAN Companion: /api/player/ptt and /api/player/turn dispatch action for th
     assert.equal(emptyAudioRes.status, 400);
     const emptyErr = await emptyAudioRes.json();
     assert.match(emptyErr.error, /Опишите действие героя/);
+
+    // 7. Verify /api/lan-info returns playerHttpsUrl for seamless browser voice
+    const lanRes = await fetch(base + '/api/lan-info', {
+      headers: { 'x-app-token': 'master-token' }
+    });
+    assert.equal(lanRes.status, 200);
+    const lanInfo = await lanRes.json();
+    assert.ok(lanInfo.playerUrl.startsWith('http://'));
+    assert.ok(lanInfo.playerHttpsUrl.startsWith('https://'));
+    assert.ok(Number.isInteger(lanInfo.httpsPort));
+
+    // 8. Verify HTTPS server responds with status 200
+    const httpsRes = await new Promise((resolve, reject) => {
+      https.get(lanInfo.playerHttpsUrl, { rejectUnauthorized: false }, res => {
+        resolve(res.statusCode);
+      }).on('error', reject);
+    });
+    assert.equal(httpsRes, 200);
   } finally {
     if (child && !child.killed) await stop();
     await rm(dir, { recursive: true, force: true });

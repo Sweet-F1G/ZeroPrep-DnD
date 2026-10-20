@@ -3,6 +3,8 @@ import {gameMap} from './maps.mjs';
 import {buildPortraitPrompt} from './public/portrait-prompt.mjs';
 import {dmState,publicDM,worldRecord} from './dm-state.mjs';import {heroRecords} from './progression.mjs';
 import http from 'node:http';
+import https from 'node:https';
+import {execSync} from 'node:child_process';
 import os from 'node:os';
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
@@ -67,16 +69,38 @@ async function body(req){let size=0,chunks=[];for await(const chunk of req){size
 const audioStreams=new AudioStreams((text,signal)=>speechChunks({...config},{...keys},text,observe,signal));
 const audioScope=()=>config.ttsProvider==='edge'?('edge|'+(config.edgeVoice||config.voice||'ru-RU-DmitryNeural')):(((config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel)+'|'+config.voice);
 let voiceLatencies=[];try{voiceLatencies=JSON.parse(await fs.readFile(path.join(dataDir,'voice-latency.json'),'utf8'));}catch{}
+function getOrCreateTlsCert(targetDir){
+ const certPath=path.join(targetDir,'cert.pem');
+ const keyPath=path.join(targetDir,'key.pem');
+ try{
+  if(!fsSync.existsSync(certPath)||!fsSync.existsSync(keyPath)){
+   execSync(`/usr/bin/openssl req -x509 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -days 3650 -nodes -subj "/CN=Skazitel Local"`,{stdio:'ignore'});
+  }
+  return {key:fsSync.readFileSync(keyPath),cert:fsSync.readFileSync(certPath)};
+ }catch(e){
+  console.warn('TLS setup skipped:',e.message);
+  return null;
+ }
+}
+const tlsOptions=getOrCreateTlsCert(dataDir);
+let server=null,httpsServer=null;
 let costRequests=0;
-const server=http.createServer(async(req,res)=>{
+const serverHandler=async(req,res)=>{
  let costSensitive=false;
  try {
-  const port=server.address().port;const validHosts=[`127.0.0.1:${port}`,`localhost:${port}`,...getLanIps().map(ip=>`${ip}:${port}`)];
+  const httpPort=server?.address()?.port;
+  const httpsPort=httpsServer?.address()?.port;
+  const activePorts=[httpPort,httpsPort].filter(Boolean);
+  const lanIps=['127.0.0.1','localhost',...getLanIps()];
+  const validHosts=[];
+  for(const p of activePorts){for(const ip of lanIps){validHosts.push(`${ip}:${p}`);}}
   if(!validHosts.includes(req.headers.host))return json(res,{error:'Недопустимый Host'},403);
   if(req.headers.origin&&!validHosts.some(h=>req.headers.origin===`http://${h}`||req.headers.origin===`https://${h}`))return json(res,{error:'Другой источник запрещён'},403);
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
   res.setHeader('Content-Security-Policy',"default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
-  const url=new URL(req.url,`http://${req.headers.host}`);
+  const isHttps=!!(req.socket.encrypted||req.connection?.encrypted);
+  const proto=isHttps?'https':'http';
+  const url=new URL(req.url,`${proto}://${req.headers.host}`);
   if(!url.pathname.startsWith('/api/')) {
    if(/^\/images\/[a-f0-9-]{36}\.(webp|png|jpg)$/.test(url.pathname)){try{const file=path.join(dataDir,'Images',path.basename(url.pathname)),data=await fs.readFile(file);res.writeHead(200,{'Content-Type':file.endsWith('.png')?'image/png':file.endsWith('.jpg')?'image/jpeg':'image/webp','Cache-Control':'private,max-age=86400'});return res.end(data);}catch{res.writeHead(404);return res.end();}}
    if(/^\/icons\/[a-z0-9-]+\.svg$/.test(url.pathname)||['/icons/manifest.json','/icons/LICENSE.txt'].includes(url.pathname)){const file=path.join(root,'public',url.pathname.slice(1));try{const data=await fs.readFile(file);res.writeHead(200,{'Content-Type':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.json')?'application/json':'text/plain; charset=utf-8','Cache-Control':file.endsWith('.json')?'no-store':'public,max-age=86400'});return res.end(data);}catch{res.writeHead(404);return res.end();}}
@@ -129,8 +153,10 @@ const server=http.createServer(async(req,res)=>{
    if(req.method==='GET'&&url.pathname==='/api/lan-info'){
     const auth=req.headers['x-app-token']||req.headers['x-player-token']||url.searchParams.get('token');
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
-    const port=server.address().port,ips=getLanIps(),primaryIp=ips[0]||'127.0.0.1';
-    return json(res,{port,ips,primaryIp,playerToken,playerUrl:`http://${primaryIp}:${port}/player`,clientsCount:sseClients.size});
+    const port=server.address().port;
+    const httpsPort=httpsServer?.address()?.port||null;
+    const ips=getLanIps(),primaryIp=ips[0]||'127.0.0.1';
+    return json(res,{port,httpsPort,ips,primaryIp,playerToken,playerUrl:`http://${primaryIp}:${port}/player`,playerHttpsUrl:httpsPort?`https://${primaryIp}:${httpsPort}/player`:null,clientsCount:sseClients.size});
    }
    if(req.method==='GET'&&url.pathname==='/api/events'){
     const auth=req.headers['x-app-token']||req.headers['x-player-token']||url.searchParams.get('token');
@@ -148,9 +174,11 @@ const server=http.createServer(async(req,res)=>{
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const campaignId=url.searchParams.get('id');
     const c=(campaignId?campaigns.find(x=>x.id===campaignId):null)||(config.activeCampaignId?campaigns.find(x=>x.id===config.activeCampaignId):null)||campaigns[0];
-    if(!c)return json(res,{campaign:null,campaigns:[]});
+    const httpsPort=httpsServer?.address()?.port||null;
+    if(!c)return json(res,{campaign:null,campaigns:[],httpsPort});
     return json(res,{
      activeCampaignId:config.activeCampaignId||c.id,
+     httpsPort,
      campaign:{
       id:c.id,name:c.name,setting:c.setting,characters:c.characters,inventory:c.inventory||[],wallet:c.wallet||{group:0},loot:c.loot||[],maps:c.maps||[],journal:(c.journal||[]).slice(-30),images:(c.images||[]).filter(i=>i.status==='ready')
      },
@@ -448,8 +476,16 @@ const server=http.createServer(async(req,res)=>{
    }
    if(config.ttsProvider==='edge'||b.preview==='edge'){
     const voice=b.preview==='edge'?(b.voice||config.edgeVoice||'ru-RU-DmitryNeural'):(config.edgeVoice||'ru-RU-DmitryNeural');
-    const audio=await edgeSpeech(String(b.text||''),voice);
-    res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store'});return res.end(audio);
+    try{
+     const audio=await edgeSpeech(String(b.text||''),voice);
+     res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store'});return res.end(audio);
+    }catch(edgeErr){
+     if(voiceStatus.installed&&!b.preview){
+      const result=await sileroSpeech(String(b.text||''),config.sileroSpeaker);
+      res.writeHead(200,{'Content-Type':'audio/wav','Cache-Control':'no-store','X-Synthesis-Fallback':'silero'});return res.end(result.audio);
+     }
+     throw edgeErr;
+    }
    }
    if(config.ttsProvider==='openai'||b.preview==='openai'){
     await keysReady;
@@ -578,11 +614,24 @@ updateReactionClock(c,b);}
   }finally{busy.delete(b.id);}
  } catch(e){json(res,{error:e.message||'Ошибка приложения'},400);}
  finally{if(costSensitive)costRequests--;}
-});
-server.listen(Number(process.env.PORT||0),'0.0.0.0',()=>{
+};
+server=http.createServer(serverHandler);
+if(tlsOptions)httpsServer=https.createServer(tlsOptions,serverHandler);
+const portEnv=Number(process.env.PORT||0);
+server.listen(portEnv,'0.0.0.0',()=>{
  const port=server.address().port;
  console.log(`SKAZITEL_URL=http://127.0.0.1:${port}`);
  for(const ip of getLanIps())console.log(`SKAZITEL_LAN_URL=http://${ip}:${port}`);
+ if(httpsServer){
+  const desiredHttpsPort=portEnv===0?0:port+1;
+  httpsServer.listen(desiredHttpsPort,'0.0.0.0',()=>{
+   const httpsPort=httpsServer.address().port;
+   console.log(`SKAZITEL_HTTPS_URL=https://127.0.0.1:${httpsPort}`);
+   for(const ip of getLanIps())console.log(`SKAZITEL_LAN_HTTPS_URL=https://${ip}:${httpsPort}`);
+  }).on('error',err=>{
+   console.warn('HTTPS server failed to bind:',err.message);
+  });
+ }
 });
-process.once('SIGTERM',()=>{closeLocalVoice();campaignStore.close();server.close();process.exit(0);});
-process.once('SIGINT',()=>{closeLocalVoice();campaignStore.close();server.close();process.exit(0);});
+process.once('SIGTERM',()=>{closeLocalVoice();campaignStore.close();server.close();try{httpsServer?.close();}catch{}process.exit(0);});
+process.once('SIGINT',()=>{closeLocalVoice();campaignStore.close();server.close();try{httpsServer?.close();}catch{}process.exit(0);});

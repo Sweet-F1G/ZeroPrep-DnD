@@ -81,6 +81,33 @@ function switchToTab(tabName) {
 // ----------------------------------------------------------------------------
 // Initial State Loading & Synchronization
 // ----------------------------------------------------------------------------
+function checkHttpsPromo(httpsPort) {
+  const banner = document.getElementById('httpsPromoBanner');
+  const promoLink = document.getElementById('switchToHttpsLink');
+  const closeBtn = document.getElementById('closeHttpsBannerBtn');
+  if (!banner || !promoLink) return;
+
+  if (window.location.protocol === 'https:' || !httpsPort) {
+    banner.hidden = true;
+    return;
+  }
+
+  if (sessionStorage.getItem('skazitel_dismiss_https_promo') === '1') {
+    banner.hidden = true;
+    return;
+  }
+
+  const hostname = window.location.hostname || '127.0.0.1';
+  const targetHttpsUrl = `https://${hostname}:${httpsPort}${window.location.pathname}${window.location.search}`;
+  promoLink.href = targetHttpsUrl;
+  banner.hidden = false;
+
+  closeBtn?.addEventListener('click', () => {
+    banner.hidden = true;
+    sessionStorage.setItem('skazitel_dismiss_https_promo', '1');
+  }, { once: true });
+}
+
 async function loadInitialState() {
   try {
     const url = selectedCampaignId 
@@ -89,6 +116,9 @@ async function loadInitialState() {
     const res = await fetch(url, { headers });
     if (!res.ok) throw new Error('Ошибка связи с сервером');
     const data = await res.json();
+    if (data.httpsPort) {
+      checkHttpsPromo(data.httpsPort);
+    }
     if (data.campaign) {
       campaign = data.campaign;
       selectedCampaignId = campaign.id;
@@ -159,6 +189,9 @@ async function refreshCampaignState(targetCampaignId = null) {
     const res = await fetch(url, { headers });
     if (!res.ok) return;
     const data = await res.json();
+    if (data.httpsPort) {
+      checkHttpsPromo(data.httpsPort);
+    }
     if (data.campaign) {
       campaign = data.campaign;
       selectedCampaignId = campaign.id;
@@ -923,6 +956,7 @@ function renderMap() {
     for (let x = 0; x < width; x++) {
       const cellTokens = tokens.filter(t => t.x === x && t.y === y);
       const coordLabel = `${colLabels[x]}${y + 1}`;
+      const terrainClass = getCellTerrainClass(cellTokens);
 
       if (cellTokens.length > 0) {
         const topToken = cellTokens[0];
@@ -932,8 +966,10 @@ function renderMap() {
         const countBadge = cellTokens.length > 1 ? `<span class="cell-multi-badge">${cellTokens.length}</span>` : '';
 
         html += `
-          <td class="tactical-grid-cell has-token token-${kind}" 
+          <td class="tactical-grid-cell has-token token-${kind} ${terrainClass}" 
               data-coord="${coordLabel}" 
+              data-x="${x}"
+              data-y="${y}"
               data-tokens="${escapeHtml(JSON.stringify(cellTokens))}"
               title="${coordLabel}: ${escapeHtml(tokenLabel)}">
             <span class="token-icon">${icon}</span>
@@ -941,7 +977,7 @@ function renderMap() {
           </td>
         `;
       } else {
-        html += `<td class="tactical-grid-cell empty-cell" data-coord="${coordLabel}">·</td>`;
+        html += `<td class="tactical-grid-cell empty-cell ${terrainClass}" data-coord="${coordLabel}" data-x="${x}" data-y="${y}">·</td>`;
       }
     }
     html += `</tr>`;
@@ -963,15 +999,35 @@ function renderMap() {
       cell.classList.add('selected-cell');
 
       const coord = cell.dataset.coord;
+      const x = parseInt(cell.dataset.x, 10);
+      const y = parseInt(cell.dataset.y, 10);
       const tokensData = cell.dataset.tokens ? JSON.parse(cell.dataset.tokens) : [];
       const detailEl = document.getElementById('mapCellDetail');
+
+      // Distance from current hero
+      const activeHero = getActiveHero();
+      let heroDistStr = '';
+      if (activeHero && Number.isInteger(x) && Number.isInteger(y)) {
+        const heroToken = tokens.find(t => t.kind === 'hero' && (
+          (t.label || '').toLowerCase().includes(activeHero.name.toLowerCase()) ||
+          activeHero.name.toLowerCase().includes((t.label || '').toLowerCase())
+        )) || tokens.find(t => t.kind === 'hero');
+
+        if (heroToken && Number.isInteger(heroToken.x) && Number.isInteger(heroToken.y)) {
+          const dx = Math.abs(x - heroToken.x);
+          const dy = Math.abs(y - heroToken.y);
+          const cellsDist = Math.max(dx, dy);
+          const feetDist = cellsDist * (activeMap.feetPerCell || 5);
+          heroDistStr = ` · Дистанция от ${escapeHtml(heroToken.label || activeHero.name)}: <strong>${feetDist} фт</strong> (${cellsDist} кл)`;
+        }
+      }
 
       if (inspector) inspector.hidden = false;
       if (detailEl) {
         if (tokensData.length > 0) {
           detailEl.innerHTML = `
             <div class="cell-inspect-head">
-              <strong>Клетка ${coord}</strong>: ${tokensData.length === 1 ? '1 объект' : tokensData.length + ' объекта(-ов)'}
+              <strong>Клетка ${coord}</strong>: ${tokensData.length === 1 ? '1 объект' : tokensData.length + ' объекта(-ов)'}${heroDistStr}
             </div>
             <div class="cell-inspect-tokens">
               ${tokensData.map(t => `
@@ -984,7 +1040,7 @@ function renderMap() {
             </div>
           `;
         } else {
-          detailEl.innerHTML = `<span style="color:var(--text-muted);">Клетка <strong>${coord}</strong>: свободное пространство (${scaleText}).</span>`;
+          detailEl.innerHTML = `<span style="color:var(--text-muted);">Клетка <strong>${coord}</strong>: свободное пространство (${scaleText})${heroDistStr}.</span>`;
         }
       }
     });
@@ -1006,33 +1062,72 @@ function renderMap() {
   }
 }
 
+function getCellTerrainClass(tokens) {
+  if (!tokens || !tokens.length) return '';
+  for (const t of tokens) {
+    const label = (t.label || t.id || '').toLowerCase();
+    if (/(?:костер|огонь|пламя|факел|жар|лава|печь|fire|flame|torch|lava)/iu.test(label)) return 'cell-terrain-fire';
+    if (/(?:фонтан|колодец|вода|водоем|озеро|ручей|бассейн|река|fountain|well|water|river|pond)/iu.test(label)) return 'cell-terrain-water';
+    if (/(?:дерево|куст|заросли|трава|лес|растение|tree|bush|forest|vine|plant)/iu.test(label)) return 'cell-terrain-nature';
+    if (/(?:ловушка|растяжка|нажим|мина|яма|trap|pit)/iu.test(label)) return 'cell-terrain-trap';
+    if (/(?:колонна|стена|завал|столб|камень|валун|скала|обвал|pillar|column|wall|rock|stone|boulder)/iu.test(label)) return 'cell-terrain-stone';
+  }
+  return '';
+}
+
 function getTokenIcon(token) {
   if (!token) return '◇';
   const kind = token.kind || 'object';
   const label = (token.label || token.id || '').toLowerCase();
 
   if (kind === 'hero') {
-    if (/(?:плут|вор|разбой|следопыт|ловк|роуг|rogue|стрелок)/iu.test(label)) return '🗡️';
-    if (/(?:жрец|клирик|паладин|храмов|священ|альвари|cleric|paladin)/iu.test(label)) return '🛡️';
-    if (/(?:воин|боец|рыцар|солдат|варвар|теон|fighter|warrior|barbarian)/iu.test(label)) return '⚔️';
-    if (/(?:маг|чародей|колдун|волшебн|иллюз|wizard|sorcerer|mage|warlock)/iu.test(label)) return '🧙';
+    if (/(?:арт|изобрет|инженер|алхим|теон|artificer)/iu.test(label)) return '⚙️';
+    if (/(?:друид|шаман|травник|альвари|druid)/iu.test(label)) return '🌿';
+    if (/(?:бард|скальд|певец|музык|лира|bard)/iu.test(label)) return '🪕';
+    if (/(?:жрец|клирик|священ|целител|капеллан|cleric)/iu.test(label)) return '🛡️';
+    if (/(?:паладин|храмов|крестонос|paladin)/iu.test(label)) return '⚜️';
+    if (/(?:воин|боец|рыцар|солдат|варвар|берсерк|fighter|warrior|barbarian)/iu.test(label)) return '⚔️';
+    if (/(?:плут|вор|разбой|следопыт|ловк|ассасин|роуг|rogue|стрелок)/iu.test(label)) return '🗡️';
     if (/(?:лучник|рейнджер|archer|ranger)/iu.test(label)) return '🏹';
-    if (/(?:бард|певец|bard)/iu.test(label)) return '🪕';
-    if (/(?:друид|шаман|druid)/iu.test(label)) return '🌿';
-    if (/(?:монах|monk)/iu.test(label)) return '🥋';
+    if (/(?:монах|единобор|кунг|monk)/iu.test(label)) return '🥋';
+    if (/(?:чародей|sorcerer)/iu.test(label)) return '🔮';
+    if (/(?:колдун|чернокниж|warlock)/iu.test(label)) return '🧿';
+    if (/(?:маг|волшебн|иллюз|архимаг|wizard|mage)/iu.test(label)) return '🧙';
     if (/(?:отряд|партия|лагерь|стоянка)/iu.test(label)) return '🏕️';
-    return '🛡️';
+    return '👤';
   }
 
   if (kind === 'enemy') {
-    if (/(?:волк|пес|собак|зверь|гонч|wolf|hound|beast)/iu.test(label)) return '🐺';
-    if (/(?:скелет|нежить|зомби|мертв|упырь|гуль|ghoul|skeleton|zombie|undead)/iu.test(label)) return '💀';
-    if (/(?:гоблин|орк|кобольд|тролль|огр|демон|бес|goblin|orc|kobold|demon|devil|fiend)/iu.test(label)) return '👹';
-    if (/(?:паук|паучи|spider)/iu.test(label)) return '🕷️';
-    if (/(?:дракон|виверн|змий|dragon|wyvern)/iu.test(label)) return '🐉';
-    if (/(?:культист|бандит|наемник|граби|разбой|bandit|thug|cultist)/iu.test(label)) return '🗡️';
-    if (/(?:призрак|дух|тень|фантом|ghost|specter|shadow|wraith)/iu.test(label)) return '👻';
-    if (/(?:босс|главарь|вождь|капитан|boss|король)/iu.test(label)) return '👑';
+    // Undead
+    if (/(?:скелет|костяк|skeleton)/iu.test(label)) return '💀';
+    if (/(?:зомби|упырь|гуль|мертв|ghoul|zombie|undead)/iu.test(label)) return '🧟';
+    if (/(?:вампир|князь\s+тьмы|vampire)/iu.test(label)) return '🧛';
+    if (/(?:лич|некромант|lich|necromancer)/iu.test(label)) return '☠️';
+    if (/(?:призрак|дух|тень|фантом|банши|ghost|specter|shadow|wraith|banshee)/iu.test(label)) return '👻';
+    // Beasts / Animals
+    if (/(?:волк|пес|собак|зверь|гонч|wolf|hound)/iu.test(label)) return '🐺';
+    if (/(?:медведь|гризли|bear)/iu.test(label)) return '🐻';
+    if (/(?:кабан|вепрь|секач|boar)/iu.test(label)) return '🐗';
+    if (/(?:паук|паучи|тарантул|spider|arachnid)/iu.test(label)) return '🕷️';
+    if (/(?:змея|гадюка|василиск|кобра|snake|viper|basilisk)/iu.test(label)) return '🐍';
+    if (/(?:крыса|мышь|грызун|rat)/iu.test(label)) return '🐀';
+    if (/(?:летучая\s+мышь|нетопырь|bat)/iu.test(label)) return '🦇';
+    // Humanoid enemies
+    if (/(?:гоблин|кобольд|goblin|kobold)/iu.test(label)) return '👺';
+    if (/(?:орк|варг|полуорк|orc)/iu.test(label)) return '👹';
+    if (/(?:тролль|огр|великан|гигант|циклоп|troll|ogre|giant|cyclops)/iu.test(label)) return '🧌';
+    if (/(?:культист|фанатик|сектан|cultist)/iu.test(label)) return '🕯️';
+    if (/(?:разбой|бандит|наемник|граби|головорез|thug|bandit|mercenary)/iu.test(label)) return '🗡️';
+    if (/(?:ассасин|наемный\s+убийца|assassin|ninja)/iu.test(label)) return '🥷';
+    if (/(?:снайпер|стрелок|арбалетчик|archer|crossbowman)/iu.test(label)) return '🎯';
+    if (/(?:всадник|кавалерист|rider|cavalry)/iu.test(label)) return '🏇';
+    // Monsters & Bosses
+    if (/(?:дракон|виверн|змий|тиамат|dragon|wyvern|drake)/iu.test(label)) return '🐉';
+    if (/(?:демон|бес|черт|дьявол|имп|demon|devil|fiend|imp)/iu.test(label)) return '👿';
+    if (/(?:мимик|слизь|студень|желе|mimic|ooze|slime|cube)/iu.test(label)) return '🧪';
+    if (/(?:элементаль|голем|elemental|golem)/iu.test(label)) return '🗿';
+    if (/(?:энт|дендроид|леший|treant)/iu.test(label)) return '🪵';
+    if (/(?:босс|главарь|вождь|капитан|король|командир|boss|chief|lord)/iu.test(label)) return '👑';
     if (/(?:логово|катакомб|руины|лабиринт|пещера)/iu.test(label)) return '🕳️';
     return '💀';
   }
@@ -1042,18 +1137,31 @@ function getTokenIcon(token) {
   if (/(?:башн|руин|tower)/iu.test(label)) return '🗼';
   if (/(?:деревн|поселени|хутор|селение|village)/iu.test(label)) return '🏘️';
   if (/(?:таверн|трактир|постоял|питейная|inn|tavern)/iu.test(label)) return '🍺';
-  if (/(?:лагерь|палатк|костер|кострищ|camp|fire)/iu.test(label)) return '🔥';
-  if (/(?:тракт|дорог|троп|путь|перекресток|мост|road|bridge)/iu.test(label)) return '🛤️';
-  if (/(?:лес|пущ|чащ|дубрав|дерев|forest|woods)/iu.test(label)) return '🌲';
-  if (/(?:гора|кряж|перевал|пик|скал|хребет|mountain)/iu.test(label)) return '⛰️';
-  if (/(?:река|озер|вод|переправ|ручей|river|lake)/iu.test(label)) return '🌊';
-  if (/(?:сундук|ларь|ящик|бочка|трофей|chest|crate|barrel|box)/iu.test(label)) return '📦';
-  if (/(?:дверь|ворота|проход|решетка|люк|door|gate|hatch)/iu.test(label)) return '🚪';
-  if (/(?:ловушка|растяжка|нажим|trap)/iu.test(label)) return '⚠️';
-  if (/(?:алтарь|статуя|монумент|altar|statue)/iu.test(label)) return '🗿';
-  if (/(?:фонтан|колодец|well|fountain)/iu.test(label)) return '⛲';
-  if (/(?:колонна|стена|завал|столб|pillar|column|wall)/iu.test(label)) return '🏛️';
-  if (/(?:стол|стул|бар|стойка|table|chair)/iu.test(label)) return '🪑';
+  if (/(?:лагерь|палатк|camp)/iu.test(label)) return '⛺';
+  if (/(?:тракт|дорог|троп|путь|перекресток|road)/iu.test(label)) return '🛤️';
+  if (/(?:мост|переправа|bridge)/iu.test(label)) return '🌉';
+  if (/(?:гора|кряж|перевал|пик|хребет|mountain)/iu.test(label)) return '⛰️';
+  if (/(?:река|озер|вод|ручей|river|lake)/iu.test(label)) return '🌊';
+  if (/(?:сундук|ларь|ящик|короб|сейф|трофей|chest|crate|barrel|box|safe)/iu.test(label)) return '📦';
+  if (/(?:сокровищ|золото|клад|монеты|драгоцен|алмаз|treasure|gold|gem)/iu.test(label)) return '💎';
+  if (/(?:дверь|ворота|проход|решетка|люк|door|gate|hatch|portal)/iu.test(label)) return '🚪';
+  if (/(?:костер|огонь|пламя|факел|жар|печь|жаровня|fire|flame|torch)/iu.test(label)) return '🔥';
+  if (/(?:ловушка|растяжка|нажим|мина|яма|trap|pit)/iu.test(label)) return '⚠️';
+  if (/(?:алтарь|саркофаг|гробниц|могила|святилищ|altar|tomb|shrine|sarcophagus)/iu.test(label)) return '⚰️';
+  if (/(?:фонтан|колодец|well|fountain|pool)/iu.test(label)) return '⛲';
+  if (/(?:дерево|дуб|сосна|роща|лес|пущ|чащ|tree|forest|woods)/iu.test(label)) return '🌲';
+  if (/(?:куст|заросли|трава|кустарник|bush|vine)/iu.test(label)) return '🌿';
+  if (/(?:колонна|столб|стена|обелиск|pillar|column|wall|obelisk)/iu.test(label)) return '🏛️';
+  if (/(?:камень|валун|скала|завал|обвал|rock|boulder|rubble)/iu.test(label)) return '🪨';
+  if (/(?:стол|стул|бар|стойка|мебель|скамья|table|chair|bench)/iu.test(label)) return '🪑';
+  if (/(?:лестниц|трап|ступен|подъем|спуск|ladder|stairs)/iu.test(label)) return '🪜';
+  if (/(?:книга|свиток|фолиант|записка|гримуар|book|scroll|tome)/iu.test(label)) return '📜';
+  if (/(?:зелье|флакон|колба|эликсир|снадобье|potion|flask|vial)/iu.test(label)) return '🧪';
+  if (/(?:кровать|нары|спальник|постель|bed|cot)/iu.test(label)) return '🛏️';
+  if (/(?:повозка|телега|карета|фургон|wagon|cart|carriage)/iu.test(label)) return '🛒';
+  if (/(?:клетка|темница|решетка|цепи|cage|chains)/iu.test(label)) return '⛓️';
+  if (/(?:гриб|споры|mushroom|fungus)/iu.test(label)) return '🍄';
+  if (/(?:портал|разлом|руна|магический\s+круг|portal|rift|rune)/iu.test(label)) return '🌀';
 
   return '◇';
 }
@@ -1100,6 +1208,32 @@ function initPttControls() {
   const textInput = document.getElementById('pttTextInput');
   const textRow = document.getElementById('pttTextInputRow');
   const audioInput = document.getElementById('playerAudioInput');
+  const collapseBtn = document.getElementById('pttCollapseBtn');
+  const collapsedPill = document.getElementById('pttCollapsedPill');
+  const pttBar = document.getElementById('playerPttBar');
+  const appContainer = document.querySelector('.player-app');
+  const expandedBody = document.getElementById('pttExpandedBody');
+
+  function setPttCollapsed(collapsed) {
+    if (!pttBar) return;
+    pttBar.classList.toggle('is-collapsed', collapsed);
+    if (appContainer) appContainer.classList.toggle('ptt-collapsed', collapsed);
+    if (collapsedPill) collapsedPill.hidden = !collapsed;
+    if (expandedBody) expandedBody.hidden = collapsed;
+    localStorage.setItem('skazitel_ptt_collapsed', collapsed ? '1' : '0');
+  }
+
+  const savedCollapsed = localStorage.getItem('skazitel_ptt_collapsed') === '1';
+  setPttCollapsed(savedCollapsed);
+
+  collapseBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setPttCollapsed(true);
+  });
+
+  collapsedPill?.addEventListener('click', () => {
+    setPttCollapsed(false);
+  });
 
   if (audioInput) {
     audioInput.addEventListener('change', async (e) => {
@@ -1249,10 +1383,12 @@ function updatePttHero() {
   const hero = getActiveHero();
   const name = hero ? hero.name : '—';
   const badge = document.getElementById('pttHeroBadgeName');
+  const collapsedHero = document.getElementById('pttCollapsedHeroName');
   const btnText = document.getElementById('pttBtnText');
   const status = document.getElementById('pttStatusText');
   const textInput = document.getElementById('pttTextInput');
   if (badge) badge.textContent = name;
+  if (collapsedHero) collapsedHero.textContent = name;
   if (btnText && !pttRecording && !pttBusy) {
     if (hasMediaDevices) {
       btnText.textContent = hero ? `Говорить от лица: ${name}` : 'Удерживайте для хода';
