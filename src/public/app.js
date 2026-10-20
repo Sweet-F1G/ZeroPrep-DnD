@@ -28,6 +28,21 @@ let lastVisibleHeroId=null;
 let state,activeId=localStorage.getItem('skazitel-active'),selectedId,busy=false,toastTimer,currentAudio,currentAudioURL,speechVersion=0,recording=null,recordStarting=false,recordHeld=false,spaceHeld=false,interruptionActive=false,voiceActive=false,clockRequest=false,clockTimedOut=null,spaceTimer,speechDone=null,deliveryRun=0,deliveryCancel=null,voiceQueue=[],voiceProcessing=false,voiceEpoch=0;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,9000);}
+function askConfirm({title='Подтверждение',message,okText='Удалить безвозвратно'}){
+ return new Promise(resolve=>{
+  const dlg=$('confirmDialog');
+  if(!dlg){resolve(confirm(message));return;}
+  $('confirmTitle').textContent=title;
+  $('confirmMessage').textContent=message;
+  $('confirmOkBtn').textContent=okText;
+  let done=false;
+  const finish=val=>{if(done)return;done=true;dlg.close();resolve(val);};
+  $('confirmOkBtn').onclick=()=>finish(true);
+  $('confirmCancelBtn').onclick=()=>finish(false);
+  dlg.onclose=()=>finish(false);
+  dlg.showModal();
+ });
+}
 async function api(route,data){const r=await fetch('/api/'+route,{method:data===undefined?'GET':'POST',headers:{'x-app-token':token,...(data===undefined?{}:{'Content-Type':'application/json'})},...(route==='live-meter'?{keepalive:true}:{}),...(data===undefined?{}:{body:JSON.stringify({requestId:crypto.randomUUID(),...data})})});if(!r.ok){const e=await r.json();throw Error(e.error||'Ошибка сервера');}return r.json();}
 function current(){return state?.campaigns.find(x=>x.id===activeId);}
 function setBusy(value,label){busy=value;$('listeningMode').disabled=value||!!recording||recordStarting;document.body.classList.toggle('busy',value);$('status').textContent=label||(value?'Мастер обдумывает ваш ход…':'Мастер слушает по кнопке');for(const id of ['send','mic','begin','undo','new','sessionZero','seed','import','settings','export','editHeroes'])$(id).disabled=value;document.querySelectorAll('#rollForm button,#proposals button').forEach(el=>el.disabled=value);}
@@ -262,15 +277,22 @@ $('campaigns').onclick=async e=>{
  const del=e.target.closest('[data-delete-campaign]');
  if(del){
   e.stopPropagation();
+  e.preventDefault();
   const c=state.campaigns.find(x=>x.id===del.dataset.deleteCampaign);
   if(!c)return;
-  if(!confirm(`Вы уверены, что хотите удалить кампанию «${c.name}»?\n\nВсе записи журнала, листы персонажей, карты и память этой кампании будут стёрты безвозвратно.`))return;
+  const ok=await askConfirm({
+   title:'Удалить партию?',
+   message:`Вы уверены, что хотите удалить партию «${c.name}»?\n\nВсе записи журнала, листы персонажей, карты и память этой кампании будут стёрты безвозвратно.`,
+   okText:'Удалить партию'
+  });
+  if(!ok)return;
   try{
    const res=await api('campaign/delete',{id:c.id});
    toast(`Кампания «${c.name}» удалена`);
    state=res;
    activeId=res.activeCampaignId||state.campaigns?.[0]?.id||null;
    if(activeId)localStorage.setItem('skazitel-active',activeId);else localStorage.removeItem('skazitel-active');
+   selectedId=null;
    render();
   }catch(err){
    toast('Ошибка удаления: '+err.message);
@@ -521,7 +543,12 @@ for(const id of ['usage','memory','new','import','export','seed','editHeroes']){
 $('deleteCampaign')?.addEventListener('click',async()=>{
  const c=current();
  if(!c)return toast('Сначала откройте кампанию');
- if(!confirm(`Вы уверены, что хотите удалить кампанию «${c.name}»?\n\nВсе записи журнала, листы персонажей, карты и память этой кампании будут стёрты безвозвратно.`))return;
+ const ok=await askConfirm({
+  title:'Удалить текущую кампанию?',
+  message:`Вы уверены, что хотите удалить кампанию «${c.name}»?\n\nВсе записи журнала, листы персонажей, карты и память этой кампании будут стёрты безвозвратно.`,
+  okText:'Удалить кампанию'
+ });
+ if(!ok)return;
  try{
   const res=await api('campaign/delete',{id:c.id});
   $('campaignToolsDialog').close();
@@ -529,6 +556,7 @@ $('deleteCampaign')?.addEventListener('click',async()=>{
   state=res;
   activeId=res.activeCampaignId||state.campaigns?.[0]?.id||null;
   if(activeId)localStorage.setItem('skazitel-active',activeId);else localStorage.removeItem('skazitel-active');
+  selectedId=null;
   render();
  }catch(e){
   toast('Ошибка удаления: '+e.message);
