@@ -11,18 +11,37 @@ export const edgeVoices=[
  {id:'ru-RU-SvetlanaNeural',name:'Светлана (нейросеть Edge · мягкий)'}
 ];
 
-export async function pythonExecutable(){
+export async function pythonEnvironment(){
  for(const relative of ['venv/bin/python','python/bin/python3','venv/bin/python3']){
   const file=path.join(directory,relative);
-  try{await fs.access(file);return file;}catch{}
+  try{
+   await fs.access(file);
+   let realExecutable=file;
+   try{realExecutable=await fs.realpath(file);}catch{}
+   let sitePackages='';
+   const libDir=path.join(directory,'venv/lib');
+   try{
+    const entries=await fs.readdir(libDir);
+    for(const e of entries){
+     const sp=path.join(libDir,e,'site-packages');
+     try{await fs.access(sp);sitePackages=sp;break;}catch{}
+    }
+   }catch{}
+   return {executable:realExecutable,sitePackages};
+  }catch{}
  }
- try{return 'python3';}catch{}
+ try{return {executable:'python3',sitePackages:''};}catch{}
  throw Error('Не найдена среда Python для озвучивания Edge TTS.');
+}
+
+export async function pythonExecutable(){
+ const env=await pythonEnvironment();
+ return env.executable;
 }
 
 export async function edgeVoiceStatus(){
  try{
-  const py=await pythonExecutable();
+  await pythonEnvironment();
   return {installed:true,engine:'Microsoft Edge Neural TTS',voices:edgeVoices};
  }catch{
   return {installed:false,engine:'Microsoft Edge Neural TTS',voices:edgeVoices};
@@ -32,12 +51,18 @@ export async function edgeVoiceStatus(){
 export async function* edgeSpeechChunks(text,voice='ru-RU-DmitryNeural',signal=null){
  if(typeof text!=='string'||!text.trim())return;
  const cleanVoice=edgeVoices.some(v=>v.id===voice)?voice:'ru-RU-DmitryNeural';
- const py=await pythonExecutable();
+ const pyEnv=await pythonEnvironment();
  const script=path.join(root,'edge-worker.py');
  const environment={...process.env,PYTHONNOUSERSITE:'1',PYTHONDONTWRITEBYTECODE:'1'};
- delete environment.PYTHONPATH;delete environment.PYTHONHOME;
+ delete environment.__PYVENV_LAUNCHER__;
+ delete environment.PYTHONHOME;
+ if(pyEnv.sitePackages){
+  environment.PYTHONPATH=environment.PYTHONPATH
+   ? `${pyEnv.sitePackages}:${environment.PYTHONPATH}`
+   : pyEnv.sitePackages;
+ }
 
- const child=spawn(py,['-u',script,'--voice',cleanVoice],{env:environment,stdio:['pipe','pipe','pipe']});
+ const child=spawn(pyEnv.executable,['-s','-u',script,'--voice',cleanVoice],{env:environment,stdio:['pipe','pipe','pipe']});
  let stderr='';
  child.stderr.on('data',chunk=>{stderr=(stderr+chunk.toString()).slice(-1000);});
 

@@ -30,16 +30,30 @@ async def main():
         return
 
     import edge_tts
-    communicate = edge_tts.Communicate(text, args.voice, rate=args.rate, pitch=args.pitch)
-    chunk_count = 0
-    async for chunk in communicate.stream():
-        if chunk.get("type") == "audio" and "data" in chunk:
-            sys.stdout.buffer.write(chunk["data"])
-            sys.stdout.buffer.flush()
-            chunk_count += 1
+    max_retries = 3
+    last_err = None
 
-    if chunk_count == 0:
-        sys.stderr.write("EdgeTTS: no audio chunks received\n")
+    for attempt in range(max_retries):
+        try:
+            communicate = edge_tts.Communicate(text, args.voice, rate=args.rate, pitch=args.pitch)
+            chunk_count = 0
+            async for chunk in communicate.stream():
+                if chunk.get("type") == "audio" and "data" in chunk:
+                    sys.stdout.buffer.write(chunk["data"])
+                    sys.stdout.buffer.flush()
+                    chunk_count += 1
+            if chunk_count > 0:
+                return
+            last_err = RuntimeError("No audio chunks received")
+        except Exception as err:
+            last_err = err
+            if "Broken pipe" in str(err) or isinstance(err, BrokenPipeError):
+                sys.exit(0)
+            if attempt < max_retries - 1:
+                await asyncio.sleep(0.4 * (attempt + 1))
+
+    if last_err:
+        sys.stderr.write(f"EdgeTTS error: {last_err}\n")
         sys.exit(2)
 
 if __name__ == "__main__":

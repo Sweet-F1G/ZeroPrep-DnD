@@ -8,9 +8,30 @@ const directory=process.env.SKAZITEL_VOICE_DIR||path.resolve(root,'../LocalVoice
 export const sileroSpeakers=['eugene','aidar','xenia','kseniya','baya'];
 let child=null,ready=null,readyResolve,readyReject,buffer='',tail='',serial=Promise.resolve(),waiting=0;
 const jobs=new Map();
-async function pythonExecutable(){
- for(const relative of ['python/bin/python3','venv/bin/python']){const file=path.join(directory,relative);try{await fs.access(file);return file;}catch{}}
+async function pythonEnvironment(){
+ for(const relative of ['python/bin/python3','venv/bin/python']){
+  const file=path.join(directory,relative);
+  try{
+   await fs.access(file);
+   let realExecutable=file;
+   try{realExecutable=await fs.realpath(file);}catch{}
+   let sitePackages='';
+   const libDir=path.join(directory,'venv/lib');
+   try{
+    const entries=await fs.readdir(libDir);
+    for(const e of entries){
+     const sp=path.join(libDir,e,'site-packages');
+     try{await fs.access(sp);sitePackages=sp;break;}catch{}
+    }
+   }catch{}
+   return {executable:realExecutable,sitePackages};
+  }catch{}
+ }
  throw Error('Не найдена встроенная среда локального голоса. Переустановите Сказителя.');
+}
+async function pythonExecutable(){
+ const env=await pythonEnvironment();
+ return env.executable;
 }
 export async function localVoiceStatus(){
  try{await pythonExecutable();await fs.access(path.join(directory,'models/silero-ru.pt'));return {installed:true,engine:'Silero v5.6 · CPU',speakers:sileroSpeakers};}
@@ -22,8 +43,16 @@ async function start(){
  if(!(await localVoiceStatus()).installed)throw Error('Silero ещё не установлен. Нужна папка LocalVoice рядом с приложением.');
  if(ready)return ready;
  ready=new Promise((resolve,reject)=>{readyResolve=resolve;readyReject=reject;});
- const environment={...process.env,PYTHONNOUSERSITE:'1',PYTHONDONTWRITEBYTECODE:'1'};delete environment.PYTHONPATH;delete environment.PYTHONHOME;
- const instance=spawn(await pythonExecutable(),['-u',path.join(root,'silero-worker.py'),path.join(directory,'models/silero-ru.pt')],{env:environment,stdio:['pipe','pipe','pipe']});
+ const pyEnv=await pythonEnvironment();
+ const environment={...process.env,PYTHONNOUSERSITE:'1',PYTHONDONTWRITEBYTECODE:'1'};
+ delete environment.__PYVENV_LAUNCHER__;
+ delete environment.PYTHONHOME;
+ if(pyEnv.sitePackages){
+  environment.PYTHONPATH=environment.PYTHONPATH
+   ? `${pyEnv.sitePackages}:${environment.PYTHONPATH}`
+   : pyEnv.sitePackages;
+ }
+ const instance=spawn(pyEnv.executable,['-s','-u',path.join(root,'silero-worker.py'),path.join(directory,'models/silero-ru.pt')],{env:environment,stdio:['pipe','pipe','pipe']});
  child=instance;buffer='';tail='';
  const timer=setTimeout(()=>{if(child===instance){instance.kill();fail(Error('Silero не загрузился за 60 секунд.'));}},60000);
  instance.stderr.on('data',bytes=>{tail=(tail+bytes.toString()).slice(-2000);});
