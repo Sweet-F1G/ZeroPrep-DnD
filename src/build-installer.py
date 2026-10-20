@@ -10,7 +10,7 @@ PYTHON=Path(os.environ.get('SKAZITEL_PYTHON', '/Users/sweet_f1g/.cache/codex-run
 NODE=Path(os.environ.get('SKAZITEL_NODE', '/Users/sweet_f1g/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node'))
 VOICE=Path(os.environ.get('SKAZITEL_VOICE_SOURCE',str(SRC.parent/'LocalVoice')))
 CACHE=Path(os.environ.get('SKAZITEL_BUILD_CACHE','/private/tmp/skazitel-installer-swift-cache'));CACHE.mkdir(exist_ok=True)
-VERSION='0.4.1'
+VERSION='0.6.2'
 def run(*args):subprocess.run([str(a) for a in args],check=True)
 def write(path,text):path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text)
 CODE.mkdir(parents=True);(APP/'Contents/MacOS').mkdir()
