@@ -333,6 +333,28 @@ $('settingsForm').elements.ttsProvider.onchange=e=>{const f=$('settingsForm');if
 $('testSilero').onclick=async()=>{$('testSilero').disabled=true;$('sileroStatus').textContent='Готовим голос… Первая загрузка может занять несколько секунд.';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.sileroSpeaker.value);}finally{$('testSilero').disabled=false;}};
 $('testEdge').onclick=async()=>{$('testEdge').disabled=true;$('edgeStatus').textContent='Связываемся с нейросетью Edge…';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.edgeVoice.value);$('edgeStatus').textContent='Озвучено нейросетью Edge. Без ключей и оплаты.';}catch(err){$('edgeStatus').textContent='Ошибка Edge TTS: '+err.message;}finally{$('testEdge').disabled=false;}};
 $('testOpenAI').onclick=async()=>{$('testOpenAI').disabled=true;$('openaiStatus').textContent='Связываемся с OpenAI…';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?','openai:'+$('settingsForm').elements.voice.value);$('openaiStatus').textContent='Озвучено выбранным голосом OpenAI ('+$('settingsForm').elements.voice.value+').';}catch(err){$('openaiStatus').textContent='Ошибка OpenAI TTS: '+err.message;}finally{$('testOpenAI').disabled=false;}};
+$('testMultiVoice')?.addEventListener('click',async()=>{
+ $('testMultiVoice').disabled=true;
+ $('openaiStatus').textContent='Запуск демонстрации многоголосия (4 персонажа)…';
+ try{
+  const parts=[
+   'За старой башней сгущаются сумерки. В тишине раздаётся шорох сухих трав.',
+   '«Не произносите истинные имена после заката», — тихо шепчет жрица Альвари, сжимая свой посох.',
+   'Теон усмехается и ловко крутит медную шестерню: «Не переживай, Альвари, моя пушка уже заряжена».',
+   'Внезапно из темноты за деревьями тяжело рычит огромный орк, гремя железом и занося топор!'
+  ];
+  const run=++deliveryRun;
+  for(let i=0;i<parts.length;i++){
+   if(run!==deliveryRun)break;
+   const part=parts[i];
+   const nextPart=parts[i+1]||null;
+   const ok=await speak(part,null,nextPart?{nextText:nextPart}:null);
+   if(!ok||run!==deliveryRun)break;
+  }
+  $('openaiStatus').textContent='Демонстрация завершена. Озвучено 4 разными голосами OpenAI.';
+ }catch(err){$('openaiStatus').textContent='Ошибка демо: '+err.message;}
+ finally{$('testMultiVoice').disabled=false;}
+});
 $('openaiModelSelect').onchange=()=>{const f=$('settingsForm'),sel=$('openaiModelSelect');if(sel.value==='__custom__'){f.elements.model.hidden=false;f.elements.model.required=true;f.elements.model.focus();}else{f.elements.model.hidden=true;f.elements.model.required=false;f.elements.model.value=sel.value;}voiceControls();};
 $('refreshOpenAIModels').onclick=()=>loadOpenAIModels(true);
 $('settingsForm').elements.provider.onchange=e=>{const f=$('settingsForm');const presets={openai:['gpt-6-luna','https://api.openai.com/v1'],gemini:['gemini-2.0-flash','https://generativelanguage.googleapis.com'],compatible:['','https://openrouter.ai/api/v1']};if(presets[e.target.value]){[f.elements.model.value,f.elements.baseUrl.value]=presets[e.target.value];}if(e.target.value==='openai'){f.elements.reasoningEffort.value='low';$('keyPools').querySelector('[data-pool="openai"]').open=true;loadOpenAIModels();}voiceControls();};
@@ -414,7 +436,44 @@ $('heroEditForm').onsubmit=async e=>{e.preventDefault();try{state=await api('her
 function download(obj,name){const url=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
 $('export').onclick=async()=>{try{const data=await api('export?id='+encodeURIComponent(activeId));if(window.webkit?.messageHandlers?.nativeExport)window.webkit.messageHandlers.nativeExport.postMessage({text:JSON.stringify(data,null,2),name:current().name+'.json'});else download(data,current().name+'.json');}catch(e){toast(e.message);}};
 $('import').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(f.size>15e6)return toast('Сохранение слишком большое.');try{await created('import',JSON.parse(await f.text()));}catch(err){toast('Не удалось прочитать JSON: '+err.message);}e.target.value='';};
-$('journal').onclick=e=>{const art=e.target.closest('[data-suggest-image]');if(art){const suggestion=current().journal.find(x=>x.id===art.dataset.suggestImage)?.illustrationSuggestion;if(suggestion)openIllustrations(suggestion);return;}const b=e.target.closest('[data-replay]');if(b)speak(current().journal[Number(b.dataset.replay)].text);};$('stopVoice').onclick=()=>interruptMaster();
+function cleanNarration(text){
+ if(!text)return '';
+ return String(text)
+  .replace(/\*\*([^*]+)\*\*/g,'$1')
+  .replace(/\*([^*]+)\*/g,'$1')
+  .replace(/#{1,6}\s*/g,'')
+  .replace(/^[\s*•-]+\s+/gm,'')
+  .replace(/`([^`]+)`/g,'$1')
+  .replace(/[ \t]+/g,' ')
+  .trim();
+}
+function splitNarration(text){
+ const cleaned=cleanNarration(text);
+ return cleaned.split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«“])/u).map(s=>s.trim()).filter(Boolean).reduce((a,s)=>{if(s.length>650){const words=s.split(/\s+/);let part='';for(const w of words){if(part.length+w.length>600){a.push(part);part='';}part+=(part?' ':'')+w;}if(part)a.push(part);}else a.push(s);return a;},[]);
+}
+async function replayEntry(text){
+ const parts=splitNarration(text);
+ if(!parts.length)return;
+ const run=++deliveryRun;
+ for(let i=0;i<parts.length;i++){
+  if(run!==deliveryRun)break;
+  const part=parts[i];
+  const nextPart=parts[i+1]||null;
+  const ok=await speak(part,null,nextPart?{nextText:nextPart}:null);
+  if(!ok||run!==deliveryRun)break;
+ }
+}
+$('demoVoiceBtn')?.addEventListener('click',async()=>{
+ $('campaignToolsDialog').close();
+ if(busy)return;
+ try{
+  toast('Запуск демонстрации многоголосия…');
+  state=await api('demo-voice',{id:activeId});
+  render();
+  if($('autoVoice')?.checked){playDelivery();}
+ }catch(e){toast(e.message);}
+});
+$('journal').onclick=e=>{const art=e.target.closest('[data-suggest-image]');if(art){const suggestion=current().journal.find(x=>x.id===art.dataset.suggestImage)?.illustrationSuggestion;if(suggestion)openIllustrations(suggestion);return;}const b=e.target.closest('[data-replay]');if(b)replayEntry(current().journal[Number(b.dataset.replay)].text);};$('stopVoice').onclick=()=>interruptMaster();
 function interruptMaster({focus=true}={}){
  pauseReactionClock();liveVoice.interrupt();haltNarration();interruptionActive=true;
  if(busy){$('status').textContent='Озвучка остановлена. Дождитесь ответа, затем вмешайтесь.';return;}

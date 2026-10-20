@@ -764,7 +764,18 @@ const serverHandler=async(req,res)=>{
   if(busy.has(b.id))throw Error('Дождитесь завершения текущего действия');busy.add(b.id);
   try {
    const c=structuredClone(original);
-   if(url.pathname==='/api/delivery'){
+   if(url.pathname==='/api/demo-voice'){
+    interruptDelivery(c);
+    checkpoint(c);
+    const demoText="За старой башней сгущаются сумерки. В тишине раздаётся шорох сухих трав.\n\n«Не произносите истинные имена после заката», — тихо шепчет жрица Альвари, сжимая свой посох.\n\nТеон усмехается и ловко крутит медную шестерню: «Не переживай, Альвари, моя пушка уже заряжена».\n\nВнезапно из темноты за деревьями тяжело рычит огромный орк, гремя железом и занося топор!";
+    const reply={narration:demoText,changes:[]};
+    stageReply(c,reply);
+    const first=narrationParts(demoText)[0];
+    if(first&&(config.ttsProvider==='openai'||config.ttsProvider==='edge')){
+     audioStreams.prepare(first,audioScope(first));
+    }
+   }
+   else if(url.pathname==='/api/delivery'){
     if(b.action==='interrupt'){if(c.delivery?.id===b.deliveryId)interruptDelivery(c);}
     else if(b.action==='ack')advanceDelivery(c,b.deliveryId,b.index);
     else if(b.action==='finish'){while(c.delivery?.id===b.deliveryId)advanceDelivery(c,b.deliveryId,c.delivery.index);}
@@ -825,6 +836,7 @@ updateReactionClock(c,b);}
    } else return json(res,{error:'Неизвестный маршрут'},404);
    if(url.pathname==='/api/turn'){const latest=campaigns.find(x=>x.id===c.id);if(latest?.summary&&(!c.summary||latest.summary.count>c.summary.count)&&summaryValid({...c,summary:latest.summary}))c.summary=latest.summary;}
    if(requestId)c.receipts=[...(c.receipts||[]),{id:requestId,fingerprint}].slice(-100);await commitCampaign(c);
+   if(url.pathname==='/api/demo-voice')broadcast('campaign',{campaignId:c.id});
    if(url.pathname==='/api/turn'&&config.autoSummary==='on'&&config.provider!=='demo'&&!summaryBusy.has(c.id)){
     const plan=summaryPlan(c);if(plan){summaryBusy.add(c.id);const snapshotConfig={...config},snapshotKeys={...keys};
      (async()=>{try{const result=await summarize(snapshotConfig,snapshotKeys,plan,observe);await updateImage(c.id,latest=>{if((latest.summary?.count||0)<plan.count)setSummary(latest,result.summary,plan);});}catch{}finally{summaryBusy.delete(c.id);}})();
