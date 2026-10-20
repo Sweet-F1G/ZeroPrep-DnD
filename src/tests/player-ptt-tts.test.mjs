@@ -5,7 +5,7 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import https from 'node:https';
 import os from 'node:os';
 import path from 'node:path';
-import {cleanNarrationForTTS} from '../delivery.mjs';
+import {cleanNarrationForTTS,resolveOpenAiVoice,resolveEdgeVoice} from '../delivery.mjs';
 import {buildSystem,ttsVoiceSystem} from '../prompts.mjs';
 
 test('cleanNarrationForTTS cleans markdown symbols while keeping dramatic pauses and punctuation', () => {
@@ -26,6 +26,31 @@ test('ttsVoiceSystem is included in prompt buildSystem', () => {
   assert.ok(system.includes('АДАПТАЦИЯ ТЕКСТА ПОД НЕЙРОСЕТЕВОГО ЧТЕЦА (TTS)'));
   assert.ok(system.includes('НИКАКОЙ СЛУЖЕБНОЙ И ТЕХНИЧЕСКОЙ РАЗМЕТКИ'));
   assert.ok(system.includes('ПАУЗЫ, ДЫХАНИЕ И ДРАМАТИЧЕСКИЙ РИТМ'));
+});
+
+test('resolveOpenAiVoice routes voices dynamically by character and dialogue cues', () => {
+  // Base narrator
+  assert.equal(resolveOpenAiVoice('onyx', 'Тропинка петляет среди мрачных сосен.'), 'onyx');
+  
+  // Female NPC dialogue / tags
+  assert.equal(resolveOpenAiVoice('onyx', '«Не ходите туда», — шепчет жрица Альвари.'), 'nova');
+  assert.equal(resolveOpenAiVoice('onyx', 'Трактирщица с улыбкой ставит кружку на стол: «Угощайтесь, путники».'), 'nova');
+  assert.equal(resolveOpenAiVoice('onyx', 'Старуха поднимает костлявую руку: «Вы опоздали».'), 'nova');
+
+  // Young male / bard / agile companion
+  assert.equal(resolveOpenAiVoice('onyx', 'Теон усмехается и ловко достает отмычку.'), 'echo');
+  assert.equal(resolveOpenAiVoice('onyx', '«Я знаю тайный ход!» — восклицает юноша.'), 'echo');
+  assert.equal(resolveOpenAiVoice('onyx', 'Бард перебирает струны лютни и запевает балладу.'), 'echo');
+
+  // Monster / orc / brute
+  assert.equal(resolveOpenAiVoice('alloy', 'Огромный орк рычит и заносит тяжелый топор.'), 'onyx');
+  assert.equal(resolveOpenAiVoice('nova', 'Древний дракон гремит чешуей во тьме пещеры.'), 'onyx');
+});
+
+test('resolveEdgeVoice routes voices dynamically between male and female', () => {
+  assert.equal(resolveEdgeVoice('ru-RU-DmitryNeural', 'Лес погружается во мрак.'), 'ru-RU-DmitryNeural');
+  assert.equal(resolveEdgeVoice('ru-RU-DmitryNeural', '«Будьте осторожны», — тихо произносит жрица.'), 'ru-RU-SvetlanaNeural');
+  assert.equal(resolveEdgeVoice('ru-RU-SvetlanaNeural', 'Голос рассказчика спокоен и глубок.'), 'ru-RU-SvetlanaNeural');
 });
 
 test('LAN Companion: /api/player/ptt and /api/player/turn dispatch action for the active character', async () => {

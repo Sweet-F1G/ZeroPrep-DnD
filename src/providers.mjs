@@ -7,9 +7,8 @@ import {campaignContext,SUMMARY_SYSTEM} from './context.mjs';
 import {limitHeaders} from './usage.mjs';
 import {wavSeconds} from './cost.mjs';
 import {cachedCampaignContext,openAIInput,CACHE_CONTEXT_SYSTEM} from './openai-context.mjs';
-import {gameMap} from './maps.mjs';
 import {edgeSpeech,edgeSpeechChunks} from './edge-voice.mjs';
-import {cleanNarrationForTTS} from './delivery.mjs';
+import {cleanNarrationForTTS, resolveOpenAiVoice, resolveEdgeVoice} from './delivery.mjs';
 export const defaults={provider:'demo',model:'gpt-6-luna',baseUrl:'https://api.openai.com/v1',sttProvider:'openai',sttModel:'gpt-4o-mini-transcribe',ttsProvider:'system',ttsModel:'tts-1',voice:'alloy',edgeVoice:'ru-RU-DmitryNeural',sileroSpeaker:'eugene',voiceSendMode:'review',listeningMode:'ptt',bargeInMode:'any',autoSummary:'on',reserveProvider:'off',activeCampaignId:'',groqBilling:'free',reasoningEffort:'medium',voicePipeline:'cascade',liveModel:'gpt-live-1',imageProvider:'openai',imageModel:'gpt-image-2',imageQuality:'low',summaryModel:'',serviceTier:'default'};
 export function providerError(status,body,contentType='',secrets=[]) {
  let message='',code='';
@@ -382,10 +381,11 @@ export async function transcribe(config,keys,audio,mime,names=[],observe) {
 }
 export async function speech(config,keys,text,observe) {
  const cleanText=cleanNarrationForTTS(text);
- if(config.ttsProvider==='edge')return edgeSpeech(cleanText,config.edgeVoice||config.voice||'ru-RU-DmitryNeural');
+ if(config.ttsProvider==='edge')return edgeSpeech(cleanText,config.forceVoice?(config.edgeVoice||config.voice||'ru-RU-DmitryNeural'):resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',cleanText));
  const ttsModel=(config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel;
  const log=telemetry(config,'tts',ttsModel,observe);
- const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice:config.voice,input:cleanText.slice(0,4000),response_format:'mp3'})},log);try{return Buffer.from(await r.arrayBuffer());}finally{await log(r,{});}
+ const voice=config.forceVoice?(config.voice||'onyx'):resolveOpenAiVoice(config.voice,cleanText);
+ const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice,input:cleanText.slice(0,4000),response_format:'mp3'})},log);try{return Buffer.from(await r.arrayBuffer());}finally{await log(r,{});}
 }
 
 // The project key never leaves the local server. Only the SDP answer reaches the browser.
@@ -405,11 +405,12 @@ export async function generateImage(config,keys,prompt,observe){
 export async function* speechChunks(config,keys,text,observe,signal){
  const cleanText=cleanNarrationForTTS(text);
  if(config.ttsProvider==='edge'){
-  yield* edgeSpeechChunks(cleanText,config.edgeVoice||config.voice||'ru-RU-DmitryNeural',signal);
+  yield* edgeSpeechChunks(cleanText,config.forceVoice?(config.edgeVoice||config.voice||'ru-RU-DmitryNeural'):resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',cleanText),signal);
   return;
  }
  const ttsModel=(config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel;
  const log=telemetry(config,'tts',ttsModel,observe);
- const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice:config.voice,input:cleanText.slice(0,4000),response_format:'mp3'})},log);
+ const voice=config.forceVoice?(config.voice||'onyx'):resolveOpenAiVoice(config.voice,cleanText);
+ const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice,input:cleanText.slice(0,4000),response_format:'mp3'})},log);
  try{for await(const chunk of r.body)yield chunk;}finally{await log(r,{});}
 }

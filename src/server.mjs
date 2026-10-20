@@ -25,7 +25,7 @@ import {beginSessionZero,sessionZeroTurn,restoreSessionZero} from './session-zer
 import {credentialStore,mergeKeys,keyPool} from './credentials.mjs';
 import {createUsageStore} from './usage.mjs';
 import {summaryPlan,setSummary,summaryValid} from './context.mjs';
-import {stageReply,advanceDelivery,interruptDelivery,publicDelivery,narrationParts} from './delivery.mjs';
+import {stageReply,advanceDelivery,interruptDelivery,publicDelivery,narrationParts,resolveOpenAiVoice,resolveEdgeVoice} from './delivery.mjs';
 console.log('SKAZITEL_BOOT=imports-ready');
 const root=path.dirname(fileURLToPath(import.meta.url));
 let keyHelper=process.env.SKAZITEL_KEYCHAIN_HELPER;
@@ -67,7 +67,9 @@ function state(){return {config,storage:campaignStore.status(),lastTextRoute,usa
 function json(res,obj,status=200){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(obj));}
 async function body(req){let size=0,chunks=[];for await(const chunk of req){size+=chunk.length;if(size>20e6)throw Error('Запрос слишком большой (максимум 20 МБ)');chunks.push(chunk);}return JSON.parse(Buffer.concat(chunks).toString()||'{}');}
 const audioStreams=new AudioStreams((text,signal)=>speechChunks({...config},{...keys},text,observe,signal));
-const audioScope=()=>config.ttsProvider==='edge'?('edge|'+(config.edgeVoice||config.voice||'ru-RU-DmitryNeural')):(((config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel)+'|'+config.voice);
+const audioScope=(text='')=>config.ttsProvider==='edge'
+ ?('edge|'+resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',text))
+ :(((config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel)+'|'+resolveOpenAiVoice(config.voice,text));
 let voiceLatencies=[];try{voiceLatencies=JSON.parse(await fs.readFile(path.join(dataDir,'voice-latency.json'),'utf8'));}catch{}
 function getOrCreateTlsCert(targetDir){
  const certPath=path.join(targetDir,'cert.pem');
@@ -489,7 +491,7 @@ const serverHandler=async(req,res)=>{
      remember(c,{kind:'promise',text:playerSpeech(c,text,hero.id),actorId:hero.id},event.id);
     }
     if(config.provider!=='demo')await keysReady;
-    const prepareFirst=t=>{const first=narrationParts(t)[0];if(first)audioStreams.prepare(first,audioScope());};
+    const prepareFirst=t=>{const first=narrationParts(t)[0];if(first)audioStreams.prepare(first,audioScope(first));};
     const speechCallback=(config.ttsProvider==='openai'||config.ttsProvider==='edge')?prepareFirst:undefined;
     costSensitive=true;costRequests++;
     let reply;
@@ -586,7 +588,7 @@ const serverHandler=async(req,res)=>{
    if(config.ttsProvider!=='openai'&&config.ttsProvider!=='edge')throw Error('Потоковый голос доступен для OpenAI и Edge TTS');
    if(config.ttsProvider==='openai')await keysReady;
    const text=String(b.text||'');if(!text.trim()||text.length>4000)throw Error('Некорректный текст озвучки');
-   return json(res,{url:'/api/audio/'+audioStreams.prepare(text,audioScope())});
+   return json(res,{url:'/api/audio/'+audioStreams.prepare(text,audioScope(text))});
   }
   if(url.pathname==='/api/cost-session'){if(b.action!=='new')throw Error('Неизвестное действие счётчика');if(busy.size||costRequests||liveSessions.size||liveStarting||[...audioStreams.jobs.values()].some(j=>!j.done)||summaryBusy.size)throw Error('Дождитесь завершения запросов перед началом новой сессии');await usageStore.newCostSession();return json(res,{...usageStore.report(),error:usageError});}
   if(url.pathname==='/api/settings'){
@@ -708,7 +710,7 @@ const serverHandler=async(req,res)=>{
    if(config.ttsProvider==='openai'||b.preview==='openai'){
     await keysReady;
     const ttsCfg={...config};
-    if(b.preview==='openai'&&b.voice)ttsCfg.voice=b.voice;
+    if(b.preview==='openai'&&b.voice){ttsCfg.voice=b.voice;ttsCfg.forceVoice=true;}
     if(b.preview==='openai'&&b.ttsModel)ttsCfg.ttsModel=b.ttsModel;
     const audio=await speech(ttsCfg,keys,String(b.text||''),observe);
     res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store'});return res.end(audio);
@@ -817,7 +819,7 @@ updateReactionClock(c,b);}
      }
     }
     if(config.provider!=='demo')await keysReady;
-    const prepareFirst=text=>{const first=narrationParts(text)[0];if(first)audioStreams.prepare(first,audioScope());};
+    const prepareFirst=text=>{const first=narrationParts(text)[0];if(first)audioStreams.prepare(first,audioScope(first));};
     const speechCallback=b.voiceDelivery&&(config.ttsProvider==='openai'||config.ttsProvider==='edge')?prepareFirst:undefined;
     const reply=localReply?{narration:localReply,changes:[]}:config.provider==='demo'?demoReply(c,b,roll):await generate({...config},{...keys},c,observe,speechCallback,speechCallback);if(b.voiceDelivery)stageReply(c,reply);else acceptReply(c,reply);
    } else return json(res,{error:'Неизвестный маршрут'},404);
