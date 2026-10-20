@@ -1,6 +1,6 @@
 {
   "provider": "openai",
-  "model": "gpt-6-luna",
+  "model": "gpt-4o",
   "baseUrl": "https://api.openai.com/v1",
   "sttProvider": "groq",
   "sttModel": "whisper-large-v3-turbo",
