@@ -102,13 +102,13 @@ test('hero.create, hero.delete and session.complete manage party dynamically', (
   actions:[
    {
     type:'item.add',
-    item:{name:'Серп друида',category:'weapon',ownerId:'Тихон'},
+    item:{name:'Серп друида',category:'оружие',ownerId:'Тихон'},
     commit:'resolved',
     reason:'Стартовое оружие'
    },
    {
     type:'item.add',
-    item:{name:'Мешок картошки',category:'food',ownerId:'Неизвестный путник'},
+    item:{name:'Мешок картошки',category:'деревенские припасы',ownerId:'Неизвестный путник'},
     commit:'resolved',
     reason:'Общие припасы'
    },
@@ -137,9 +137,11 @@ test('hero.create, hero.delete and session.complete manage party dynamically', (
  const sickle=freshCampaign.inventory.find(i=>i.name==='Серп друида');
  assert.ok(sickle);
  assert.equal(sickle.ownerId,freshCampaign.characters[0].id);
+ assert.equal(sickle.category,'weapon');
  const potatoes=freshCampaign.inventory.find(i=>i.name==='Мешок картошки');
  assert.ok(potatoes);
  assert.equal(potatoes.ownerId,'group');
+ assert.equal(potatoes.category,'food');
 });
 
 test('HTTP API: campaign deletion and session zero AI flow', async ()=>{

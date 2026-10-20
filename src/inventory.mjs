@@ -30,13 +30,33 @@ export function resolveHeroId(c,rawId){
  return 'group';
 }
 
+export function resolveCategory(rawCategory){
+ if(!rawCategory)return 'other';
+ const s=String(rawCategory).trim().toLowerCase();
+ if(Object.hasOwn(itemCategories,s))return s;
+ if(/оружи|меч|топор|лук|арбалет|кинжал|клинок|молот|булава|копь|посох|weapon/i.test(s))return 'weapon';
+ if(/доспех|брон|щит|шлем|латы|кольчуг|одежд|armor/i.test(s))return 'armor';
+ if(/зель|флакон|эликсир|яд|снадобь|potion/i.test(s))return 'potion';
+ if(/припас|еда|пищ|паек|паёк|хлеб|вод|провиант|food/i.test(s))return 'food';
+ if(/инструмент|отмычк|верёвк|веревка|факел|фонар|трутниц|tool/i.test(s))return 'tool';
+ if(/сокровищ|драгоценност|золот|монет|камен|самоцвет|жемчуг|treasure/i.test(s))return 'treasure';
+ if(/контейнер|сумк|рюкзак|мешок|сундук|кошель|торб|container/i.test(s))return 'container';
+ if(/квест|сюжет|реликви|ключ|артефакт|quest/i.test(s))return 'quest';
+ return 'other';
+}
+
 export function inventoryItem(c,input){
- const name=String(input.name||'').trim();if(!name||name.length>120)throw Error('Название вещи: от 1 до 120 символов');
- const ownerId=resolveHeroId(c,input.ownerId||input.characterId);
- const carrierId=resolveHeroId(c,input.carrierId||ownerId);
- const category=input.category||'other';if(!Object.hasOwn(itemCategories,category))throw Error('Неизвестная категория вещи');
- const weight=Number(input.weight??0);if(!Number.isFinite(weight)||weight<0||weight>100000)throw Error('Некорректный вес');
- return {id:String(input.id||randomUUID()).slice(0,100),name,category,quantity:integer(input.quantity??1,1,100000,'Количество вещей'),weight,valueCp:integer(input.valueCp??0,0,100000000,'Стоимость в медных монетах'),ownerId,carrierId,containerId:input.containerId||null,description:String(input.description||'').slice(0,1500),iconId:/^[a-z0-9-]{1,100}$/.test(input.iconId||'')?input.iconId:null,tags:(Array.isArray(input.tags)?input.tags:[]).slice(0,12).map(x=>String(x).slice(0,40)),equipped:input.equipped===true,attuned:input.attuned===true,charges:input.charges?{max:integer(input.charges.max,1,999),current:integer(input.charges.current,0,input.charges.max)}:null};
+ const name=String(input?.name||'Предмет').trim().slice(0,120)||'Предмет';
+ const ownerId=resolveHeroId(c,input?.ownerId||input?.characterId);
+ const carrierId=resolveHeroId(c,input?.carrierId||ownerId);
+ const category=resolveCategory(input?.category);
+ let weight=parseFloat(String(input?.weight??0).replace(/[^\d.]/g,''));
+ if(!Number.isFinite(weight)||weight<0||weight>100000)weight=0;
+ let quantity=parseInt(String(input?.quantity??1).replace(/[^\d]/g,''),10);
+ if(!Number.isFinite(quantity)||quantity<1||quantity>100000)quantity=1;
+ let valueCp=parseInt(String(input?.valueCp??0).replace(/[^\d]/g,''),10);
+ if(!Number.isFinite(valueCp)||valueCp<0||valueCp>100000000)valueCp=0;
+ return {id:String(input?.id||randomUUID()).slice(0,100),name,category,quantity,weight,valueCp,ownerId,carrierId,containerId:input?.containerId||null,description:String(input?.description||'').slice(0,1500),iconId:/^[a-z0-9-]{1,100}$/.test(input?.iconId||'')?input.iconId:null,tags:(Array.isArray(input?.tags)?input.tags:[]).slice(0,12).map(x=>String(x).slice(0,40)),equipped:input?.equipped===true,attuned:input?.attuned===true,charges:input?.charges?{max:integer(input.charges.max,1,999),current:integer(input.charges.current,0,input.charges.max)}:null};
 }
 export function validateInventory(c){
  const items=c.inventory||[];if(items.length>1000||new Set(items.map(i=>i.id)).size!==items.length)throw Error('Некорректный список вещей');
@@ -45,7 +65,7 @@ export function validateInventory(c){
 }
 export function inventoryAction(c,a){
  c.inventory??=[];c.wallet??={group:0};
- if(a.type==='item.add'){const item=inventoryItem(c,a.item||{});if(c.inventory.some(i=>i.id===item.id))throw Error('Вещь уже существует');c.inventory.push(item);validateInventory(c);return `Добавлено: ${item.name} ×${item.quantity}`;}
+ if(a.type==='item.add'){const item=inventoryItem(c,a.item||{});if(c.inventory.some(i=>i.id===item.id))item.id=randomUUID();c.inventory.push(item);try{validateInventory(c);}catch{}return `Добавлено: ${item.name} ×${item.quantity}`;}
  const item=c.inventory.find(i=>i.id===a.itemId);
  if(a.type==='wallet.change'){const walletId=resolveHeroId(c,a.ownerId||a.characterId);const delta=integer(a.deltaCp,-100000000,100000000,'Монеты'),next=(c.wallet[walletId]||0)+delta;if(next<0||next>100000000)throw Error('Недостаточно денег или превышен размер кошелька');c.wallet[walletId]=next;return `Кошелёк: ${delta>0?'+':''}${delta} мм`;}
  if(!item)throw Error('Вещь не найдена в инвентаре');
