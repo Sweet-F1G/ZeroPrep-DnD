@@ -76,7 +76,15 @@ function getOrCreateTlsCert(targetDir){
  const keyPath=path.join(targetDir,'key.pem');
  try{
   if(!fsSync.existsSync(certPath)||!fsSync.existsSync(keyPath)){
-   execSync(`/usr/bin/openssl req -x509 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -days 3650 -nodes -subj "/CN=Skazitel Local"`,{stdio:'ignore'});
+   let openssl = 'openssl';
+   if(process.platform === 'win32'){
+    openssl = 'openssl';
+   } else if(fsSync.existsSync('/usr/bin/openssl')){
+    openssl = '/usr/bin/openssl';
+   } else if(fsSync.existsSync('/opt/homebrew/bin/openssl')){
+    openssl = '/opt/homebrew/bin/openssl';
+   }
+   execSync(`"${openssl}" req -x509 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -days 3650 -nodes -subj "/CN=Skazitel Local"`,{stdio:'ignore'});
   }
   return {key:fsSync.readFileSync(keyPath),cert:fsSync.readFileSync(certPath)};
  }catch(e){

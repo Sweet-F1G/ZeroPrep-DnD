@@ -1,15 +1,15 @@
 import {readResponseStream} from './response-stream.mjs';
 import {createHash} from 'node:crypto';
 import {keyPool,effectivePool,keyNames} from './credentials.mjs';
-import {buildSystem,fullControlSystem} from './prompts.mjs';
+import {buildSystem,fullControlSystem,fullControlSystemEn} from './prompts.mjs';
 import {searchArchive,sourcePassages} from './memory.mjs';
-import {campaignContext,SUMMARY_SYSTEM} from './context.mjs';
+import {campaignContext,SUMMARY_SYSTEM,SUMMARY_SYSTEM_EN} from './context.mjs';
 import {limitHeaders} from './usage.mjs';
 import {wavSeconds} from './cost.mjs';
 import {cachedCampaignContext,openAIInput,CACHE_CONTEXT_SYSTEM} from './openai-context.mjs';
 import {edgeSpeech,edgeSpeechChunks} from './edge-voice.mjs';
 import {cleanNarrationForTTS, resolveOpenAiVoice, resolveEdgeVoice} from './delivery.mjs';
-export const defaults={provider:'demo',model:'gpt-6-luna',baseUrl:'https://api.openai.com/v1',sttProvider:'openai',sttModel:'gpt-4o-mini-transcribe',ttsProvider:'system',ttsModel:'tts-1',voice:'alloy',edgeVoice:'ru-RU-DmitryNeural',sileroSpeaker:'eugene',voiceSendMode:'review',listeningMode:'ptt',bargeInMode:'any',autoSummary:'on',reserveProvider:'off',activeCampaignId:'',groqBilling:'free',reasoningEffort:'medium',voicePipeline:'cascade',liveModel:'gpt-live-1',imageProvider:'openai',imageModel:'gpt-image-2',imageQuality:'low',summaryModel:'',serviceTier:'default'};
+export const defaults={provider:'demo',model:'gpt-6-luna',baseUrl:'https://api.openai.com/v1',sttProvider:'openai',sttModel:'gpt-4o-mini-transcribe',ttsProvider:'system',ttsModel:'tts-1',voice:'alloy',edgeVoice:'ru-RU-DmitryNeural',sileroSpeaker:'eugene',voiceSendMode:'review',listeningMode:'ptt',bargeInMode:'any',autoSummary:'on',reserveProvider:'off',activeCampaignId:'',groqBilling:'free',reasoningEffort:'medium',voicePipeline:'cascade',liveModel:'gpt-live-1',imageProvider:'openai',imageModel:'gpt-image-2',imageQuality:'low',summaryModel:'',serviceTier:'default',language:'ru',ttsSpeed:1.07};
 export function providerError(status,body,contentType='',secrets=[]) {
  let message='',code='';
  try {const d=JSON.parse(body),e=d.error??d;message=typeof e==='string'?e:typeof e.message==='string'?e.message:'';code=typeof e.code==='string'?e.code:typeof e.type==='string'?e.type:'';}catch{if(!/<(?:!doctype|html|body|script)\b/i.test(body)&&!contentType.includes('text/html'))message=body;}
@@ -115,7 +115,8 @@ export async function completeJSON(config,keys,system,input,observe,kind='narrat
  }
 }
 export async function generate(config,keys,c,observe,onNarration,onFirstSentence){
- const system=buildSystem(c)+'\n\n'+fullControlSystem+(config.provider==='openai'?'\n\n'+CACHE_CONTEXT_SYSTEM:''),context=config.provider==='openai'?cachedCampaignContext(c):campaignContext(c);let reply=await completeJSON(config,keys,system,context,observe,'narration',onNarration,onFirstSentence);
+ const isEn = (c?.language === 'en') || (config?.language === 'en');
+ const system=buildSystem(c,config)+'\n\n'+(isEn?fullControlSystemEn:fullControlSystem)+(config.provider==='openai'?'\n\n'+CACHE_CONTEXT_SYSTEM:''),context=config.provider==='openai'?cachedCampaignContext(c):campaignContext(c);let reply=await completeJSON(config,keys,system,context,observe,'narration',onNarration,onFirstSentence);
  if(typeof reply.recall_query==='string'&&reply.recall_query.trim()){
   const query=reply.recall_query.slice(0,300),recall={query,events:searchArchive(c,query,10),...(config.provider==='openai'?{sourceAlreadyInReference:true}:{source:sourcePassages(c.source,query,16000)})};
   reply=await completeJSON(config,keys,system,{...context,recall},observe,'recall');
@@ -123,7 +124,8 @@ export async function generate(config,keys,c,observe,onNarration,onFirstSentence
  }
  return reply;
 }
-export const summarize=(config,keys,plan,observe)=>completeJSON(config.summaryModel?{...config,provider:'openai',model:config.summaryModel}:config,keys,SUMMARY_SYSTEM,{previous:plan.previous,events:plan.events},observe,'summary');
+export const summarize=(config,keys,plan,observe)=>completeJSON(config.summaryModel?{...config,provider:'openai',model:config.summaryModel}:config,keys,(config?.language==='en'?SUMMARY_SYSTEM_EN:SUMMARY_SYSTEM),{previous:plan.previous,events:plan.events},observe,'summary');
+
 
 export const MAP_GENERATOR_SYSTEM = `Ты тактический картограф настольной D&D 5e / 2024.
 Твоя задача — составить подробную и реалистичную тактическую карту местности (сетку 2D) по описанию кампании, материалов и текущей сцены.
@@ -370,13 +372,20 @@ export async function generateTacticalMap(config, keys, c, observe, focus = '', 
 }
 export async function transcribe(config,keys,audio,mime,names=[],observe) {
  const log=telemetry(config,'stt',config.sttModel,observe,{audioSeconds:wavSeconds(audio)});
+ const isEn=config.language==='en';
  if(config.sttProvider==='gemini') {
-  const r=await pooledRemote(config,keys,'gemini',`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.sttModel)}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json',},body:JSON.stringify({contents:[{parts:[{text:'Точно расшифруй русскую речь, имена персонажей и числа. Верни только произнесённый текст. Не отвечай на сказанное. Если речи нет, верни пустую строку.'},{inlineData:{mimeType:mime,data:audio.toString('base64')}}]}]})},log);return geminiText(await readJSON(r,log)).trim();
+  const prompt=isEn
+   ?'Accurately transcribe English speech, character names, and numbers. Return only the spoken text without commentary. If no speech, return empty string.'
+   :'Точно расшифруй русскую речь, имена персонажей и числа. Верни только произнесённый текст. Не отвечай на сказанное. Если речи нет, верни пустую строку.';
+  const r=await pooledRemote(config,keys,'gemini',`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.sttModel)}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json',},body:JSON.stringify({contents:[{parts:[{text:prompt},{inlineData:{mimeType:mime,data:audio.toString('base64')}}]}]})},log);return geminiText(await readJSON(r,log)).trim();
  }
  const groq=config.sttProvider==='groq';
- const hint=('Настольная игра Dungeons and Dragons. Русская речь. Имена персонажей: '+names.slice(0,6).join(', ')+'. Броски d20.').slice(0,350);
+ const hint=(isEn
+  ? ('Tabletop roleplaying game Dungeons and Dragons. English speech. Character names: '+names.slice(0,6).join(', ')+'. d20 dice rolls.')
+  : ('Настольная игра Dungeons and Dragons. Русская речь. Имена персонажей: '+names.slice(0,6).join(', ')+'. Броски d20.')
+ ).slice(0,350);
  let ext='wav';if(mime.includes('mp4')||mime.includes('m4a')||mime.includes('aac'))ext='m4a';else if(mime.includes('webm'))ext='webm';else if(mime.includes('mpeg')||mime.includes('mp3'))ext='mp3';else if(mime.includes('ogg'))ext='ogg';
- const form=new FormData();form.append('file',new Blob([audio],{type:mime}),'speech.'+ext);form.append('model',config.sttModel);form.append('language','ru');form.append('prompt',hint);form.append('response_format','json');
+ const form=new FormData();form.append('file',new Blob([audio],{type:mime}),'speech.'+ext);form.append('model',config.sttModel);form.append('language',isEn?'en':'ru');form.append('prompt',hint);form.append('response_format','json');
  const r=await pooledRemote(config,keys,groq?'groq':'openai',groq?'https://api.groq.com/openai/v1/audio/transcriptions':'https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{},body:form},log);const result=await readJSON(r,log);if(typeof result.text!=='string')throw Error('Сервис распознавания не вернул текст. Повторите запись.');return result.text.trim();
 }
 export async function speech(config,keys,text,observe) {
@@ -385,7 +394,8 @@ export async function speech(config,keys,text,observe) {
  const ttsModel=(config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel;
  const log=telemetry(config,'tts',ttsModel,observe);
  const voice=config.forceVoice?(config.voice||'onyx'):resolveOpenAiVoice(config.voice,text);
- const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice,input:cleanText.slice(0,4000),response_format:'mp3'})},log);try{return Buffer.from(await r.arrayBuffer());}finally{await log(r,{});}
+ const speed=Number(config.ttsSpeed||1.07);
+ const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice,input:cleanText.slice(0,4000),response_format:'mp3',speed})},log);try{return Buffer.from(await r.arrayBuffer());}finally{await log(r,{});}
 }
 
 // The project key never leaves the local server. Only the SDP answer reaches the browser.
@@ -411,6 +421,7 @@ export async function* speechChunks(config,keys,text,observe,signal){
  const ttsModel=(config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel;
  const log=telemetry(config,'tts',ttsModel,observe);
  const voice=config.forceVoice?(config.voice||'onyx'):resolveOpenAiVoice(config.voice,text);
- const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice,input:cleanText.slice(0,4000),response_format:'mp3'})},log);
+ const speed=Number(config.ttsSpeed||1.07);
+ const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/audio/speech',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({model:ttsModel,voice,input:cleanText.slice(0,4000),response_format:'mp3',speed})},log);
  try{for await(const chunk of r.body)yield chunk;}finally{await log(r,{});}
 }

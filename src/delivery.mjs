@@ -134,6 +134,61 @@ export function normalizeIntonationAndStressForTTS(text){
  return s.trim();
 }
 
+export function expandDiceAndTermsForTTS(text){
+ if(!text)return '';
+ let s=String(text);
+ const isRu=/[а-яё]/i.test(s);
+
+ // 1. Dice formulas: 1d20+3 -> "1 дэ 20 плюс 3" / "1 d 20 plus 3"
+ s=s.replace(/(?<![\p{L}\p{N}])(\d+)?\s*[dд](\d+)(?:\s*([+-])\s*(\d+))?(?![\p{L}\p{N}])/gui,(match,count,sides,sign,mod)=>{
+  const dWord=isRu?'дэ':'d';
+  let res=count?`${count} ${dWord} ${sides}`:`${dWord} ${sides}`;
+  if(sign&&mod){
+   const signWord=sign==='+'?(isRu?'плюс':'plus'):(isRu?'минус':'minus');
+   res+=` ${signWord} ${mod}`;
+  }
+  return res;
+ });
+
+ // 2. Game acronyms and terms
+ if(isRu){
+  s=s
+   .replace(/(?<![\p{L}\p{N}])(\d+)\s*(?:HP|ХП|хп)(?![\p{L}\p{N}])/gui,'$1 очков здоровья')
+   .replace(/(?<![\p{L}\p{N}])(?:HP|ХП|хп)(?![\p{L}\p{N}])/gui,'очки здоровья')
+   .replace(/(?<![\p{L}\p{N}])(?:КД|AC)\s*(\d+)(?![\p{L}\p{N}])/gui,'класс доспеха $1')
+   .replace(/(?<![\p{L}\p{N}])(?:Сл|DC)\s*(\d+)(?![\p{L}\p{N}])/gui,'сложность $1')
+   .replace(/(?<![\p{L}\p{N}])(\d+)\s*зм(?![\p{L}\p{N}])/gui,'$1 золотых')
+   .replace(/(?<![\p{L}\p{N}])(\d+)\s*см(?![\p{L}\p{N}])/gui,'$1 серебряных')
+   .replace(/(?<![\p{L}\p{N}])(\d+)\s*мм(?![\p{L}\p{N}])/gui,'$1 медных');
+ }else{
+  s=s
+   .replace(/\b(\d+)\s*(?:HP|hp)\b/g,'$1 hit points')
+   .replace(/\b(?:HP|hp)\b/g,'hit points')
+   .replace(/\b(?:AC|ac)\s*(\d+)\b/g,'armor class $1')
+   .replace(/\b(?:DC|dc)\s*(\d+)\b/g,'DC $1')
+   .replace(/\b(\d+)\s*gp\b/g,'$1 gold pieces')
+   .replace(/\b(\d+)\s*sp\b/g,'$1 silver pieces')
+   .replace(/\b(\d+)\s*cp\b/g,'$1 copper pieces');
+ }
+
+ // 3. Normalize all-caps yelling words / sentences: "БЕГИТЕ!" -> "Бегите!"
+ s=s.replace(/([.!?]\s*|^)([^.!?]+)/gu,(full,punct,sentence)=>{
+  const letters=sentence.match(/[\p{L}]/gu)||[];
+  const upperLetters=sentence.match(/[\p{Lu}]/gu)||[];
+  if(letters.length>=3&&letters.length===upperLetters.length){
+   const leadingSpaces=sentence.match(/^\s*/)[0];
+   const trailingSpaces=sentence.match(/\s*$/)[0];
+   let trimmed=sentence.trim().toLowerCase();
+   if(/^(?:npc|rpg|dnd|str|dex|con|int|wis|cha|usa|url|api|pdf|dc)$/i.test(trimmed))return full;
+   trimmed=trimmed.charAt(0).toUpperCase()+trimmed.slice(1);
+   return punct+leadingSpaces+trimmed+trailingSpaces;
+  }
+  return full;
+ });
+
+ return s;
+}
+
 export function cleanNarrationForTTS(text){
  if(!text)return '';
  let s = String(text)
@@ -151,6 +206,8 @@ export function cleanNarrationForTTS(text){
   .replace(/\s*[»"”]$/,'')
   .replace(/[ \t]+/g,' ')
   .trim();
+
+ s = expandDiceAndTermsForTTS(s);
 
  return normalizeIntonationAndStressForTTS(s);
 }
@@ -300,34 +357,34 @@ export function resolveOpenAiVoice(defaultVoice = 'onyx', text = '') {
 
  const speaker = extractSpeaker(textStr);
  if (speaker) {
-  if (/(?:Марта|Старуха|Альвари|Лира|Элия|Мира|женщин[а-я]*|девушк[а-я]*|эльфийк[а-я]*|жриц[а-я]*|трактирщиц[а-я]*|ведьм[а-я]*|королев[а-я]*|бабк[а-я]*|девочк[а-я]*|матер[а-я]*|хозяйк[а-я]*|чародейк[а-я]*|разбойниц[а-я]*|воительниц[а-я]*|[А-ЯЁ][а-яё]*(?:а|я|ия|эль|етта|ис|ова|ева))$/iu.test(speaker) && !/(?:Фёдор|Теон|Илья|Никита|Фома|дед|орк|гном)/iu.test(speaker)) {
+  if (/(?:Марта|Старуха|Альвари|Лира|Элия|Мира|Martha|Alvari|Lyra|Elia|Mira|женщин[а-я]*|девушк[а-я]*|эльфийк[а-я]*|жриц[а-я]*|трактирщиц[а-я]*|ведьм[а-я]*|королев[а-я]*|бабк[а-я]*|девочк[а-я]*|матер[а-я]*|хозяйк[а-я]*|чародейк[а-я]*|разбойниц[а-я]*|воительниц[а-я]*|woman|girl|witch|priestess|queen|innkeeper|lady|sorceress|[А-ЯЁ][а-яё]*(?:а|я|ия|эль|етта|ис|ова|ева))$/iu.test(speaker) && !/(?:Фёдор|Теон|Илья|Никита|Фома|дед|орк|гном|Fedor|Theon)/iu.test(speaker)) {
    return (defaultVoice === 'nova' || defaultVoice === 'shimmer') ? defaultVoice : 'nova';
   }
-  if (/(?:Теон|плут|бард|юнош[а-я]*|мальчик[а-я]*|парнишк[а-я]*|ловкач)/iu.test(speaker)) {
+  if (/(?:Теон|плут|бард|юнош[а-я]*|мальчик[а-я]*|парнишк[а-я]*|ловкач|Theon|rogue|bard|youth|boy|lad)/iu.test(speaker)) {
    return defaultVoice === 'echo' ? defaultVoice : 'echo';
   }
-  if (/(?:орк|гоблин|чудовищ[а-я]*|демон|дракон|великан|тролль|князь)/iu.test(speaker)) {
+  if (/(?:орк|гоблин|чудовищ[а-я]*|демон|дракон|великан|тролль|князь|orc|goblin|monster|demon|dragon|giant|troll|brute)/iu.test(speaker)) {
    return 'onyx';
   }
-  if (/(?:Мастер|Сказитель|Рассказчик|Фёдор)/iu.test(speaker)) {
+  if (/(?:Мастер|Сказитель|Рассказчик|Фёдор|DM|Narrator|GM)/iu.test(speaker)) {
    return defaultVoice || 'onyx';
   }
  }
 
  // Female characters / NPCs (Nova)
- const femalePattern = /(?<!\p{L})(?:женщин[а-я]*|девушк[а-я]*|эльфийк[а-я]*|жриц[а-я]*|трактирщиц[а-я]*|ведьм[а-я]*|королев[а-я]*|старух[а-я]*|бабк[а-я]*|девочк[а-я]*|матер[а-я]*|хозяйк[а-я]*|чародейк[а-я]*|разбойниц[а-я]*|воительниц[а-я]*|Альвари|Лира|Элия|Марта|она\s+(?:говорит|шепчет|отвечает|восклицает|спрашивает)|(?:сказала|ответила|прошептала|вскрикнула|спросила|улыбнулась)\s+она)(?!\p{L})/iu;
+ const femalePattern = /(?<!\p{L})(?:женщин[а-я]*|девушк[а-я]*|эльфийк[а-я]*|жриц[а-я]*|трактирщиц[а-я]*|ведьм[а-я]*|королев[а-я]*|старух[а-я]*|бабк[а-я]*|девочк[а-я]*|матер[а-я]*|хозяйк[а-я]*|чародейк[а-я]*|разбойниц[а-я]*|воительниц[а-я]*|Альвари|Лира|Элия|Марта|Martha|Alvari|Lyra|Elia|Mira|woman|girl|witch|priestess|queen|innkeeper|lady|sorceress|она\s+(?:говорит|шепчет|отвечает|восклицает|спрашивает)|(?:сказала|ответила|прошептала|вскрикнула|спросила|улыбнулась)\s+она|she\s+(?:says|whispers|replies|asks|shouts)|(?:said|whispered|asked|replied)\s+she)(?!\p{L})/iu;
  if (femalePattern.test(textStr)) {
   return (defaultVoice === 'nova' || defaultVoice === 'shimmer') ? defaultVoice : 'nova';
  }
 
  // Youth / nimble companion / rogue / bard (Echo)
- const youthPattern = /(?<!\p{L})(?:мальчик[а-я]*|юнош[а-я]*|парнишк[а-я]*|плут[а-я]*|бард[а-я]*|Теон|молодой\s+(?:человек|парень|воин)|юный)(?!\p{L})/iu;
+ const youthPattern = /(?<!\p{L})(?:мальчик[а-я]*|юнош[а-я]*|парнишк[а-я]*|плут[а-я]*|бард[а-я]*|Теон|молодой\s+(?:человек|парень|воин)|юный|Theon|youth|boy|lad|rogue|bard|young\s+(?:man|warrior|hero))(?!\p{L})/iu;
  if (youthPattern.test(textStr)) {
   return defaultVoice === 'echo' ? defaultVoice : 'echo';
  }
 
  // Heavy brute / monster / orc / demon / giant (Onyx)
- const brutePattern = /(?<!\p{L})(?:орк[а-я]*|гоблин[а-я]*|чудовищ[а-я]*|демон[а-я]*|дракон[а-я]*|великан[а-я]*|тролл[а-я]*|рычит|гремит|басом|чудищ[а-я]*)(?!\p{L})/iu;
+ const brutePattern = /(?<!\p{L})(?:орк[а-я]*|гоблин[а-я]*|чудовищ[а-я]*|демон[а-я]*|дракон[а-я]*|великан[а-я]*|тролл[а-я]*|рычит|гремит|басом|чудищ[а-я]*|orc|goblin|monster|demon|dragon|giant|troll|beast|brute|growls|roars)(?!\p{L})/iu;
  if (brutePattern.test(textStr)) {
   return 'onyx';
  }

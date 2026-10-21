@@ -5,7 +5,11 @@ import {LiveVoice} from '/live-voice.mjs';
 import {SpeechPrefetch} from '/speech-prefetch.mjs';
 import {ambientEngine} from '/ambient-sound.mjs';
 import {playSfx, toggleSfx, isSfxEnabled} from '/sfx.mjs';
+import {translations, getLanguage, setLanguage, t, initLanguage, applyTranslations} from '/i18n.mjs';
 let activeSpeechRequest=null;
+let mapWindowFloating = localStorage.getItem('skazitel-map-floating') !== '0';
+let mapWindowMinimized = false;
+let mapWindowMaximized = false;
 const speechPrefetch=new SpeechPrefetch((text,signal)=>loadSpeech(text,null,signal));
 let liveDelegating=false;
 const liveVoice=new LiveVoice({api,delegate:async(text,id)=>{
@@ -46,18 +50,20 @@ function askConfirm({title='Подтверждение',message,okText='Удал
 }
 async function api(route,data){const r=await fetch('/api/'+route,{method:data===undefined?'GET':'POST',headers:{'x-app-token':token,...(data===undefined?{}:{'Content-Type':'application/json'})},...(route==='live-meter'?{keepalive:true}:{}),...(data===undefined?{}:{body:JSON.stringify({requestId:crypto.randomUUID(),...data})})});if(!r.ok){const e=await r.json();throw Error(e.error||'Ошибка сервера');}return r.json();}
 function current(){return state?.campaigns.find(x=>x.id===activeId);}
-function setBusy(value,label){busy=value;$('listeningMode').disabled=value||!!recording||recordStarting;document.body.classList.toggle('busy',value);$('status').textContent=label||(value?'Мастер обдумывает ваш ход…':'Мастер слушает по кнопке');for(const id of ['send','mic','begin','undo','new','sessionZero','seed','import','settings','export','editHeroes'])$(id).disabled=value;document.querySelectorAll('#rollForm button,#proposals button').forEach(el=>el.disabled=value);}
+function setBusy(value,label){busy=value;$('listeningMode').disabled=value||!!recording||recordStarting;document.body.classList.toggle('busy',value);$('status').textContent=label||(value?t('statusBusy'):t('statusIdle'));for(const id of ['send','mic','begin','undo','new','sessionZero','seed','import','settings','export','editHeroes'])$(id).disabled=value;document.querySelectorAll('#rollForm button,#proposals button').forEach(el=>el.disabled=value);}
 function choose(id){if(busy||recording||recordStarting)return;stopListening();pauseReactionClock();haltNarration();interruptionActive=false;lastKnownMapHash='';activeId=id;localStorage.setItem('skazitel-active',id);api('settings',{activeCampaignId:id}).catch(()=>{});selectedId=null;render();scrollToLatest();}
 function scrollToLatest(){const target=current()?.pending?$('rollPanel'):$('journal').lastElementChild;target?.scrollIntoView({block:'end'});}
 function render(){
- const c=current();$('campaigns').innerHTML=state.campaigns.map(x=>`<div class="campaign-item-row"><button class="campaign-item ${x.id===activeId?'active':''}" data-campaign="${x.id}">${esc(x.name)}<small>${x.characters.length} героя · ${x.journal.length} событий</small></button><button class="campaign-delete-btn" data-delete-campaign="${x.id}" title="Удалить партию «${esc(x.name)}»" aria-label="Удалить партию «${esc(x.name)}»" type="button">✕</button></div>`).join('');
+ applyTranslations();
+ const c=current();$('campaigns').innerHTML=state.campaigns.map(x=>`<div class="campaign-item-row"><button class="campaign-item ${x.id===activeId?'active':''}" data-campaign="${x.id}">${esc(x.name)}<small>${x.characters.length} ${getLanguage()==='en'?'heroes':'героя'} · ${x.journal.length} ${t('eventsCount').toLowerCase()}</small></button><button class="campaign-delete-btn" data-delete-campaign="${x.id}" title="${getLanguage()==='en'?'Delete campaign':'Удалить партию'} «${esc(x.name)}»" aria-label="Delete «${esc(x.name)}»" type="button">✕</button></div>`).join('');
  $('providerDot').textContent=state.config.provider==='demo'?'◌':'●';$('welcome').hidden=!!c;$('table').hidden=!c;$('export').disabled=!c;$('undo').disabled=!c?.canUndo||busy;
  renderSessionCost(state.usage);renderListening();if(!c)return;
  if(!c.characters.some(x=>x.id===selectedId))selectedId=c.characters[0]?.id;
- $('crumb').textContent=c.name;$('title').textContent=c.name;$('settingText').title=c.setting;$('settingText').textContent=c.sessionZero&&!c.sessionZero.complete?(state.config.provider==='demo'?`Нулевая сессия · ${c.sessionZero.step===5?'проверка договорённостей':`вопрос ${c.sessionZero.step+1} из 5`} · отвечайте голосом или текстом`:'Подготовка приключения · Обсудите мир и героев с Мастером'):c.setting;
- $('modeBadge').hidden=state.config.provider!=='demo'&&state.lastTextRoute?.provider!=='openrouter.ai';$('modeBadge').title=(editions[c.edition]||editions.legacy)+' · '+(state.lastTextRoute?.model||state.config.model);$('modeBadge').textContent=state.lastTextRoute?.provider==='openrouter.ai'&&state.config.reserveProvider==='openrouter'?'БЕСПЛАТНЫЙ РЕЗЕРВ · GEMMA 4 31B':state.config.provider==='demo'?'УЧЕБНЫЙ РЕЖИМ · БЕЗ ИИ':`${state.config.provider.toUpperCase()} · ${state.config.model}`;
+ $('crumb').textContent=c.name;$('title').textContent=c.name;$('settingText').title=c.setting;$('settingText').textContent=c.sessionZero&&!c.sessionZero.complete?(state.config.provider==='demo'?(getLanguage()==='en'?`Session Zero · Question ${c.sessionZero.step+1} of 5`:`Нулевая сессия · ${c.sessionZero.step===5?'проверка договорённостей':`вопрос ${c.sessionZero.step+1} из 5`} · отвечайте голосом или текстом`):(getLanguage()==='en'?'Adventure Prep · Discuss the world and heroes with the DM':'Подготовка приключения · Обсудите мир и героев с Мастером')):c.setting;
+ $('modeBadge').hidden=state.config.provider!=='demo'&&state.lastTextRoute?.provider!=='openrouter.ai';$('modeBadge').title=(editions[c.edition]||editions.legacy)+' · '+(state.lastTextRoute?.model||state.config.model);$('modeBadge').textContent=state.lastTextRoute?.provider==='openrouter.ai'&&state.config.reserveProvider==='openrouter'?'FREE RESERVE · GEMMA 4 31B':state.config.provider==='demo'?(getLanguage()==='en'?'DEMO NO-AI':'УЧЕБНЫЙ РЕЖИМ · БЕЗ ИИ'):`${state.config.provider.toUpperCase()} · ${state.config.model}`;
  const scene=(c.images||[]).findLast(i=>i.kind==='scene'&&i.status==='ready');$('sceneArt').hidden=!scene;if(scene){$('sceneArtImage').src='/images/'+scene.file;$('sceneArtImage').alt=scene.prompt;}
- $('entryCount').textContent=`${c.journalTotal??c.journal.length} СОБЫТИЙ`;
+ $('entryCount').textContent=`${c.journalTotal??c.journal.length} ${t('eventsCount')}`;
+
  $('journal').innerHTML=c.journal.map((x,i)=>{if(x.role==='user'&&x.text==='Игрок подтвердил операцию с листом, памятью или вещами.')return '';let text=x.text;const verified=x.role==='system'&&text.startsWith('VERIFIED_ROLL ');if(verified){try{const r=JSON.parse(text.slice(14));text=`${r.character} · ${r.kind==='save'?'Спасбросок · ':r.kind==='death'?'От смерти · ':''}${skills[r.skill]}: d20 ${r.dice?.length===2?'['+r.dice.join(', ')+'] → ':''}${r.raw} ${r.bonus>=0?'+':'−'} ${Math.abs(r.bonus)} = ${r.total} / Сл ${r.dc} · ${r.success?'Успех':'Провал'}`;}catch{}}
  if(x.role==='system'&&!verified)return `<details class="compact-event"><summary>◇ ${esc(text.split('\n')[0].slice(0,140))}</summary><p>${esc(text)}</p></details>`;
   return `<article class="entry ${esc(x.role)}${x.isWhisper?' is-whisper':''}"><div class="entry-label"><span>${x.isWhisper?'<span class="whisper-badge">🤫 ШЁПОТ</span>':''}${x.role==='assistant'?'✦ СКАЗИТЕЛЬ':x.role==='user'?'ДЕЙСТВИЕ ГЕРОЯ':'◇ ИГРОВОЕ СОБЫТИЕ'}</span><time>${new Date(x.at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</time></div><p>${esc(text)}${c.delivery?.entryId===x.id?`<span class="narrating">${text?' ':''}${esc(c.delivery.displayText||c.delivery.text?.replace(/^\[[^\]]+\]\s*/,'')||'')}</span>`:''}</p>${x.role==='assistant'?`<button class="replay" data-replay="${i}">▷ Озвучить</button>`:''}${x.automaticChanges?.length?`<details class="automatic-changes"><summary>✓ Записано мастером · ${x.automaticChanges.length}</summary>${x.automaticChanges.map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}${x.tacticalHints?.length?`<div class="tactical-hints">${x.tacticalHints.map(h=>`<p>✦ ${esc(h.text)}</p>`).join('')}</div>`:''}${x.illustrationSuggestion?`<div class="image-suggestion"><span>✧ ${esc(x.illustrationSuggestion.reason)}</span><button class="quiet" data-suggest-image="${x.id}">Предлагаю иллюстрацию ↗</button></div>`:''}</article>`;}).slice(-50).join('');
@@ -982,13 +988,75 @@ function toggleTacticalHud(forceState){
  const next = forceState !== undefined ? forceState : !tacticalHudOpen;
  tacticalHudOpen = next;
  const grid = document.querySelector('.table-grid');
- grid?.classList.toggle('split-mode', tacticalHudOpen);
- grid?.classList.toggle('wide-hud', tacticalHudOpen && hudWideMode);
  const hud = $('tacticalHud');
- if(hud) hud.hidden = !tacticalHudOpen;
  $('toggleTacticalHud')?.classList.toggle('active', tacticalHudOpen);
+
+ if(!tacticalHudOpen){
+  if(hud) hud.hidden = true;
+  grid?.classList.remove('split-mode');
+  grid?.classList.remove('wide-hud');
+  return;
+ }
+
+ if(mapWindowFloating){
+  hud?.classList.add('floating-window');
+  grid?.classList.remove('split-mode');
+  grid?.classList.remove('wide-hud');
+  applySavedMapWindowGeometry();
+  if(hud) hud.hidden = false;
+  const mb = $('hudMinibar');
+  if(mb) mb.hidden = true;
+  mapWindowMinimized = false;
+ } else {
+  hud?.classList.remove('floating-window');
+  grid?.classList.add('split-mode');
+  grid?.classList.toggle('wide-hud', hudWideMode);
+  if(hud) hud.hidden = false;
+ }
+
+ renderTacticalHud();
+}
+
+function setMapWindowMode(floating){
+ mapWindowFloating = floating;
+ localStorage.setItem('skazitel-map-floating', mapWindowFloating ? '1' : '0');
+ const dockBtn = $('toggleHudDockMode');
+ if(dockBtn){
+  dockBtn.textContent = mapWindowFloating ? t('hudDockBtn') : t('hudUndockBtn');
+ }
  if(tacticalHudOpen){
-  renderTacticalHud();
+  toggleTacticalHud(true);
+ }
+}
+
+function saveMapWindowGeometry(){
+ const hud = $('tacticalHud');
+ if(!hud || !mapWindowFloating) return;
+ const geom = {
+  left: hud.style.left,
+  top: hud.style.top,
+  width: hud.style.width,
+  height: hud.style.height,
+  maximized: mapWindowMaximized
+ };
+ localStorage.setItem('skazitel-map-window-geom', JSON.stringify(geom));
+}
+
+function applySavedMapWindowGeometry(){
+ const hud = $('tacticalHud');
+ if(!hud) return;
+ try {
+  const saved = JSON.parse(localStorage.getItem('skazitel-map-window-geom') || '{}');
+  hud.style.left = saved.left || 'calc(50vw - 360px)';
+  hud.style.top = saved.top || '75px';
+  hud.style.width = saved.width || '720px';
+  hud.style.height = saved.height || '540px';
+  mapWindowMaximized = !!saved.maximized;
+ } catch {
+  hud.style.left = 'calc(50vw - 360px)';
+  hud.style.top = '75px';
+  hud.style.width = '720px';
+  hud.style.height = '540px';
  }
 }
 
@@ -1876,6 +1944,234 @@ function applyTheme(theme) {
 }
 
 initThemeManager();
+
+// ==========================================================================
+// TACTICAL MAP WINDOW (Apple HIG Floating Window + Docking)
+// ==========================================================================
+function initMapWindow() {
+  const hud = $('tacticalHud');
+  const header = $('hudWindowHeader');
+  const grip = $('hudResizeGrip');
+
+  // Traffic lights
+  $('hudWindowClose')?.addEventListener('click', () => {
+    toggleTacticalHud(false);
+  });
+
+  $('hudWindowMinimize')?.addEventListener('click', () => {
+    if (hud) hud.hidden = true;
+    mapWindowMinimized = true;
+    const mb = $('hudMinibar');
+    if (mb) mb.hidden = false;
+    tacticalHudOpen = false;
+    $('toggleTacticalHud')?.classList.remove('active');
+  });
+
+  $('hudWindowZoom')?.addEventListener('click', () => {
+    if (!hud) return;
+    mapWindowMaximized = !mapWindowMaximized;
+    if (mapWindowMaximized) {
+      hud.dataset.prevLeft = hud.style.left;
+      hud.dataset.prevTop = hud.style.top;
+      hud.dataset.prevWidth = hud.style.width;
+      hud.dataset.prevHeight = hud.style.height;
+      hud.style.left = '24px';
+      hud.style.top = '24px';
+      hud.style.width = 'calc(100vw - 48px)';
+      hud.style.height = 'calc(100vh - 48px)';
+    } else {
+      hud.style.left = hud.dataset.prevLeft || 'calc(50vw - 360px)';
+      hud.style.top = hud.dataset.prevTop || '75px';
+      hud.style.width = hud.dataset.prevWidth || '720px';
+      hud.style.height = hud.dataset.prevHeight || '540px';
+    }
+    saveMapWindowGeometry();
+  });
+
+  // Minibar restore
+  $('hudMinibarRestore')?.addEventListener('click', () => {
+    const mb = $('hudMinibar');
+    if (mb) mb.hidden = true;
+    mapWindowMinimized = false;
+    toggleTacticalHud(true);
+  });
+
+  // Dock / Undock toggle
+  $('toggleHudDockMode')?.addEventListener('click', () => {
+    setMapWindowMode(!mapWindowFloating);
+  });
+
+  // Dragging by header (in floating mode)
+  if (header && hud) {
+    let isDragging = false, dragStartX = 0, dragStartY = 0, winX = 0, winY = 0;
+    header.addEventListener('mousedown', e => {
+      if (!hud.classList.contains('floating-window')) return;
+      if (e.target.closest('button, input, select, .hud-tabs, .hud-controls')) return;
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      const rect = hud.getBoundingClientRect();
+      winX = rect.left;
+      winY = rect.top;
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      const nextX = Math.max(10, Math.min(window.innerWidth - 120, winX + dx));
+      const nextY = Math.max(10, Math.min(window.innerHeight - 60, winY + dy));
+      hud.style.left = nextX + 'px';
+      hud.style.top = nextY + 'px';
+      hud.style.right = 'auto';
+      hud.style.bottom = 'auto';
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        saveMapWindowGeometry();
+      }
+    });
+  }
+
+  // Resizing by corner grip
+  if (grip && hud) {
+    let isResizing = false, resizeStartX = 0, resizeStartY = 0, startW = 0, startH = 0;
+    grip.addEventListener('mousedown', e => {
+      if (!hud.classList.contains('floating-window')) return;
+      isResizing = true;
+      resizeStartX = e.clientX;
+      resizeStartY = e.clientY;
+      const rect = hud.getBoundingClientRect();
+      startW = rect.width;
+      startH = rect.height;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!isResizing) return;
+      const dw = e.clientX - resizeStartX;
+      const dh = e.clientY - resizeStartY;
+      const nextW = Math.max(380, Math.min(window.innerWidth - 20, startW + dw));
+      const nextH = Math.max(260, Math.min(window.innerHeight - 20, startH + dh));
+      hud.style.width = nextW + 'px';
+      hud.style.height = nextH + 'px';
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        saveMapWindowGeometry();
+      }
+    });
+  }
+
+  // Initial dock button label
+  const dockBtn = $('toggleHudDockMode');
+  if (dockBtn) {
+    dockBtn.textContent = mapWindowFloating ? t('hudDockBtn') : t('hudUndockBtn');
+  }
+}
+
+// ==========================================================================
+// RESIZABLE SPLIT-PANE LAYOUT (Story / Map / Party)
+// ==========================================================================
+function initSplitResizers() {
+  const left = $('splitResizerLeft');
+  const right = $('splitResizerRight');
+
+  try {
+    const saved = JSON.parse(localStorage.getItem('skazitel-split-widths') || '{}');
+    if (saved.story) document.documentElement.style.setProperty('--story-width', saved.story + 'px');
+    if (saved.party) document.documentElement.style.setProperty('--party-width', saved.party + 'px');
+    if (saved.hud) document.documentElement.style.setProperty('--hud-width', saved.hud + 'px');
+  } catch {}
+
+  let draggingResizer = null, startX = 0, startVal = 0;
+  const onMouseDown = (resizer, e) => {
+    draggingResizer = resizer;
+    resizer.classList.add('dragging');
+    startX = e.clientX;
+    if (resizer === left) {
+      startVal = document.querySelector('.story')?.getBoundingClientRect().width || 600;
+    } else {
+      startVal = document.querySelector('.party')?.getBoundingClientRect().width || 270;
+    }
+    e.preventDefault();
+  };
+
+  left?.addEventListener('mousedown', e => onMouseDown(left, e));
+  right?.addEventListener('mousedown', e => onMouseDown(right, e));
+
+  window.addEventListener('mousemove', e => {
+    if (!draggingResizer) return;
+    const dx = e.clientX - startX;
+    if (draggingResizer === left) {
+      const nextW = Math.max(280, Math.min(window.innerWidth - 400, startVal + dx));
+      document.documentElement.style.setProperty('--story-width', nextW + 'px');
+    } else {
+      const nextW = Math.max(200, Math.min(550, startVal - dx));
+      document.documentElement.style.setProperty('--party-width', nextW + 'px');
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (draggingResizer) {
+      draggingResizer.classList.remove('dragging');
+      draggingResizer = null;
+      const storyW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--story-width')) || 0;
+      const partyW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--party-width')) || 0;
+      localStorage.setItem('skazitel-split-widths', JSON.stringify({ story: storyW, party: partyW }));
+    }
+  });
+}
+
+// ==========================================================================
+// UI SCALE MANAGER (A- / 100% / A+)
+// ==========================================================================
+function initUiScale() {
+  let uiScale = parseFloat(localStorage.getItem('skazitel-ui-scale') || '1.0');
+  const setScale = val => {
+    uiScale = Math.max(0.75, Math.min(1.30, Math.round(val * 100) / 100));
+    document.documentElement.style.setProperty('--ui-scale', uiScale);
+    document.body.style.zoom = uiScale === 1.0 ? '' : uiScale;
+    localStorage.setItem('skazitel-ui-scale', uiScale.toFixed(2));
+    const resetBtn = $('uiScaleResetBtn');
+    if (resetBtn) resetBtn.textContent = Math.round(uiScale * 100) + '%';
+  };
+  setScale(uiScale);
+  $('uiScaleDownBtn')?.addEventListener('click', () => setScale(uiScale - 0.15));
+  $('uiScaleResetBtn')?.addEventListener('click', () => setScale(1.0));
+  $('uiScaleUpBtn')?.addEventListener('click', () => setScale(uiScale + 0.15));
+}
+
+// ==========================================================================
+// BILINGUAL LANGUAGE MANAGER (RU / EN Toggle)
+// ==========================================================================
+function initLanguageManager() {
+  initLanguage();
+  const btn = $('langToggleBtn');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const current = getLanguage();
+      const next = current === 'ru' ? 'en' : 'ru';
+      setLanguage(next);
+      api('settings', { language: next }).catch(() => {});
+      render();
+      if (typeof playSfx === 'function') playSfx('dice');
+      toast(next === 'en' ? '🌐 Language switched to English' : '🌐 Язык переключён на русский');
+    });
+  }
+}
+
+initMapWindow();
+initSplitResizers();
+initUiScale();
+initLanguageManager();
+
 
 
 

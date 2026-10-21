@@ -1213,25 +1213,281 @@ main > header {
 }
 
 /* --------------------------------------------------------------------------
-   8. РАЗДЕЛЁННЫЙ ДИСПЛЕЙ СТОЛА (TACTICAL HUD / SPLIT MODE)
+   8. РАЗДЕЛЁННЫЙ ДИСПЛЕЙ СТОЛА (TACTICAL HUD / SPLIT & FLOATING WINDOW)
    -------------------------------------------------------------------------- */
+
+:root {
+  --story-width: 1fr;
+  --hud-width: 520px;
+  --party-width: 270px;
+}
+
+.table-grid {
+  display: grid;
+  grid-template-columns: var(--story-width, 1fr) 8px var(--party-width, 270px);
+  gap: 16px;
+  padding: 0 32px 200px;
+  align-items: stretch;
+}
 
 .table-grid.split-mode {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 1.4fr) 260px;
-  gap: 20px;
+  grid-template-columns: var(--story-width, 1fr) 8px var(--hud-width, 520px) 8px var(--party-width, 270px);
+  gap: 12px;
 }
 
+/* Split Resizer (Apple Cupertino aesthetic) */
+.split-resizer {
+  width: 8px;
+  margin: 0 -2px;
+  cursor: col-resize;
+  z-index: 20;
+  position: relative;
+  border-radius: 4px;
+  transition: background-color 0.18s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.split-resizer::after {
+  content: '';
+  width: 3px;
+  height: 38px;
+  border-radius: 2px;
+  background: var(--apple-hairline);
+  transition: all 0.18s ease;
+}
+
+.split-resizer:hover, .split-resizer.dragging {
+  background: rgba(0, 122, 255, 0.15);
+}
+
+.split-resizer:hover::after, .split-resizer.dragging::after {
+  background: var(--apple-blue);
+  height: 60px;
+}
+
+/* Apple Window Traffic Lights */
+.apple-window-traffic-lights {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.traffic-light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  transition: transform var(--apple-spring-duration) var(--apple-spring-timing), filter 0.15s ease;
+}
+
+.traffic-light:active {
+  transform: scale(0.9);
+}
+
+.traffic-light.close {
+  background: #FF5F56;
+  border: 0.5px solid rgba(0, 0, 0, 0.15);
+}
+
+.traffic-light.minimize {
+  background: #FFBD2E;
+  border: 0.5px solid rgba(0, 0, 0, 0.15);
+}
+
+.traffic-light.zoom {
+  background: #27C93F;
+  border: 0.5px solid rgba(0, 0, 0, 0.15);
+}
+
+.traffic-light:hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+}
+
+.apple-window-title {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  color: var(--apple-label-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+/* Tactical HUD: Docked Mode */
 .tactical-hud {
   display: flex;
   flex-direction: column;
-  background: var(--surface-1);
-  border: 1px solid var(--hairline);
-  border-radius: 20px;
+  background: var(--apple-surface-card);
+  border: 1px solid var(--apple-hairline);
+  border-radius: var(--apple-radius-card, 18px);
   min-height: 0;
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--apple-shadow-card);
   animation: hudFadeIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+}
+
+/* Tactical HUD: Floating Window Mode (Apple Glass / Minesweeper Freedom) */
+.tactical-hud.floating-window {
+  position: fixed;
+  z-index: 1200;
+  min-width: 420px;
+  min-height: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 40px);
+  background: var(--apple-surface-card);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid var(--apple-hairline);
+  border-radius: var(--apple-radius-large, 22px);
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--apple-hairline);
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] .tactical-hud.floating-window {
+  box-shadow: 0 28px 84px rgba(0, 0, 0, 0.72), 0 0 0 1px var(--apple-hairline), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.tactical-hud.floating-window .hud-header {
+  cursor: grab;
+  user-select: none;
+  background: var(--apple-surface-sub);
+  border-bottom: 1px solid var(--apple-hairline);
+  padding: 10px 14px;
+}
+
+.tactical-hud.floating-window .hud-header:active {
+  cursor: grabbing;
+}
+
+/* Corner Resize Grip */
+.apple-resize-grip {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  z-index: 10;
+  background-image: radial-gradient(circle at 12px 12px, var(--apple-label-tertiary) 1.5px, transparent 1.5px),
+                    radial-gradient(circle at 7px 12px, var(--apple-label-tertiary) 1.5px, transparent 1.5px),
+                    radial-gradient(circle at 12px 7px, var(--apple-label-tertiary) 1.5px, transparent 1.5px);
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.apple-resize-grip:hover {
+  opacity: 1;
+}
+
+/* Minibar Pill */
+.hud-minibar {
+  position: fixed;
+  bottom: 88px;
+  right: 24px;
+  z-index: 1250;
+  animation: appleSpringIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hud-minibar-btn {
+  background: var(--apple-surface-card);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--apple-hairline);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apple-label-primary);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 0 0 1px var(--apple-hairline);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform var(--apple-spring-duration) var(--apple-spring-timing), box-shadow 0.2s ease;
+}
+
+.hud-minibar-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+}
+
+.hud-minibar-btn:active {
+  transform: scale(0.96);
+}
+
+/* UI Scale Controls & Language Toggle */
+.ui-scale-group {
+  display: inline-flex;
+  align-items: center;
+  background: var(--apple-surface-sub);
+  border: 1px solid var(--apple-hairline);
+  border-radius: var(--apple-radius-small, 10px);
+  overflow: hidden;
+  padding: 2px;
+  gap: 2px;
+}
+
+.ui-scale-btn {
+  border: none;
+  background: transparent;
+  color: var(--apple-label-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ui-scale-btn:hover {
+  color: var(--apple-label-primary);
+  background: var(--apple-surface-popover);
+}
+
+.ui-scale-btn.active {
+  color: var(--apple-label-primary);
+  background: var(--apple-surface-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.lang-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: var(--apple-radius-small, 10px);
+  border: 1px solid var(--apple-hairline);
+  background: var(--apple-surface-sub);
+  color: var(--apple-label-primary);
+  cursor: pointer;
+  transition: transform var(--apple-spring-duration) var(--apple-spring-timing), background 0.15s ease;
+}
+
+.lang-toggle-btn:hover {
+  background: var(--apple-surface-card);
+}
+
+.lang-toggle-btn:active {
+  transform: scale(0.96);
 }
 
 @keyframes hudFadeIn {
@@ -1244,8 +1500,8 @@ main > header {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--hairline);
+  background: var(--apple-surface-sub);
+  border-bottom: 1px solid var(--apple-hairline);
   flex-shrink: 0;
   gap: 8px;
 }

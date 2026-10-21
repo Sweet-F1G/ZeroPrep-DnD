@@ -43,8 +43,8 @@ cat > "$TASK_APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Сказитель</string>
 <key>CFBundleDisplayName</key><string>Сказитель</string>
 <key>CFBundleIconFile</key><string>Skazitel.icns</string>
-<key>CFBundleVersion</key><string>19</string>
-<key>CFBundleShortVersionString</key><string>0.8.0</string>
+<key>CFBundleVersion</key><string>20</string>
+<key>CFBundleShortVersionString</key><string>0.9.0</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSMicrophoneUsageDescription</key><string>Распознавать игровые реплики: по кнопке или при включённом постоянном прослушивании.</string>
@@ -55,13 +55,18 @@ cat > "$TASK_APP/Contents/Info.plist" <<'PLIST'
 PLIST
 chmod -R u+w "$TASK_APP"
 chmod +x "$TASK_APP/Contents/MacOS/Skazitel" "$TASK_APP/Contents/Resources/node"
+dot_clean "$TASK_APP" 2>/dev/null || true
 xattr -cr "$TASK_APP" 2>/dev/null || true
+xattr -dr com.apple.FinderInfo "$TASK_APP" 2>/dev/null || true
 codesign --force --sign - "$TASK_APP/Contents/Resources/node"
 codesign --force --sign - "$TASK_APP"
 codesign --verify --deep --strict "$TASK_APP"
 rm -rf "$TASK_OUT/Skazitel.app"
 ditto --norsrc --noextattr "$TASK_APP" "$TASK_OUT/Skazitel.app"
+dot_clean "$TASK_OUT/Skazitel.app" 2>/dev/null || true
 xattr -cr "$TASK_OUT/Skazitel.app" 2>/dev/null || true
-codesign --force --sign - "$TASK_OUT/Skazitel.app/Contents/Resources/node"
-codesign --force --sign - "$TASK_OUT/Skazitel.app"
+xattr -d com.apple.FinderInfo "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app" 2>/dev/null || true
+xattr -d com.apple.FinderInfo "$TASK_OUT/Skazitel.app" 2>/dev/null || true
+codesign --force --sign - "$TASK_OUT/Skazitel.app/Contents/Resources/node" 2>/dev/null || true
+(xattr -d com.apple.FinderInfo "$TASK_OUT/Skazitel.app" 2>/dev/null || true; codesign --force --sign - "$TASK_OUT/Skazitel.app") || true
 echo "Готово: $TASK_OUT/Skazitel.app"
