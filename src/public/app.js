@@ -1834,4 +1834,48 @@ function renderGenResult(res) {
   }
 }
 
+// ==========================================================================
+// APPLE HIG THEME MANAGER (Light / Dark Mode Switcher)
+// ==========================================================================
+function initThemeManager() {
+  const saved = localStorage.getItem('skazitel-color-theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initialTheme = saved || (prefersDark ? 'dark' : 'light');
+  applyTheme(initialTheme);
+
+  const btn = $('themeToggleBtn');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || (prefersDark ? 'dark' : 'light');
+      const nextTheme = current === 'dark' ? 'light' : 'dark';
+      applyTheme(nextTheme);
+      localStorage.setItem('skazitel-color-theme', nextTheme);
+      if (typeof playSfx === 'function') playSfx('dice');
+      toast(nextTheme === 'dark' ? '🌙 Тёмная тема Apple HIG (Dark Mode)' : '☀️ Светлая тема Apple HIG (Light Mode)');
+    });
+  }
+
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem('skazitel-color-theme')) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  }
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = $('themeToggleBtn');
+  if (btn) {
+    btn.innerHTML = theme === 'dark' 
+      ? '🌙 <span class="theme-text">Тёмная</span>' 
+      : '☀️ <span class="theme-text">Светлая</span>';
+    btn.title = `Текущая тема: ${theme === 'dark' ? 'Тёмная (Dark Mode)' : 'Светлая (Light Mode)'}. Нажмите для переключения`;
+  }
+}
+
+initThemeManager();
+
+
 
