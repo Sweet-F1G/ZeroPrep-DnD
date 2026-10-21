@@ -1,15 +1,16 @@
-# macOS
+# macOS system detritus
 .DS_Store
 .AppleDouble
 .LSOverride
 ._*
 
-# Temporary and log files
+# Temporary, build, and log files
 *.tmp
 *.log
 *.swp
+dist/
 
-# SQLite runtime locks and journals
+# SQLite runtime locks, journals, and local databases
 *.sqlite-wal
 *.sqlite-shm
 *.sqlite-journal
@@ -18,12 +19,20 @@
 LocalVoice/models/
 LocalVoice/venv/
 
-# Backup snapshots and temporary journals
+# Local Saves and user campaign data (KEEP PRIVATE)
+Saves/*
+!Saves/README.md
+!Saves/.gitkeep
+!Saves/Theon-Alvari-filled-sheets.md
 Saves/Backups/
+Saves/Images/
 Saves/*.pem
-src/data/*.pem
-src/data/*.sqlite-wal
-src/data/*.sqlite-shm
+Saves/*.sqlite*
+Saves/*.json
+Saves/*.log
+
+# Local dev data
+src/data/
 
 # Python cache
 __pycache__/
