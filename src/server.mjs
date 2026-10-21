@@ -154,7 +154,13 @@ const serverHandler=async(req,res)=>{
      }
     }catch{res.writeHead(404);return res.end();}
    }
-    const assets={'/':'index.html','/app.js':'app.js','/ambient-sound.mjs':'ambient-sound.mjs','/sfx.mjs':'sfx.mjs','/style.css':'style.css','/voice-input.mjs':'voice-input.mjs','/speech-prefetch.mjs':'speech-prefetch.mjs','/live-voice.mjs':'live-voice.mjs','/rule-data.mjs':'rule-data.mjs','/attribution.txt':'attribution.txt','/player':'player.html','/player.html':'player.html','/player.js':'player.js','/player.css':'player.css','/qrcode.js':'qrcode.js'};const file=assets[url.pathname];if(!file){res.writeHead(404);return res.end();}
+    const assets={'/':'index.html','/app.js':'app.js','/i18n.mjs':'i18n.mjs','/ambient-sound.mjs':'ambient-sound.mjs','/sfx.mjs':'sfx.mjs','/style.css':'style.css','/voice-input.mjs':'voice-input.mjs','/speech-prefetch.mjs':'speech-prefetch.mjs','/live-voice.mjs':'live-voice.mjs','/rule-data.mjs':'rule-data.mjs','/attribution.txt':'attribution.txt','/player':'player.html','/player.html':'player.html','/player.js':'player.js','/player.css':'player.css','/qrcode.js':'qrcode.js'};
+    let file=assets[url.pathname];
+    if(!file&&/^\/[a-zA-Z0-9_-]+\.(?:mjs|js|css|txt)$/.test(url.pathname)){
+     const candidate=url.pathname.slice(1);
+     try{await fs.access(path.join(root,'public',candidate));file=candidate;}catch{}
+    }
+    if(!file){res.writeHead(404);return res.end();}
     let content=await fs.readFile(path.join(root,'public',file));if(file==='index.html')content=Buffer.from(content.toString().replace('__APP_TOKEN__',token));
     if(file==='player.html')content=Buffer.from(content.toString().replace(/__PLAYER_TOKEN__/g,playerToken).replace(/__APP_TOKEN__/g,playerToken));
     res.writeHead(200,{'Content-Type':file.endsWith('html')?'text/html; charset=utf-8':file.endsWith('js')||file.endsWith('mjs')?'text/javascript; charset=utf-8':file.endsWith('.txt')?'text/plain; charset=utf-8':'text/css; charset=utf-8','Cache-Control':'no-store'});return res.end(content);
