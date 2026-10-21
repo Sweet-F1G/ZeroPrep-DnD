@@ -2084,12 +2084,16 @@ function initMapWindow() {
 function initSplitResizers() {
   const left = $('splitResizerLeft');
   const right = $('splitResizerRight');
+  const grid = document.querySelector('.table-grid');
 
   try {
     const saved = JSON.parse(localStorage.getItem('skazitel-split-widths') || '{}');
-    if (saved.story) document.documentElement.style.setProperty('--story-width', saved.story + 'px');
-    if (saved.party) document.documentElement.style.setProperty('--party-width', saved.party + 'px');
-    if (saved.hud) document.documentElement.style.setProperty('--hud-width', saved.hud + 'px');
+    if (saved.party && saved.party >= 200 && saved.party <= 600) {
+      document.documentElement.style.setProperty('--party-width', saved.party + 'px');
+    }
+    if (saved.hud && saved.hud >= 320 && saved.hud <= 900) {
+      document.documentElement.style.setProperty('--hud-width', saved.hud + 'px');
+    }
   } catch {}
 
   let draggingResizer = null, startX = 0, startVal = 0;
@@ -2097,8 +2101,13 @@ function initSplitResizers() {
     draggingResizer = resizer;
     resizer.classList.add('dragging');
     startX = e.clientX;
+    const isSplitMode = grid?.classList.contains('split-mode');
     if (resizer === left) {
-      startVal = document.querySelector('.story')?.getBoundingClientRect().width || 600;
+      if (isSplitMode) {
+        startVal = $('tacticalHud')?.getBoundingClientRect().width || 520;
+      } else {
+        startVal = document.querySelector('.party')?.getBoundingClientRect().width || 270;
+      }
     } else {
       startVal = document.querySelector('.party')?.getBoundingClientRect().width || 270;
     }
@@ -2111,11 +2120,17 @@ function initSplitResizers() {
   window.addEventListener('mousemove', e => {
     if (!draggingResizer) return;
     const dx = e.clientX - startX;
+    const isSplitMode = grid?.classList.contains('split-mode');
     if (draggingResizer === left) {
-      const nextW = Math.max(280, Math.min(window.innerWidth - 400, startVal + dx));
-      document.documentElement.style.setProperty('--story-width', nextW + 'px');
+      if (isSplitMode) {
+        const nextW = Math.max(320, Math.min(window.innerWidth - 450, startVal - dx));
+        document.documentElement.style.setProperty('--hud-width', nextW + 'px');
+      } else {
+        const nextW = Math.max(220, Math.min(550, startVal - dx));
+        document.documentElement.style.setProperty('--party-width', nextW + 'px');
+      }
     } else {
-      const nextW = Math.max(200, Math.min(550, startVal - dx));
+      const nextW = Math.max(220, Math.min(550, startVal - dx));
       document.documentElement.style.setProperty('--party-width', nextW + 'px');
     }
   });
@@ -2124,9 +2139,9 @@ function initSplitResizers() {
     if (draggingResizer) {
       draggingResizer.classList.remove('dragging');
       draggingResizer = null;
-      const storyW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--story-width')) || 0;
-      const partyW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--party-width')) || 0;
-      localStorage.setItem('skazitel-split-widths', JSON.stringify({ story: storyW, party: partyW }));
+      const partyW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--party-width')) || 270;
+      const hudW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hud-width')) || 520;
+      localStorage.setItem('skazitel-split-widths', JSON.stringify({ party: partyW, hud: hudW }));
     }
   });
 }

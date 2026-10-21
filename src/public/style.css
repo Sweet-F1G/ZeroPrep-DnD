@@ -827,12 +827,6 @@ main > header {
   white-space: nowrap;
 }
 
-.table-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
-  gap: 24px;
-  padding: 0 32px 200px;
-}
 
 .panel-heading {
   font-size: 11px;
@@ -1224,7 +1218,7 @@ main > header {
 
 .table-grid {
   display: grid;
-  grid-template-columns: var(--story-width, 1fr) 8px var(--party-width, 270px);
+  grid-template-columns: minmax(0, 1fr) 8px minmax(240px, var(--party-width, 270px));
   gap: 16px;
   padding: 0 32px 200px;
   align-items: stretch;
@@ -1232,8 +1226,13 @@ main > header {
 
 .table-grid.split-mode {
   display: grid;
-  grid-template-columns: var(--story-width, 1fr) 8px var(--hud-width, 520px) 8px var(--party-width, 270px);
+  grid-template-columns: minmax(0, 1fr) 8px minmax(360px, var(--hud-width, 520px)) 8px minmax(240px, var(--party-width, 270px));
   gap: 12px;
+}
+
+/* Hide the right resizer whenever the table is not in split-mode */
+.table-grid:not(.split-mode) #splitResizerRight {
+  display: none !important;
 }
 
 /* Split Resizer (Apple Cupertino aesthetic) */
@@ -2711,7 +2710,11 @@ body.sidebar-collapsed .composer {
   .sidebar { width: 220px; }
   main { margin-left: 220px; }
   .composer { left: 220px; padding: 12px 20px; }
-  .table-grid { grid-template-columns: minmax(0, 1fr) 210px; gap: 16px; padding: 0 20px 200px; }
+  .table-grid {
+    grid-template-columns: minmax(0, 1fr) 8px minmax(210px, var(--party-width, 240px));
+    gap: 12px;
+    padding: 0 20px 200px;
+  }
   main > header, .campaign-heading { padding-left: 20px; padding-right: 20px; }
 }
 
