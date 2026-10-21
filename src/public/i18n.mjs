@@ -243,7 +243,13 @@ export function applyTranslations(){
     if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'){
       if(el.hasAttribute('placeholder')) el.placeholder = text;
     } else {
-      el.innerHTML = text;
+      const idChildren = el.querySelectorAll('[id]');
+      if(idChildren.length > 0){
+        const textNode = Array.from(el.childNodes).find(n => n.nodeType === 3);
+        if(textNode) textNode.textContent = text + ' ';
+      } else {
+        el.innerHTML = text;
+      }
     }
   });
 
