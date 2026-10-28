@@ -1,6 +1,6 @@
 import {spawn} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
-export const keyNames=['openai','gemini','compatible','groq'];
+export const keyNames=['openai','gemini','compatible','groq','elevenlabs'];
 // String envelopes keep compatibility with the existing, separately signed Keychain helper.
 const prefix='skazitel-pool-v1:';
 export function keyPool(keys,name){
@@ -45,7 +45,7 @@ export function credentialStore(helper=process.env.SKAZITEL_KEYCHAIN_HELPER){
   return new Promise((resolve,reject)=>{
    const child=spawn(helper,['--credentials',action],{stdio:['pipe','pipe','ignore']});let chunks=[],size=0,finished=false;
    const fail=()=>{if(finished)return;finished=true;clearTimeout(timer);reject(Error('Не удалось открыть Связку ключей macOS. Разрешите доступ «Сказителю» и повторите сохранение.'));};
-   const timer=setTimeout(()=>{child.kill();fail();},60000);
+   const timer=setTimeout(()=>{child.kill();fail();},5000);
    child.on('error',fail);child.stdin.on('error',()=>{});
    child.stdout.on('data',b=>{size+=b.length;if(size>32768){child.kill();fail();}else chunks.push(b);});
    child.on('close',code=>{if(finished)return;if(code!==0)return fail();finished=true;clearTimeout(timer);try{const data=action==='load'?JSON.parse(Buffer.concat(chunks).toString()):undefined;if(data){for(const name of Object.keys(data)){if(!keyNames.includes(name)||typeof data[name]!=='string')throw Error();keyPool(data,name);}}resolve(data);}catch{reject(Error('Не удалось прочитать сохранённые API-ключи.'));}});

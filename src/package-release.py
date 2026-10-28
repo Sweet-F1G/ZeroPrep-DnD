@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build clean, privacy-verified distribution packages for Windows and macOS (v0.9.0)."""
+"""Build clean, privacy-verified distribution packages for Windows and macOS (v0.9.1)."""
 import os
 import shutil
 import zipfile
@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
-VERSION = 'v0.9.0'
+VERSION = 'v0.9.1'
 
 print(f"Packaging Skazitel {VERSION} from {ROOT} to {DIST}...")
 
@@ -26,7 +26,7 @@ shutil.copy2(ROOT / 'Start-Windows.bat', win_stage / 'Start-Windows.bat')
 shutil.copy2(ROOT / 'Start-Windows.ps1', win_stage / 'Start-Windows.ps1')
 
 # Copy documentation
-for doc in ['README.md', 'INSTALL-GUIDE.md', 'RELEASE-0.9.0.md', 'CAMPAIGN-IDEAS.md', 'DM-RESPONSIBILITIES.md']:
+for doc in ['README.md', 'INSTALL-GUIDE.md', 'RELEASE-0.9.1.md', 'CAMPAIGN-IDEAS.md', 'DM-RESPONSIBILITIES.md']:
     doc_path = ROOT / doc
     if doc_path.exists():
         shutil.copy2(doc_path, win_stage / doc)
@@ -89,7 +89,7 @@ if start_cmd.exists():
     os.chmod(mac_stage / 'Start-browser.command', 0o755)
 
 # Copy documentation
-for doc in ['README.md', 'INSTALL-GUIDE.md', 'RELEASE-0.9.0.md', 'CAMPAIGN-IDEAS.md', 'DM-RESPONSIBILITIES.md']:
+for doc in ['README.md', 'INSTALL-GUIDE.md', 'RELEASE-0.9.1.md', 'CAMPAIGN-IDEAS.md', 'DM-RESPONSIBILITIES.md']:
     doc_path = ROOT / doc
     if doc_path.exists():
         shutil.copy2(doc_path, mac_stage / doc)

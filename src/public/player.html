@@ -20,7 +20,7 @@
         <span class="brand-title">СКАЗИТЕЛЬ</span>
         <span class="status-indicator" id="connStatus" title="Статус связи со столом Мастера">
           <span class="status-dot"></span>
-          <small id="connLabel">LAN · v0.8.0</small>
+          <small id="connLabel">LAN · v0.9.1</small>
         </span>
       </div>
       <div class="header-hero-picker">
@@ -88,6 +88,18 @@
     <main class="panels-container">
       <!-- 1. Hero Sheet Panel -->
       <section id="heroPanel" class="panel active" role="tabpanel">
+        <section id="playerPendingRoll" class="player-pending-roll" hidden aria-live="polite">
+          <strong id="playerRollTitle">Мастер ожидает бросок</strong>
+          <p id="playerRollReason"></p>
+          <p id="playerRollOwner"></p>
+          <button type="button" id="playerRollVirtualBtn" class="player-virtual-roll-btn">🎲 Бросить d20 в приложении</button>
+          <form id="playerRollForm">
+            <label>Или введите результат физического d20<input id="playerRawDie" type="number" min="1" max="20" step="1" required inputmode="numeric"></label>
+            <label id="playerSecondDieLabel" hidden>Второй физический d20<input id="playerRawDie2" type="number" min="1" max="20" step="1" inputmode="numeric"></label>
+            <button id="playerSubmitRoll" type="submit">Передать физический бросок мастеру</button>
+          </form>
+          <small>Без бонусов. Можно также сказать или написать в чат: «на кубике 14».</small>
+        </section>
         <div id="heroCard" class="hero-card">
           <!-- Dynamic hero header -->
           <div class="hero-headline">
@@ -319,6 +331,7 @@
 
     <!-- Floating Push-to-Talk Bar (LAN Mobile Companion) -->
     <div id="playerPttBar" class="player-ptt-bar">
+      <p id="playerSendError" role="alert" hidden></p>
       <!-- Expanded Dock Body -->
       <div id="pttExpandedBody" class="ptt-expanded-body">
         <div class="ptt-status-hint">
@@ -357,7 +370,7 @@
         <span class="collapsed-pill-arrow">▴</span>
       </div>
 
-      <input type="file" id="playerAudioInput" accept="audio/*,audio/mp4,audio/m4a,audio/wav,audio/aac,audio/webm" capture="microphone" hidden>
+      <input type="file" id="playerAudioInput" accept="audio/*" class="player-audio-input">
     </div>
   </div>
 

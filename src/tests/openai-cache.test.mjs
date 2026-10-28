@@ -27,3 +27,23 @@ test('incomplete responses and refusals stop cleanly without mutating campaign s
  const c=fixture(),before=structuredClone(c),original=globalThis.fetch;
  try{for(const response of [{status:'incomplete',output:[]},{status:'completed',output:[{type:'message',content:[{type:'refusal',refusal:'No'}]}]}]){globalThis.fetch=async()=>Response.json(response);await assert.rejects(()=>generate(config,{openai:'fake-openai-errors'},c),/не завершён|отказался/);assert.deepEqual(c,before);}}finally{globalThis.fetch=original;}
 });
+test('Smart Reasoning Boost: session zero boosts reasoningEffort to high, reverts to low once complete',async()=>{
+ const c=fixture(),original=globalThis.fetch,efforts=[];
+ globalThis.fetch=async(url,options)=>{
+  const body=JSON.parse(options.body);
+  efforts.push(body.reasoning.effort);
+  return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({narration:'Тестовый ответ',actions:[]})}]}]});
+ };
+ try{
+  c.sessionZero={version:1,step:0,answers:{},draft:[],complete:false,editing:false};
+  const cfg={...config,model:'gpt-6.1-terra',reasoningEffort:'low',sessionZeroBoost:'on'};
+  await generate(cfg,{openai:'fake-openai'},c);
+  assert.equal(efforts[0],'high');
+  c.sessionZero.complete=true;
+  await generate(cfg,{openai:'fake-openai'},c);
+  assert.equal(efforts[1],'low');
+  c.sessionZero.complete=false;
+  await generate({...cfg,sessionZeroBoost:'off'},{openai:'fake-openai'},c);
+  assert.equal(efforts[2],'low');
+ }finally{globalThis.fetch=original;}
+});

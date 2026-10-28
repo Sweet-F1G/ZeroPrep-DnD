@@ -1916,3 +1916,54 @@ button:active {
 .tactical-grid-cell.cell-player-fog .cell-multi-badge {
   display: none !important;
 }
+
+.player-pending-roll {padding:16px;margin-bottom:16px;border:1px solid #d1aa5e;border-radius:12px;background:var(--bg-surface-elevated);color:var(--text-main);}
+.player-pending-roll p {margin:8px 0;font-size:13px;line-height:1.5;}
+.player-pending-roll form {display:grid;gap:10px;margin:12px 0;}
+.player-pending-roll label {display:grid;gap:6px;font-size:12px;}
+.player-pending-roll input {width:100%;padding:12px;border-radius:8px;box-sizing:border-box;}
+.player-pending-roll button {padding:12px;background:#d1aa5e;color:#151a16;border:0;border-radius:8px;font-weight:600;}
+.player-pending-roll [hidden],.player-pending-roll[hidden] {display:none!important;}
+.player-ptt-bar button:disabled {opacity:.5;cursor:wait;}
+
+#playerSendError {margin:0 0 10px;padding:10px 12px;border:1px solid #b85b52;border-radius:8px;color:var(--text-primary,#f3e6e4);background:#492823;font-size:12px;line-height:1.5;}
+#playerSendError[hidden] {display:none!important;}
+
+/* Native hidden state must win over flex/grid component rules. */
+[hidden] {display:none!important;}
+.player-ptt-bar {background:var(--bg-surface);color:var(--text-main);}
+.player-ptt-btn,.ptt-collapsed-pill {background:var(--bg-surface-elevated);color:var(--text-main);}
+.player-pending-roll input {background:var(--bg-surface);color:var(--text-main);border:1px solid var(--border-subtle);font:inherit;}
+.hero-name,.hp-values strong,.stat-card-mod,.result-number {color:var(--text-main);}
+.player-ptt-btn {min-width:0;}
+.ptt-btn-text {min-width:0;overflow-wrap:anywhere;}
+.ptt-toggle-btn {flex-shrink:0;}
+
+.player-audio-input {
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.player-virtual-roll-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+.player-virtual-roll-btn:active {
+  transform: scale(0.98);
+  filter: brightness(1.1);
+}

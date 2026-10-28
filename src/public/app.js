@@ -7,6 +7,7 @@ import {ambientEngine} from '/ambient-sound.mjs';
 import {playSfx, toggleSfx, isSfxEnabled} from '/sfx.mjs';
 import {translations, getLanguage, setLanguage, t, initLanguage, applyTranslations} from '/i18n.mjs';
 let activeSpeechRequest=null;
+let deliveryPlaying=false,refreshJob=null;
 let mapWindowFloating = localStorage.getItem('skazitel-map-floating') !== '0';
 let mapWindowMinimized = false;
 let mapWindowMaximized = false;
@@ -71,7 +72,13 @@ function render(){
  const charsEl=$('characters');if(charsEl)charsEl.innerHTML=c.characters.map(renderHero).join('');
  if(lastVisibleHeroId!==selectedId){document.querySelector('.hero.selected')?.scrollIntoView({block:'nearest'});lastVisibleHeroId=selectedId;}
  $('speaker').innerHTML=c.characters.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');$('speaker').value=selectedId;
- $('sessionZeroGuide').hidden=!c.sessionZero||c.sessionZero.complete;$('partyHints').hidden=true;$('speaker').hidden=!!c.sessionZero&&!c.sessionZero.complete;$('editHeroes').disabled=busy||!c.characters.length;
+ $('sessionZeroGuide').hidden=!c.sessionZero||c.sessionZero.complete;
+ const boostNotice=$('sessionZeroBoostNotice');
+ if(boostNotice){
+  const boostActive=c.sessionZero&&!c.sessionZero.complete&&state.config.provider==='openai'&&/^gpt-6(?:[.-]|$)/.test(state.config.model)&&state.config.sessionZeroBoost!=='off';
+  boostNotice.innerHTML=boostActive?'<br><strong style="color:var(--accent-glow,#79c0ff);">🧠 Включён умный буст рассуждений:</strong> Мастер глубоко продумывает сюжет, фракции, NPC и героев (high reasoning).':'';
+ }
+ $('partyHints').hidden=true;$('speaker').hidden=!!c.sessionZero&&!c.sessionZero.complete;$('editHeroes').disabled=busy||!c.characters.length;
  $('startHint').hidden=!!c.journal.length;$('rollPanel').hidden=!c.pending;
  if(c.pending){const p=c.pending,h=c.characters.find(x=>x.id===p.characterId),bonus=p.kind==='death'?0:p.kind==='save'?h.saves[p.skill]:h.bonuses[p.skill];$('rollTitle').textContent=`${h.name} · ${p.kind==='save'?'Спасбросок: ':p.kind==='death'?'От смерти: ':''}${skills[p.skill]} · Сл ${p.dc}`;$('rollStakes').textContent=`${p.reason}. ${p.stakes}`;$('rollMath').textContent=`${p.mode==='advantage'?'Два d20, больший':p.mode==='disadvantage'?'Два d20, меньший':'d20'} ${bonus>=0?'+':''}${bonus} → итог`;$('secondDieLabel').hidden=!p.mode||p.mode==='normal';$('raw2').required=!$('secondDieLabel').hidden;if($('raw').dataset.pending!==JSON.stringify(p)){$('raw').value='';$('raw2').value='';$('raw').dataset.pending=JSON.stringify(p);}}
  $('actionProposals').innerHTML=(c.actionProposals||[]).map((p,i)=>`<div class="proposal"><strong>Действие ${i+1}</strong><p>${esc(actionDescription(p.action,c))}</p><button data-action-proposal="${p.id}" data-accept="yes">Подтвердить</button><button data-action-proposal="${p.id}" data-accept="no">Отклонить</button><small>Голосом: «подтверждаю действие${c.actionProposals.length>1?' '+(i+1):''}»</small></div>`).join('');
@@ -94,12 +101,26 @@ function render(){
   ambientEngine.setTheme(targetTheme);
  }
 }
-async function refresh(){state=await api('state');if(!current())activeId=state.campaigns.find(c=>c.id===state.config.activeCampaignId)?.id||state.campaigns[0]?.id;render();scrollToLatest();if(current()?.delivery&&$('autoVoice')?.checked&&!voiceActive&&!interruptionActive&&!liveVoice.active&&!liveDelegating){playDelivery();}}
+async function refresh(){
+ if(refreshJob)return refreshJob;
+ refreshJob=(async()=>{
+  state=await api('state');
+  if(!current())activeId=state.campaigns.find(c=>c.id===state.config.activeCampaignId)?.id||state.campaigns[0]?.id;
+  render();scrollToLatest();
+  const d=current()?.delivery;
+  if(d&&!busy&&!deliveryPlaying&&!voiceActive&&!interruptionActive&&!liveVoice.active&&!liveDelegating){
+   if($('autoVoice')?.checked&&state.config.ttsProvider!=='off')void playDelivery();
+   else {state=await api('delivery',{id:activeId,deliveryId:d.id,action:'finish'});render();}
+  }
+ })();
+ try{await refreshJob;}finally{refreshJob=null;}
+}
 function stopVoice(){speechPrefetch.clear();activeSpeechRequest?.abort();activeSpeechRequest=null;speechDone?.(false);speechDone=null;speechVersion++;voiceActive=false;ambientEngine.setDucked(false);if(currentAudio){currentAudio.pause();currentAudio.remove();currentAudio=null;}if(currentAudioURL){URL.revokeObjectURL(currentAudioURL);currentAudioURL=null;}window.speechSynthesis?.cancel();window.webkit?.messageHandlers?.nativeVoice?.postMessage({stop:true});if(state)renderListening();}
 async function loadSpeech(text,preview,signal){
  const isEdgePreview=preview&&(preview.startsWith('ru-RU-')||preview==='edge');
  const isOpenAIPreview=preview&&(preview.startsWith('openai:')||['onyx','fable','echo','alloy','nova','shimmer'].includes(preview));
- if(!preview&&(state.config.ttsProvider==='openai'||state.config.ttsProvider==='edge')){
+ const isElevenPreview=preview&&(preview.startsWith('elevenlabs:'));
+ if(!preview&&(state.config.ttsProvider==='openai'||state.config.ttsProvider==='edge'||state.config.ttsProvider==='elevenlabs')){
   const r=await fetch('/api/speech-prepare',{method:'POST',signal,headers:{'Content-Type':'application/json','x-app-token':token},body:JSON.stringify({text})});
   if(!r.ok)throw Error((await r.json()).error);const prepared=await r.json();
   const cancel=()=>api('speech-cancel',{ticket:prepared.url.split('/').at(-1)}).catch(()=>{});
@@ -109,7 +130,7 @@ async function loadSpeech(text,preview,signal){
   const audio=await fetch(prepared.url,{signal});if(!audio.ok)throw Error('Не удалось получить аудио: HTTP '+audio.status);
   const blob=await audio.blob();if(!blob.size)throw Error('Сервис вернул пустое аудио');return blob;
  }
- const voiceParam=isEdgePreview?{preview:'edge',voice:preview}:isOpenAIPreview?{preview:'openai',voice:preview.replace(/^openai:/,''),ttsModel:$('settingsForm')?.elements?.ttsModel?.value||'tts-1'}:preview?{preview:'silero',speaker:preview}:{};
+ const voiceParam=isEdgePreview?{preview:'edge',voice:preview}:isOpenAIPreview?{preview:'openai',voice:preview.replace(/^openai:/,''),ttsModel:$('settingsForm')?.elements?.ttsModel?.value||'tts-1'}:isElevenPreview?{preview:'elevenlabs',voice:preview.replace(/^elevenlabs:/,''),elevenModel:$('settingsForm')?.elements?.elevenModel?.value||'eleven_flash_v2_5'}:preview?{preview:'silero',speaker:preview}:{};
  const r=await fetch('/api/speech',{method:'POST',signal,headers:{'Content-Type':'application/json','x-app-token':token},body:JSON.stringify({text,...voiceParam})});
  if(!r.ok)throw Error((await r.json()).error);return r.blob();
 }
@@ -118,11 +139,12 @@ async function speak(text,preview=null,delivery=null){
  const prepared=delivery?speechPrefetch.take(delivery.key):null;
  const isEdgePreview=preview&&(preview.startsWith('ru-RU-')||preview==='edge');
  const isOpenAIPreview=preview&&(preview.startsWith('openai:')||['onyx','fable','echo','alloy','nova','shimmer'].includes(preview));
- stopVoice();const version=speechVersion,provider=isEdgePreview?'edge':isOpenAIPreview?'openai':preview?'silero':state.config.ttsProvider;if(provider==='off')return true;
+ const isElevenPreview=preview&&(preview.startsWith('elevenlabs:'));
+ stopVoice();const version=speechVersion,provider=isEdgePreview?'edge':isOpenAIPreview?'openai':isElevenPreview?'elevenlabs':preview?'silero':state.config.ttsProvider;if(provider==='off')return true;
  voiceActive=true;ambientEngine.setDucked(true);renderListening();
  const completed=new Promise(resolve=>{speechDone=resolve;});
  try{
-  if(provider==='openai'||provider==='silero'||provider==='edge'){
+  if(provider==='openai'||provider==='silero'||provider==='edge'||provider==='elevenlabs'){
    activeSpeechRequest=prepared?.controller||new AbortController();
    let blob;if(prepared){const result=await prepared.promise;if(!result.ok)throw result.error;blob=result.value;}else blob=await loadSpeech(text,preview,activeSpeechRequest.signal);
    if(version!==speechVersion)return false;
@@ -133,6 +155,7 @@ async function speak(text,preview=null,delivery=null){
    if(preview){
     if(isEdgePreview)$('edgeStatus').textContent='Воспроизводится выбранный голос Edge.';
     else if(isOpenAIPreview)$('openaiStatus').textContent='Воспроизводится выбранный голос OpenAI.';
+    else if(isElevenPreview)$('elevenlabsStatus').textContent='Воспроизводится выбранный голос ElevenLabs.';
     else $('sileroStatus').textContent='Воспроизводится выбранный голос Silero.';
    }
   }else if(window.webkit?.messageHandlers?.nativeVoice){window.webkit.messageHandlers.nativeVoice.postMessage({text,speechId:version});}
@@ -152,6 +175,9 @@ async function cancelDelivery(){
 }
 function haltNarration(){deliveryRun++;stopVoice();return cancelDelivery();}
 async function playDelivery(){
+ if(deliveryPlaying)return;
+ deliveryPlaying=true;
+ try {
  if(voiceLatency)voiceLatency.speechStarted=performance.now();
  const run=++deliveryRun,campaignId=activeId;
  while(run===deliveryRun&&activeId===campaignId&&current()?.delivery){
@@ -163,12 +189,13 @@ async function playDelivery(){
   try{const next=await api('delivery',{id:campaignId,deliveryId:d.id,index:d.index,action:'ack'});if(run!==deliveryRun)return;state=next;render();$('journal').lastElementChild?.scrollIntoView({block:'end'});}
   catch(e){toast(e.message);await haltNarration();return;}
  }
+ }finally{deliveryPlaying=false;}
 }
 async function turn(data,{keepDraft=false}={}){
  if(busy)return;
  await haltNarration();const voiceAtStart=speechVersion;setBusy(true);let shouldPlay=false;
  try{
-  const turnStarted=performance.now();state=await api('turn',{id:activeId,characterId:selectedId,interrupted:interruptionActive,rollId:current()?.pending?.id,voiceDelivery:!liveDelegating&&!liveVoice.active&&$('autoVoice').checked&&state.config.ttsProvider!=='off',...data});
+  const turnStarted=performance.now();const sendingInterrupted=interruptionActive;interruptionActive=false;state=await api('turn',{id:activeId,characterId:selectedId,interrupted:sendingInterrupted,rollId:current()?.pending?.id,voiceDelivery:!liveDelegating&&!liveVoice.active&&$('autoVoice').checked&&state.config.ttsProvider!=='off',...data});
   if(voiceLatency)voiceLatency.turnMs=performance.now()-turnStarted;
   const interruptedDuringReply=speechVersion!==voiceAtStart;interruptionActive=interruptedDuringReply;if(!keepDraft)$('message').value='';render();$('mic').focus({preventScroll:true});
   if(current()?.delivery){if(interruptedDuringReply)await cancelDelivery();else shouldPlay=true;}
@@ -218,8 +245,8 @@ async function loadOpenAIModels(force=false){
 function renderOpenAIModelOptions(models){
  const sel=$('openaiModelSelect'),f=$('settingsForm');
  if(!sel||!f)return;
- const currentVal=f.elements.model?.value||'gpt-6-luna';
- const recommended=['gpt-6-luna','gpt-4o','gpt-4o-mini','o3','o3-mini','o1','o1-mini','gpt-5-preview','gpt-5.4-mini'];
+ const currentVal=f.elements.model?.value||'gpt-6.1-terra';
+ const recommended=['gpt-6.1-terra','gpt-6-luna','gpt-6.1-sol','gpt-4o','gpt-4o-mini','o3','o3-mini','o1','o1-mini','gpt-5-preview','gpt-5.4-mini'];
  const recSet=new Set(recommended);
  const recAvailable=[],otherAvailable=[];
  for(const id of models){
@@ -281,10 +308,10 @@ function voiceControls(){
  let sharedGroq=false;try{sharedGroq=text==='compatible'&&new URL(f.elements.baseUrl.value).hostname==='api.groq.com';}catch{}
  const show=(name,used)=>{const field=f.elements[name];field.disabled=!used;field.closest('label').hidden=!used;};
  show('serviceTier',text==='openai');show('liveModel',live);$('liveNote').hidden=!live;show('imageModel',f.elements.imageProvider.value==='openai');show('imageQuality',f.elements.imageProvider.value==='openai');show('sttProvider',!live);show('sttModel',!live);show('ttsProvider',!live);
- show('model',text!=='demo');show('baseUrl',text==='compatible');show('reasoningEffort',text==='openai'&&/^gpt-6(?:[.-]|$)/.test(f.elements.model.value));$('openaiCacheNote').hidden=text!=='openai';
+ show('model',text!=='demo');show('baseUrl',text==='compatible');show('reasoningEffort',text==='openai'&&/^gpt-6(?:[.-]|$)/.test(f.elements.model.value));show('sessionZeroBoost',text==='openai'&&/^gpt-6(?:[.-]|$)/.test(f.elements.model.value));$('openaiCacheNote').hidden=text!=='openai';
  updateModelFieldVisibility();
- for(const name of ['openai','gemini','compatible','groq']){
-  const used=({openai:text==='openai'||stt==='openai'||tts==='openai',gemini:text==='gemini'||stt==='gemini',compatible:text==='compatible'&&!sharedGroq||f.elements.reserveProvider.value==='openrouter',groq:sharedGroq||stt==='groq'})[name];
+ for(const name of ['openai','gemini','compatible','groq','elevenlabs']){
+  const used=({openai:text==='openai'||stt==='openai'||tts==='openai',gemini:text==='gemini'||stt==='gemini',compatible:text==='compatible'&&!sharedGroq||f.elements.reserveProvider.value==='openrouter',groq:sharedGroq||stt==='groq',elevenlabs:tts==='elevenlabs'})[name];
   const section=$('keyPools').querySelector(`[data-pool="${name}"]`);
   if(section){section.hidden=name==='compatible'&&sharedGroq&&f.elements.reserveProvider.value!=='openrouter';section.querySelector('.pool-use').textContent=used?'Используется сейчас':'Сейчас не используется';}
  }
@@ -296,10 +323,16 @@ function voiceControls(){
  $('openaiControls').hidden=live||tts!=='openai';if(f.elements.voice)f.elements.voice.disabled=tts!=='openai';if(f.elements.ttsModel)f.elements.ttsModel.disabled=tts!=='openai';
  $('sileroStatus').textContent=state.localVoice?.installed?'Silero установлен. Озвучивание на вашем компьютере, без API-ключа.':'Silero пока не установлен: нужна папка LocalVoice рядом с приложением.';
  $('edgeControls').hidden=live||tts!=='edge';if(f.elements.edgeVoice)f.elements.edgeVoice.disabled=tts!=='edge';
- const names={demo:'Учебный режим',openai:'OpenAI',gemini:'Gemini',compatible:sharedGroq?'Groq':'Совместимый API',groq:'Groq Whisper',silero:'Silero локально',edge:'Edge Neural онлайн',system:'Системный голос',off:'Без озвучивания'};
+ $('elevenlabsControls').hidden=live||tts!=='elevenlabs';
+ if(f.elements.elevenVoice)f.elements.elevenVoice.disabled=tts!=='elevenlabs';
+ if(f.elements.elevenModel)f.elements.elevenModel.disabled=tts!=='elevenlabs';
+ const customVoice=f.elements.elevenVoice?.value==='__custom__';
+ if($('elevenCustomVoiceLabel'))$('elevenCustomVoiceLabel').hidden=!customVoice||tts!=='elevenlabs';
+ if(f.elements.elevenCustomVoice)f.elements.elevenCustomVoice.disabled=!customVoice||tts!=='elevenlabs';
+ const names={demo:'Учебный режим',openai:'OpenAI',gemini:'Gemini',compatible:sharedGroq?'Groq':'Совместимый API',groq:'Groq Whisper',silero:'Silero локально',edge:'Edge Neural онлайн',elevenlabs:'ElevenLabs Flash',system:'Системный голос',off:'Без озвучивания'};
  $('connectionSummary').textContent='Ведущий: '+names[text]+(live?' · Голосовой канал: OpenAI Live':' · Распознавание: '+names[stt]+' · Голос: '+names[tts]);
 }
-const poolNames={groq:'Groq',openai:'OpenAI',gemini:'Gemini',compatible:'Совместимый API'};
+const poolNames={groq:'Groq',openai:'OpenAI',gemini:'Gemini',compatible:'Совместимый API',elevenlabs:'ElevenLabs'};
 function poolRow(row={},index=0){
  const saved=!!row.saved;
  let status=saved?(state.keyStorage?.persistent?'✓ Сохранён в Связке ключей macOS':'✓ Подключён в этом сеансе'):'Новый · ещё не сохранён';
@@ -334,13 +367,28 @@ $('keyPools').onclick=e=>{
  renumberPool(section);
 };
 $('keyPools').oninput=e=>{const row=e.target.closest('.key-row');if(row)row.querySelector('.key-save-state').textContent=e.target.value.trim()?'Изменён · сохранится после нажатия «Сохранить настройки»':row.dataset.saved==='true'?'✓ Сохранённый ключ остаётся без изменений':'Новый · ещё не сохранён';};
-$('settings').onclick=async()=>{stopListening();pauseReactionClock();try{state=await api('state');}catch{}const f=$('settingsForm');for(const[k,v]of Object.entries(state.config))if(f.elements[k])f.elements[k].value=v;if(f.elements.ttsModel&&(f.elements.ttsModel.value==='gpt-4o-mini-tts'||!f.elements.ttsModel.value))f.elements.ttsModel.value='tts-1';keyFields();if(f.elements.provider.value==='openai')loadOpenAIModels();$('settingsDialog').showModal();};
+$('settings').onclick=async()=>{stopListening();pauseReactionClock();try{state=await api('state');}catch{}const f=$('settingsForm');for(const[k,v]of Object.entries(state.config))if(f.elements[k])f.elements[k].value=v;if(f.elements.ttsModel&&(f.elements.ttsModel.value==='gpt-4o-mini-tts'||!f.elements.ttsModel.value))f.elements.ttsModel.value='tts-1';if(f.elements.elevenVoice){const match=[...f.elements.elevenVoice.options].find(o=>o.value===state.config.elevenVoice);if(match){f.elements.elevenVoice.value=match.value;if($('elevenCustomVoiceLabel'))$('elevenCustomVoiceLabel').hidden=true;}else if(state.config.elevenVoice){f.elements.elevenVoice.value='__custom__';if(f.elements.elevenCustomVoice)f.elements.elevenCustomVoice.value=state.config.elevenVoice;if($('elevenCustomVoiceLabel'))$('elevenCustomVoiceLabel').hidden=false;}}keyFields();if(f.elements.provider.value==='openai')loadOpenAIModels();$('settingsDialog').showModal();};
 $('settingsForm').elements.voicePipeline.onchange=voiceControls;
 $('settingsForm').elements.imageProvider.onchange=voiceControls;
 $('settingsForm').elements.ttsProvider.onchange=e=>{const f=$('settingsForm');if(e.target.value==='openai'&&(!f.elements.ttsModel.value||f.elements.ttsModel.value==='gpt-4o-mini-tts'))f.elements.ttsModel.value='tts-1';voiceControls();};
 $('testSilero').onclick=async()=>{$('testSilero').disabled=true;$('sileroStatus').textContent='Готовим голос… Первая загрузка может занять несколько секунд.';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.sileroSpeaker.value);}finally{$('testSilero').disabled=false;}};
 $('testEdge').onclick=async()=>{$('testEdge').disabled=true;$('edgeStatus').textContent='Связываемся с нейросетью Edge…';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?',$('settingsForm').elements.edgeVoice.value);$('edgeStatus').textContent='Озвучено нейросетью Edge. Без ключей и оплаты.';}catch(err){$('edgeStatus').textContent='Ошибка Edge TTS: '+err.message;}finally{$('testEdge').disabled=false;}};
 $('testOpenAI').onclick=async()=>{$('testOpenAI').disabled=true;$('openaiStatus').textContent='Связываемся с OpenAI…';try{await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?','openai:'+$('settingsForm').elements.voice.value);$('openaiStatus').textContent='Озвучено выбранным голосом OpenAI ('+$('settingsForm').elements.voice.value+').';}catch(err){$('openaiStatus').textContent='Ошибка OpenAI TTS: '+err.message;}finally{$('testOpenAI').disabled=false;}};
+$('settingsForm').elements.elevenVoice?.addEventListener('change',voiceControls);
+$('testElevenLabs')?.addEventListener('click',async()=>{
+ $('testElevenLabs').disabled=true;
+ $('elevenlabsStatus').textContent='Связываемся с ElevenLabs…';
+ try{
+  const f=$('settingsForm');
+  const v=f.elements.elevenVoice.value==='__custom__'?f.elements.elevenCustomVoice.value.trim():f.elements.elevenVoice.value;
+  await speak('Закат ложится на старую башню. За дверью слышатся шаги. Теон, сделайте проверку восприятия: сложность 12. Бросьте d20. Что вы делаете?','elevenlabs:'+v);
+  $('elevenlabsStatus').textContent='Озвучено выбранным голосом ElevenLabs ('+v+').';
+ }catch(err){
+  $('elevenlabsStatus').textContent='Ошибка ElevenLabs: '+err.message;
+ }finally{
+  $('testElevenLabs').disabled=false;
+ }
+});
 $('testMultiVoice')?.addEventListener('click',async()=>{
  $('testMultiVoice').disabled=true;
  $('openaiStatus').textContent='Запуск демонстрации многоголосия (4 персонажа)…';
@@ -365,13 +413,13 @@ $('testMultiVoice')?.addEventListener('click',async()=>{
 });
 $('openaiModelSelect').onchange=()=>{const f=$('settingsForm'),sel=$('openaiModelSelect');if(sel.value==='__custom__'){f.elements.model.hidden=false;f.elements.model.required=true;f.elements.model.focus();}else{f.elements.model.hidden=true;f.elements.model.required=false;f.elements.model.value=sel.value;}voiceControls();};
 $('refreshOpenAIModels').onclick=()=>loadOpenAIModels(true);
-$('settingsForm').elements.provider.onchange=e=>{const f=$('settingsForm');const presets={openai:['gpt-6-luna','https://api.openai.com/v1'],gemini:['gemini-2.0-flash','https://generativelanguage.googleapis.com'],compatible:['','https://openrouter.ai/api/v1']};if(presets[e.target.value]){[f.elements.model.value,f.elements.baseUrl.value]=presets[e.target.value];}if(e.target.value==='openai'){f.elements.reasoningEffort.value='low';$('keyPools').querySelector('[data-pool="openai"]').open=true;loadOpenAIModels();}voiceControls();};
+$('settingsForm').elements.provider.onchange=e=>{const f=$('settingsForm');const presets={openai:['gpt-6.1-terra','https://api.openai.com/v1'],gemini:['gemini-2.0-flash','https://generativelanguage.googleapis.com'],compatible:['','https://openrouter.ai/api/v1']};if(presets[e.target.value]){[f.elements.model.value,f.elements.baseUrl.value]=presets[e.target.value];}if(e.target.value==='openai'){f.elements.reasoningEffort.value='low';$('keyPools').querySelector('[data-pool="openai"]').open=true;loadOpenAIModels();}voiceControls();};
 $('settingsForm').elements.sttProvider.onchange=e=>{$('settingsForm').elements.sttModel.value=({gemini:'gemini-2.0-flash',groq:'whisper-large-v3-turbo',openai:'gpt-4o-mini-transcribe'})[e.target.value];voiceControls();};
 $('settingsForm').elements.baseUrl.oninput=voiceControls;
 $('settingsForm').elements.model.oninput=()=>{const f=$('settingsForm'),sel=$('openaiModelSelect');if(f.elements.provider.value==='openai'&&sel){const match=[...sel.options].find(o=>o.value===f.elements.model.value);if(match)sel.value=match.value;else sel.value='__custom__';}voiceControls();};
 $('settingsForm').elements.reserveProvider.onchange=voiceControls;
 $('settingsForm').onsubmit=async e=>{
- e.preventDefault();const data=Object.fromEntries(new FormData(e.target));if(data.ttsModel==='gpt-4o-mini-tts'||!data.ttsModel)data.ttsModel='tts-1';data.keyPools={};
+ e.preventDefault();const data=Object.fromEntries(new FormData(e.target));if(data.ttsModel==='gpt-4o-mini-tts'||!data.ttsModel)data.ttsModel='tts-1';if(data.elevenVoice==='__custom__')data.elevenVoice=data.elevenCustomVoice?.trim()||'JBFqnCBsd6RMkjVDRZzb';data.keyPools={};
  for(const section of $('keyPools').querySelectorAll('[data-pool]')){
   if(section.hidden)continue;
   const rows=[...section.querySelectorAll('.key-row')];
@@ -853,7 +901,7 @@ document.addEventListener('change',event=>{
  row.querySelector('[data-resource="recovery"] option[value="manual"]').textContent=boundary==='none'?'Только вручную':'По событию, указанному ниже';
 });
 
-$('testVoice').onclick=async()=>{const button=$('testVoice');button.disabled=true;$('testVoiceStatus').textContent='Проверяем голос…';try{const f=$('settingsForm'),tts=f.elements.ttsProvider.value;if(tts==='off')throw Error('Выбран режим без озвучки. Сначала выберите голос.');let previewParam=null;if(tts==='edge')previewParam=f.elements.edgeVoice.value;else if(tts==='openai')previewParam='openai:'+f.elements.voice.value;else if(tts==='silero')previewParam=f.elements.sileroSpeaker.value;const ok=await speak('Проверка. Голос Сказителя работает.',previewParam);$('testVoiceStatus').textContent=ok?'✓ Аудио воспроизведено до конца':'Воспроизведение остановлено или завершилось с ошибкой';}catch(error){$('testVoiceStatus').textContent=error.message;}finally{button.disabled=false;}};
+$('testVoice').onclick=async()=>{const button=$('testVoice');button.disabled=true;$('testVoiceStatus').textContent='Проверяем голос…';try{const f=$('settingsForm'),tts=f.elements.ttsProvider.value;if(tts==='off')throw Error('Выбран режим без озвучки. Сначала выберите голос.');let previewParam=null;if(tts==='edge')previewParam=f.elements.edgeVoice.value;else if(tts==='openai')previewParam='openai:'+f.elements.voice.value;else if(tts==='silero')previewParam=f.elements.sileroSpeaker.value;else if(tts==='elevenlabs')previewParam='elevenlabs:'+(f.elements.elevenVoice.value==='__custom__'?f.elements.elevenCustomVoice.value.trim():f.elements.elevenVoice.value);const ok=await speak('Проверка. Голос Сказителя работает.',previewParam);$('testVoiceStatus').textContent=ok?'✓ Аудио воспроизведено до конца':'Воспроизведение остановлено или завершилось с ошибкой';}catch(error){$('testVoiceStatus').textContent=error.message;}finally{button.disabled=false;}};
 
 let tacticalHudOpen = false;
 let activeHudTab = 'map';
@@ -1592,6 +1640,16 @@ function connectMasterSSE() {
     } catch {}
   });
 
+  lanEventSource.addEventListener('player-turn-start', e => {
+    const data=JSON.parse(e.data);
+    if(data.campaignId!==activeId)return;
+    deliveryRun++;stopVoice();interruptionActive=false;
+    $('status').textContent='Мастер обрабатывает реплику с телефона…';
+  });
+  lanEventSource.addEventListener('player-turn', e => {
+    const data=JSON.parse(e.data);
+    if(data.campaignId===activeId){interruptionActive=false;refresh().catch(err=>toast(err.message));}
+  });
   lanEventSource.addEventListener('campaign', () => {
     refresh();
   });
@@ -2192,3 +2250,18 @@ initLanguageManager();
 
 
 
+
+// The native details control supplies keyboard activation; dismiss without
+// affecting microphone shortcuts or closing unrelated dialogs.
+const tableViewMenu = $('tableViewMenu');
+document.addEventListener('pointerdown', event => {
+ if (tableViewMenu?.open && !tableViewMenu.contains(event.target)) tableViewMenu.open = false;
+});
+document.addEventListener('keydown', event => {
+ if (event.key === 'Escape' && tableViewMenu?.open) {
+  tableViewMenu.open = false;
+  tableViewMenu.querySelector('summary')?.focus();
+ }
+});
+
+$('tableModelSettings').onclick = () => { tableViewMenu.open = false; $('settings').click(); };

@@ -115,7 +115,14 @@ async function loadInitialState() {
     if (selectedHeroId) query.set('heroId', selectedHeroId);
     const url = `/api/player/state` + (query.toString() ? `?${query.toString()}` : '');
     const res = await fetch(url, { headers });
-    if (!res.ok) throw new Error('Ошибка связи с сервером');
+    if (!res.ok) {
+      if (res.status === 403) {
+        setConnectionState('offline', 'ОБНОВИТЕ СТРАНИЦУ');
+        showToast('Сессия стола изменилась. Отсканируйте актуальный QR-код на компьютере');
+        return;
+      }
+      throw new Error('Ошибка связи с сервером');
+    }
     const data = await res.json();
     if (data.httpsPort) {
       checkHttpsPromo(data.httpsPort);
@@ -201,6 +208,20 @@ function connectSSE() {
   };
 }
 
+// Mobile lifecycle: reconnect immediately when phone wakes from sleep or tab becomes visible
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    refreshCampaignState();
+    if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
+      connectSSE();
+    }
+  }
+});
+window.addEventListener('online', () => {
+  connectSSE();
+  refreshCampaignState();
+});
+
 async function refreshCampaignState(targetCampaignId = null) {
   try {
     const idToFetch = targetCampaignId || selectedCampaignId;
@@ -209,12 +230,19 @@ async function refreshCampaignState(targetCampaignId = null) {
     if (selectedHeroId) query.set('heroId', selectedHeroId);
     const url = `/api/player/state` + (query.toString() ? `?${query.toString()}` : '');
     const res = await fetch(url, { headers });
-    if (!res.ok) return;
+    if (!res.ok) {
+      if (res.status === 403) {
+        setConnectionState('offline', 'ОБНОВИТЕ СТРАНИЦУ');
+        showToast('Сессия стола изменилась. Отсканируйте актуальный QR-код на компьютере');
+      }
+      return;
+    }
     const data = await res.json();
     if (data.httpsPort) {
       checkHttpsPromo(data.httpsPort);
     }
     if (data.campaign) {
+      const prevPendingId = campaign?.pending?.id;
       campaign = data.campaign;
       selectedCampaignId = campaign.id;
       localStorage.setItem('skazitel_player_campaign', selectedCampaignId);
@@ -225,6 +253,11 @@ async function refreshCampaignState(targetCampaignId = null) {
       renderInventory();
       renderMap();
       renderCombatBanner();
+
+      if (campaign?.pending && campaign.pending.id !== prevPendingId && campaign.pending.characterId === getActiveHero()?.id) {
+        showToast('🎲 Мастер ожидает ваш бросок d20!');
+        if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+      }
     }
   } catch {}
 }
@@ -304,6 +337,7 @@ function getClassIcon(hero) {
 function renderActiveHero() {
   const hero = getActiveHero();
   updatePttHero();
+  renderPendingRoll();
   if (!hero) return;
 
   // Name & Archetype
@@ -844,9 +878,18 @@ async function executeRoll(sides, modifier, title) {
 
   addRecentRoll(heroName, title, total, sides === 20 ? finalDie : '', modifier, isCrit, isFumble);
 
+  // If the Master is awaiting a d20 roll for this hero, resolve the pending roll!
+  if (sides === 20 && campaign?.pending && campaign.pending.characterId === hero.id) {
+    const p = campaign.pending;
+    const raw = !p.mode || p.mode === 'normal' ? finalDie : [d1, d2];
+    showToast(`🎲 Бросок ${finalDie} передан Мастеру!`);
+    await sendPttTextAction({ raw, rollId: p.id });
+    return;
+  }
+
   // Send Roll to Master Server
   try {
-    await fetch(`/api/player/roll`, {
+    const response = await fetch(`/api/player/roll`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -859,9 +902,10 @@ async function executeRoll(sides, modifier, title) {
         modifier
       })
     });
+    if(!response.ok)throw Error((await response.json()).error || 'Бросок не передан');
     showToast(`🎲 Бросок ${total} отправлен Мастеру!`);
-  } catch {
-    showToast(`Бросок совершен (${total})`);
+  } catch (error) {
+    showToast(error.message || 'Бросок не передан мастеру');
   }
 }
 
@@ -1456,7 +1500,7 @@ function initPttControls() {
     audioInput.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
       audioInput.value = '';
-      if (!file) return;
+      if (!file || pttBusy) return;
 
       const hero = getActiveHero();
       if (!hero) {
@@ -1464,7 +1508,7 @@ function initPttControls() {
         return;
       }
 
-      pttBusy = true;
+      setPttBusy(true);
       const pttBtn = document.getElementById('playerPttBtn');
       const pttIcon = document.getElementById('pttBtnIcon');
       const pttText = document.getElementById('pttBtnText');
@@ -1511,9 +1555,9 @@ function initPttControls() {
         if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
         await refreshCampaignState();
       } catch (err) {
-        showToast(err.message || 'Не удалось передать ход');
+        showPlayerSendError(err.message || 'Не удалось передать ход');
       } finally {
-        pttBusy = false;
+        setPttBusy(false);
         if (pttBtn) pttBtn.classList.remove('busy');
         if (pttIcon) pttIcon.textContent = '🎙️';
         updatePttHero();
@@ -1754,7 +1798,7 @@ async function stopPttRecording() {
     return;
   }
 
-  pttBusy = true;
+  setPttBusy(true);
   if (pttBtn) pttBtn.classList.add('busy');
   if (pttIcon) pttIcon.textContent = '⏳';
   if (pttText) pttText.textContent = 'Обработка Мастером...';
@@ -1786,25 +1830,26 @@ async function stopPttRecording() {
     if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
     await refreshCampaignState();
   } catch (e) {
-    showToast(e.message || 'Не удалось передать ход');
+    showPlayerSendError(e.message || 'Не удалось передать ход');
   } finally {
-    pttBusy = false;
+    setPttBusy(false);
     if (pttBtn) pttBtn.classList.remove('busy');
     if (pttIcon) pttIcon.textContent = '🎙️';
     updatePttHero();
   }
 }
 
-async function sendPttTextAction() {
+async function sendPttTextAction(rollSubmission = null) {
+  if (pttBusy || pttRecording || pttRecordHeld) return;
   const input = document.getElementById('pttTextInput');
-  const text = input?.value?.trim();
-  if (!text) return;
+  const text = rollSubmission ? '' : input?.value?.trim();
+  if (!text && !rollSubmission) return;
   const hero = getActiveHero();
   if (!hero) {
     showToast('Сначала выберите героя');
     return;
   }
-  pttBusy = true;
+  setPttBusy(true);
   const pttBtn = document.getElementById('playerPttBtn');
   if (pttBtn) pttBtn.classList.add('busy');
   showToast(isWhisperMode ? `Шепчем ход за ${hero.name}...` : `Отправляем ход за ${hero.name}...`);
@@ -1816,6 +1861,7 @@ async function sendPttTextAction() {
         campaignId: campaign?.id,
         characterId: hero.id,
         text,
+        ...(rollSubmission || {}),
         isWhisper: isWhisperMode
       })
     });
@@ -1824,14 +1870,72 @@ async function sendPttTextAction() {
       throw new Error(err.error || 'Ошибка отправки');
     }
     const data = await res.json();
-    input.value = '';
-    showToast(isWhisperMode ? `🤫 ${hero.name}: «${text}» шепнули Мастеру!` : `✨ ${hero.name}: «${text}» отправлено!`);
+    if(!rollSubmission && input.value.trim() === text)input.value = '';
+    showToast(rollSubmission ? 'Результат броска передан мастеру' : isWhisperMode ? `🤫 ${hero.name}: «${text}» шепнули Мастеру!` : `✨ ${hero.name}: «${text}» отправлено!`);
     await refreshCampaignState();
   } catch (e) {
-    showToast(e.message || 'Не удалось передать ход');
+    showPlayerSendError(e.message || 'Не удалось передать ход');
   } finally {
-    pttBusy = false;
+    setPttBusy(false);
     if (pttBtn) pttBtn.classList.remove('busy');
     updatePttHero();
   }
+}
+
+function setPttBusy(value) {
+ pttBusy=value;
+ if(value){const error=document.getElementById('playerSendError');if(error)error.hidden=true;}
+ for(const id of ['pttSendTextBtn','playerPttBtn','playerSubmitRoll','heroSelect','campaignSelect']){
+  const el=document.getElementById(id);if(el)el.disabled=value;
+ }
+ const bar=document.getElementById('playerPttBar');
+ bar?.setAttribute('aria-busy',String(value));
+}
+function renderPendingRoll(){
+ const panel=document.getElementById('playerPendingRoll'),p=campaign?.pending;
+ if(!panel)return;
+ panel.hidden=!p;if(!p)return;
+ const owner=campaign.characters.find(h=>h.id===p.characterId);
+ const isMyRoll=getActiveHero()?.id===p.characterId;
+ document.getElementById('playerRollTitle').textContent=isMyRoll
+  ? '🎲 Мастер ожидает ваш бросок d20'
+  : `🎲 Ожидается бросок: ${owner?.name || 'другой герой'}`;
+ document.getElementById('playerRollReason').textContent=[p.reason,p.stakes].filter(Boolean).join('. ');
+ const ownerEl=document.getElementById('playerRollOwner');
+ if(ownerEl){
+  ownerEl.innerHTML=isMyRoll
+   ? `Бросает: <strong>${escapeHtml(owner?.name||'')}</strong>`
+   : `Бросает: <button type="button" id="switchToPendingHeroBtn" style="color:var(--accent-gold,#d1aa5e);text-decoration:underline;background:none;border:none;cursor:pointer;font:inherit;padding:0;">Переключиться на ${escapeHtml(owner?.name||'героя')} ↗</button>`;
+  document.getElementById('switchToPendingHeroBtn')?.addEventListener('click',()=>{
+   selectedHeroId=p.characterId;
+   localStorage.setItem('skazitel_player_hero',selectedHeroId);
+   if(heroSelect)heroSelect.value=selectedHeroId;
+   renderActiveHero();
+  });
+ }
+ const virtualBtn=document.getElementById('playerRollVirtualBtn');
+ if(virtualBtn)virtualBtn.hidden=!isMyRoll;
+ const form=document.getElementById('playerRollForm');
+ form.hidden=!isMyRoll;
+ const second=document.getElementById('playerSecondDieLabel');
+ second.hidden=!p.mode||p.mode==='normal';
+ document.getElementById('playerRawDie2').required=!second.hidden;
+ if(form.dataset.roll!==p.id){form.reset();form.dataset.roll=p.id;}
+}
+document.getElementById('playerRollVirtualBtn')?.addEventListener('click',()=>{
+ const p=campaign?.pending;if(!p)return;
+ executeRoll(20,0,p.reason?`Бросок: ${p.reason}`:'Проверка d20');
+});
+document.getElementById('playerRollForm')?.addEventListener('submit',event=>{
+ event.preventDefault();
+ const p=campaign?.pending;if(!p)return;
+ const first=Number(document.getElementById('playerRawDie').value);
+ const raw=!p.mode||p.mode==='normal'?first:[first,Number(document.getElementById('playerRawDie2').value)];
+ sendPttTextAction({raw,rollId:p.id});
+});
+
+function showPlayerSendError(message){
+ const error=document.getElementById('playerSendError');
+ if(error){error.textContent='Не отправлено: '+message;error.hidden=false;}
+ showToast(message);
 }

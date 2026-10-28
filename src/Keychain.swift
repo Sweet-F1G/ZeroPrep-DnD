@@ -27,7 +27,7 @@ func handleCredentialCommand() -> Bool {
         let data = FileHandle.standardInput.readDataToEndOfFile()
         guard data.count <= 32768,
               let keys = try? JSONSerialization.jsonObject(with: data) as? [String: String],
-              keys.keys.allSatisfy({ ["openai", "gemini", "compatible", "groq"].contains($0) }) else { exit(1) }
+              keys.keys.allSatisfy({ ["openai", "gemini", "compatible", "groq", "elevenlabs"].contains($0) }) else { exit(1) }
         let status = SecItemUpdate(query as CFDictionary, [kSecValueData as String: data] as CFDictionary)
         if status == errSecItemNotFound {
             var item = query

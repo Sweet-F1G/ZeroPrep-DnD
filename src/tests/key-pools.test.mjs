@@ -4,7 +4,7 @@ import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {mergeKeys,keyPool,credentialStore} from '../credentials.mjs';
-import {completeJSON,transcribe,poolMetadata} from '../providers.mjs';
+import {completeJSON,transcribe,speech,poolMetadata} from '../providers.mjs';
 const config={provider:'compatible',baseUrl:'https://api.groq.com/openai/v1',model:'pool-test-model',sttProvider:'groq',sttModel:'pool-test-whisper'};
 const pool=(prefix,n=3)=>mergeKeys({}, {},false,{groq:Array.from({length:n},(_,i)=>({id:'new-'+i,key:prefix+i}))});
 const ok=()=>new Response('{"choices":[{"message":{"content":"{}"}}],"usage":{"prompt_tokens":3,"completion_tokens":4,"total_tokens":7}}');
@@ -54,4 +54,26 @@ test('expired cooldown returns to primary; OpenAI, Gemini and compatible API sup
  try{const keys=pool('expiry-fixture-');await completeJSON(config,keys,'test',{});time+=2100;await completeJSON(config,keys,'test',{});assert.equal(calls.at(-1),'Bearer expiry-fixture-0');
   for(const provider of ['openai','gemini','compatible']){const credentials=mergeKeys({}, {},false,{[provider]:[{id:'x',key:provider+'-fixture'}]});await completeJSON({...config,provider,baseUrl:'https://example.test/v1'},credentials,'test',{});assert.ok(calls.at(-1).endsWith(provider+'-fixture'));}
  }finally{globalThis.fetch=original;Date.now=now;}
+});
+test('ElevenLabs TTS pool switches to reserve key immediately when primary returns 429 or quota limit',async()=>{
+ const original=globalThis.fetch;
+ const keys=mergeKeys({},{},false,{elevenlabs:[
+  {id:'k1',key:'eleven-failover-0'},
+  {id:'k2',key:'eleven-failover-1'}
+ ]});
+ const calls=[];
+ globalThis.fetch=async(url,options)=>{
+  const auth=options.headers['xi-api-key'];
+  calls.push(auth);
+  if(auth==='eleven-failover-0')return new Response(JSON.stringify({detail:{status:'quota_exceeded',message:'Quota exceeded'}}),{status:429,headers:{'content-type':'application/json'}});
+  return new Response(Buffer.from('ELEVEN_AUDIO_BYTES'),{status:200,headers:{'content-type':'audio/mpeg'}});
+ };
+ try{
+  const ttsCfg={ttsProvider:'elevenlabs',elevenVoice:'JBFqnCBsd6RMkjVDRZzb',elevenModel:'eleven_flash_v2_5'};
+  const audio=await speech(ttsCfg,keys,'Привет, искатели приключений!');
+  assert.equal(audio.toString(),'ELEVEN_AUDIO_BYTES');
+  assert.deepEqual(calls,['eleven-failover-0','eleven-failover-1']);
+ }finally{
+  globalThis.fetch=original;
+ }
 });

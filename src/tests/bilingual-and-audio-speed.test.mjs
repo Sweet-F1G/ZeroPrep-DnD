@@ -50,8 +50,12 @@ test('defaults includes language and ttsSpeed settings', () => {
 });
 
 test('Windows launch scripts exist and are valid', () => {
-  const batPath = path.resolve('Start-Windows.bat');
-  const ps1Path = path.resolve('Start-Windows.ps1');
+  const batPath = fs.existsSync(path.resolve('Start-Windows.bat'))
+    ? path.resolve('Start-Windows.bat')
+    : path.resolve('..', 'Start-Windows.bat');
+  const ps1Path = fs.existsSync(path.resolve('Start-Windows.ps1'))
+    ? path.resolve('Start-Windows.ps1')
+    : path.resolve('..', 'Start-Windows.ps1');
   assert.ok(fs.existsSync(batPath), 'Start-Windows.bat must exist');
   assert.ok(fs.existsSync(ps1Path), 'Start-Windows.ps1 must exist');
 

@@ -49,10 +49,17 @@ export function continuousTurnPlan(text,campaign,selectedId){
 
 // Spoken raw result is an explicit player submission, never a random number in a sentence.
 export function spokenRoll(text,mode='normal'){
- const t=text.toLowerCase().replace(/ё/g,'е').trim().replace(/[.!?]+$/,'').replace(/^(?:мастер|сказитель)[, ]+/u,'').replace(/^(?:на кубиках|на кубике|на грани|выпало|результат броска)\s*[:—-]?\s*/u,'');
+ const t=text.toLowerCase().replace(/ё/g,'е').trim().replace(/[.!?]+$/,'').replace(/^(?:мастер|сказитель)[, ]+/u,'').replace(/^(?:на кубиках|на кубике|на грани|выпало|результат броска|я выбросил|мой бросок|кубик|бросок|у меня|на d20|d20|roll is|rolled)\s*[:—-]?\s*/iu,'');
  const words=['один','два','три','четыре','пять','шесть','семь','восемь','девять','десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать','шестнадцать','семнадцать','восемнадцать','девятнадцать','двадцать'];
- const parts=t.split(/\s+и\s+|\s*[,;]\s*/u);if(parts.length!==(mode==='normal'||!mode?1:2))return null;
- const values=parts.map(part=>/^\d+$/.test(part)?Number(part):words.indexOf(part)+1);if(values.some(n=>n<1||n>20))return null;return parts.length===1?values[0]:values;
+ const enWords=['one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
+ const parts=t.split(/\s+и\s+|\s+and\s+|\s*[,;]\s*/iu);if(parts.length!==(mode==='normal'||!mode?1:2))return null;
+ const parseVal=part=>{
+  if(/^\d+$/.test(part))return Number(part);
+  const ruIdx=words.indexOf(part);if(ruIdx!==-1)return ruIdx+1;
+  const enIdx=enWords.indexOf(part);if(enIdx!==-1)return enIdx+1;
+  return null;
+ };
+ const values=parts.map(parseVal);if(values.some(n=>!n||n<1||n>20))return null;return parts.length===1?values[0]:values;
 }
 export function spokenApproval(text){
  const t=text.toLowerCase().replace(/ё/g,'е').trim().replace(/[.!?]+$/,'');

@@ -4,7 +4,7 @@
 // https://developers.openai.com/api/docs/pricing
 export const pricingDate='2026-10-18';
 const valid=n=>typeof n==='number'&&Number.isFinite(n)&&n>=0;
-const openaiText={'gpt-6-astra':[10,50,1],'gpt-6.1-sol':[2,10,.1],'gpt-6-luna':[.1,.5,.01],'gpt-4o':[2.5,10,1.25],'gpt-4o-mini':[.15,.6,.075]};
+const openaiText={'gpt-6-astra':[10,50,1],'gpt-6.1-terra':[1,5,.05],'gpt-6.1-sol':[2,10,.1],'gpt-6-luna':[.1,.5,.01],'gpt-4o':[2.5,10,1.25],'gpt-4o-mini':[.15,.6,.075]};
 export function estimateCost(event,usage){
  const provider=event.provider,model=event.model,data=event.data||{};
  const reported=data.usage?.cost;

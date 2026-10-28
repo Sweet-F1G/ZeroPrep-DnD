@@ -32,7 +32,10 @@ export function campaignContext(c){
  const query=c.journal.slice(-4).map(e=>e.text).join('\n')||c.dm?.location||c.setting||'';
  const {characters:hintCharacters,...hints}=availableHints(c);
  const dm=pick(c.dm,['autonomy','hints','strict','location','dateLabel','weather','session','scene']);
- dm.world=(c.dm?.world||[]).map(w=>pick(w,['id','kind','name','description','state','location','attitude','stage','deadlineMinutes','links','visibility']));
+ const worldEntries=c.dm?.world||[];
+ const nonClues=worldEntries.filter(w=>w.kind!=='clue');
+ const recentClues=worldEntries.filter(w=>w.kind==='clue').slice(-6);
+ dm.world=[...nonClues,...recentClues].map(w=>pick(w,['id','kind','name','description','state','location','attitude','stage','deadlineMinutes','links','visibility']));
  dm.boundaries=(c.dm?.boundaries||[]).map(b=>pick(b,['key','kind']));
  const memory=memoryContext(c,query);
  memory.obligations=memory.obligations.map(n=>pick(n,['id','kind','title','text','status','sourceId','actorId','target','deadlineMinutes']));
@@ -43,13 +46,14 @@ export function campaignContext(c){
   wallet:c.wallet||{group:0},loot:(c.loot||[]).filter(l=>!l.claimed),actionProposals:c.actionProposals||[],profile:c.profile||null,
   summary:valid?c.summary.text:null,
   characters:c.characters.map(h=>heroContext(h,c,query)),
-  pending:c.pending,proposals:c.proposals,reaction:c.reaction||null,rolls:(c.rolls||[]).slice(-12),
+  pending:c.pending,proposals:c.proposals,reaction:c.reaction||null,
+  rolls:(c.rolls||[]).slice(-8).map(r=>pick(r,['character','title','rollType','ability','difficulty','total','natural','outcome','reason'])),
   journal:c.journal.slice(count).map(e=>pick(e,['id','role','text','tacticalHints']))
  };
 }
 export function summaryPlan(c,manual=false){
  const start=summaryValid(c)?c.summary.count:0,end=Math.max(0,c.journal.length-12);
- if(end<=start||(!manual&&JSON.stringify(c.journal.slice(start)).length<6000))return null;
+ if(end<=start||(!manual&&JSON.stringify(c.journal.slice(start)).length<16000))return null;
  let count=start,chars=0;while(count<end&&chars<22000){chars+=JSON.stringify(c.journal[count]).length;count++;}
  return {previous:summaryValid(c)?c.summary.text:'',events:c.journal.slice(start,count),count,fingerprint:hash(c.journal.slice(0,count))};
 }

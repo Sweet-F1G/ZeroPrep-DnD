@@ -73,7 +73,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKUIDelegate, WKNaviga
             environment["SKAZITEL_DATA"] = data.path
             environment["SKAZITEL_VOICE_DIR"] = (installed ? resources : appFolder).appendingPathComponent("LocalVoice").path
             environment["PORT"] = "0"
-            environment["SKAZITEL_KEYCHAIN_HELPER"] = Bundle.main.executableURL?.path
+            let keyStoreBinary = resources.appendingPathComponent("KeyStore.app/Contents/MacOS/Skazitel").path
+            if FileManager.default.fileExists(atPath: keyStoreBinary) {
+                environment["SKAZITEL_KEYCHAIN_HELPER"] = keyStoreBinary
+            } else {
+                environment["SKAZITEL_KEYCHAIN_HELPER"] = Bundle.main.executableURL?.path
+            }
             // Node does not inherit the macOS system proxy unless explicitly configured.
             // Reuse the user's existing HTTP(S) proxy and keep all local app traffic direct.
             if let proxies = CFNetworkCopySystemProxySettings()?.takeRetainedValue() as? [String: Any] {

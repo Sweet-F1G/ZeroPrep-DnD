@@ -7,7 +7,7 @@ TASK_APP="$TASK_STAGE/Skazitel.app"
 TASK_CACHE="${SKAZITEL_BUILD_CACHE:-/private/tmp/skazitel-swift-cache}"
 mkdir -p "$TASK_APP/Contents/MacOS" "$TASK_APP/Contents/Resources/src" "$TASK_CACHE"
 cat "$TASK_SRC/Keychain.swift" "$TASK_SRC/MacApp.swift" > "$TASK_STAGE/main.swift"
-swiftc -O -module-cache-path "$TASK_CACHE" "$TASK_STAGE/main.swift" -o "$TASK_APP/Contents/MacOS/Skazitel" -framework Cocoa -framework WebKit -framework AVFoundation -framework CFNetwork -framework Security
+swiftc -O -target arm64-apple-macos14.0 -module-cache-path "$TASK_CACHE" "$TASK_STAGE/main.swift" -o "$TASK_APP/Contents/MacOS/Skazitel" -framework Cocoa -framework WebKit -framework AVFoundation -framework CFNetwork -framework Security
 NODE_BIN="${SKAZITEL_NODE:-$(command -v node 2>/dev/null || echo "$TASK_OUT/Skazitel.app/Contents/Resources/node")}"
 cp -X "$NODE_BIN" "$TASK_APP/Contents/Resources/node"
 install_name_tool -add_rpath /opt/homebrew/lib "$TASK_APP/Contents/Resources/node" 2>/dev/null || true
@@ -18,8 +18,8 @@ done
 cp -RX "$TASK_SRC/public" "$TASK_APP/Contents/Resources/src/"
 cp -RX "$TASK_SRC/seed" "$TASK_APP/Contents/Resources/src/"
 cp -X "$TASK_SRC/assets/Skazitel.icns" "$TASK_APP/Contents/Resources/Skazitel.icns"
-# Keep the credential reader's signed identity stable when UI/resources change.
-if [[ -d "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app" ]]; then
+# Keep the credential reader's signed identity stable unless Keychain.swift changes.
+if [[ -d "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app" && "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app/Contents/MacOS/Skazitel" -nt "$TASK_SRC/Keychain.swift" ]]; then
   ditto --norsrc --noextattr "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app" "$TASK_APP/Contents/Resources/KeyStore.app"
 else
   TASK_KEYSTORE="$TASK_APP/Contents/Resources/KeyStore.app"
@@ -28,7 +28,7 @@ else
   echo 'if !handleCredentialCommand() { exit(1) }' >> "$TASK_STAGE/key-store-main.swift"
   mkdir -p "$TASK_STAGE/key-store-build"
   cp -X "$TASK_STAGE/key-store-main.swift" "$TASK_STAGE/key-store-build/main.swift"
-  swiftc -O -module-cache-path "$TASK_CACHE" "$TASK_STAGE/key-store-build/main.swift" -o "$TASK_KEYSTORE/Contents/MacOS/Skazitel" -framework Security
+  swiftc -O -target arm64-apple-macos14.0 -module-cache-path "$TASK_CACHE" "$TASK_STAGE/key-store-build/main.swift" -o "$TASK_KEYSTORE/Contents/MacOS/Skazitel" -framework Security
   cat > "$TASK_KEYSTORE/Contents/Info.plist" <<'KEYSTORE'
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>CFBundleExecutable</key><string>Skazitel</string><key>CFBundleIdentifier</key><string>local.skazitel.key-store</string><key>CFBundleName</key><string>Сказитель — ключи</string><key>CFBundlePackageType</key><string>APPL</string><key>LSUIElement</key><true/></dict></plist>
 KEYSTORE
@@ -43,8 +43,8 @@ cat > "$TASK_APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Сказитель</string>
 <key>CFBundleDisplayName</key><string>Сказитель</string>
 <key>CFBundleIconFile</key><string>Skazitel.icns</string>
-<key>CFBundleVersion</key><string>20</string>
-<key>CFBundleShortVersionString</key><string>0.9.0</string>
+<key>CFBundleVersion</key><string>22</string>
+<key>CFBundleShortVersionString</key><string>0.9.2</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSMicrophoneUsageDescription</key><string>Распознавать игровые реплики: по кнопке или при включённом постоянном прослушивании.</string>

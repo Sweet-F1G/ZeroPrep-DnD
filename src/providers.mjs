@@ -9,11 +9,11 @@ import {wavSeconds} from './cost.mjs';
 import {cachedCampaignContext,openAIInput,CACHE_CONTEXT_SYSTEM} from './openai-context.mjs';
 import {edgeSpeech,edgeSpeechChunks} from './edge-voice.mjs';
 import {cleanNarrationForTTS, resolveOpenAiVoice, resolveEdgeVoice} from './delivery.mjs';
-export const defaults={provider:'demo',model:'gpt-6-luna',baseUrl:'https://api.openai.com/v1',sttProvider:'openai',sttModel:'gpt-4o-mini-transcribe',ttsProvider:'system',ttsModel:'tts-1',voice:'alloy',edgeVoice:'ru-RU-DmitryNeural',sileroSpeaker:'eugene',voiceSendMode:'review',listeningMode:'ptt',bargeInMode:'any',autoSummary:'on',reserveProvider:'off',activeCampaignId:'',groqBilling:'free',reasoningEffort:'medium',voicePipeline:'cascade',liveModel:'gpt-live-1',imageProvider:'openai',imageModel:'gpt-image-2',imageQuality:'low',summaryModel:'',serviceTier:'default',language:'ru',ttsSpeed:1.07};
+export const defaults={provider:'demo',model:'gpt-6-luna',baseUrl:'https://api.openai.com/v1',sttProvider:'openai',sttModel:'gpt-4o-mini-transcribe',ttsProvider:'system',ttsModel:'tts-1',voice:'alloy',edgeVoice:'ru-RU-DmitryNeural',sileroSpeaker:'eugene',elevenVoice:'JBFqnCBsd6RMkjVDRZzb',elevenModel:'eleven_flash_v2_5',voiceSendMode:'review',listeningMode:'ptt',bargeInMode:'any',autoSummary:'on',reserveProvider:'off',activeCampaignId:'',groqBilling:'free',reasoningEffort:'medium',sessionZeroBoost:'on',voicePipeline:'cascade',liveModel:'gpt-live-1',imageProvider:'openai',imageModel:'gpt-image-2',imageQuality:'low',summaryModel:'gpt-6-luna',serviceTier:'default',language:'ru',ttsSpeed:1.07};
 export function providerError(status,body,contentType='',secrets=[]) {
  let message='',code='';
  try {const d=JSON.parse(body),e=d.error??d;message=typeof e==='string'?e:typeof e.message==='string'?e.message:'';code=typeof e.code==='string'?e.code:typeof e.type==='string'?e.type:'';}catch{if(!/<(?:!doctype|html|body|script)\b/i.test(body)&&!contentType.includes('text/html'))message=body;}
- const clean=s=>{for(const secret of secrets.filter(Boolean))s=s.split(secret).join('[ключ скрыт]');return s.replace(/\b(?:gsk_|sk-)[A-Za-z0-9_-]+/g,'[ключ скрыт]').replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,700);};
+ const clean=s=>{for(const secret of secrets.filter(Boolean))s=s.split(secret).join('[ключ скрыт]');return s.replace(/\b(?:gsk_|sk-|sk_)[A-Za-z0-9_-]+/g,'[ключ скрыт]').replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,700);};
  message=clean(message);code=clean(code).slice(0,100);
  const hint=status===401?'Провайдер отклонил авторизацию: проверьте действительность ключа.':status===403?'Провайдер запретил запрос. Возможны ограничения ключа, проекта, модели или сетевого доступа.':status===429?'Превышен лимит запросов или токенов.':status===413?'Размер одного запроса превышает лимит провайдера. Ожидание и ключ с тем же лимитом не уменьшат запрос.':'Проверьте модель и формат API.';
  return `API вернул HTTP ${status}${code?' ['+code+']':''}. ${message?'Ответ провайдера: '+message+' ':contentType.includes('text/html')?'Получена HTML-страница вместо JSON API; возможна блокировка на сетевом шлюзе. ':''}${hint}`;
@@ -23,10 +23,10 @@ async function remote(url,options,onFailure) {
  const started=performance.now();
  let r;try {r=await fetch(url,{...options,signal:options.signal?AbortSignal.any([options.signal,AbortSignal.timeout(90000)]):AbortSignal.timeout(90000),redirect:'error'});} catch {await onFailure?.({status:0,headers:new Headers()},{});throw Object.assign(Error('Не удалось связаться с API: проверьте интернет и адрес провайдера. Тайм-аут — 90 секунд.'),{status:0});}
  requestTimings.set(r,{started,headersMs:performance.now()-started});
- if(!r.ok) {await onFailure?.(r,{});const headers=new Headers(options.headers);const secrets=[headers.get('Authorization')?.replace(/^Bearer\s+/i,''),headers.get('x-goog-api-key')];throw Object.assign(Error(providerError(r.status,await r.text(),r.headers.get('content-type')||'',secrets)),{status:r.status,retryAfter:r.headers.get('retry-after')});} return r;
+ if(!r.ok) {await onFailure?.(r,{});const headers=new Headers(options.headers);const secrets=[headers.get('Authorization')?.replace(/^Bearer\s+/i,''),headers.get('x-goog-api-key'),headers.get('xi-api-key')];throw Object.assign(Error(providerError(r.status,await r.text(),r.headers.get('content-type')||'',secrets)),{status:r.status,retryAfter:r.headers.get('retry-after')});} return r;
 }
 function geminiText(d) { const parts=d.candidates?.[0]?.content?.parts||[];const text=parts.filter(x=>!x.thought).map(x=>x.text||'').join('');if(!text)throw Error('Gemini не вернул текст: проверьте доступность модели или ограничения ответа.');return text; }
-function key(keys,k) {const rows=keyPool(keys,k);if(!rows.length)throw Error(`Добавьте API-ключ ${k==='gemini'?'Gemini':k==='openai'?'OpenAI':k==='groq'?'Groq':'модели'} в настройках.`);return rows[0].key;}
+function key(keys,k) {const rows=keyPool(keys,k);if(!rows.length)throw Error(`Добавьте API-ключ ${k==='gemini'?'Gemini':k==='openai'?'OpenAI':k==='groq'?'Groq':k==='elevenlabs'?'ElevenLabs':'модели'} в настройках.`);return rows[0].key;}
 export function usesGroqKey(config){try{return config.provider==='compatible'&&new URL(config.baseUrl).hostname==='api.groq.com';}catch{return false;}}
 const keyHealth=new Map();
 const secretID=secret=>createHash('sha256').update(secret).digest('hex');
@@ -40,18 +40,24 @@ async function pooledRemote(config,keys,name,url,options,log,{optional=false}={}
  const rows=effectivePool(keys,name,usesGroqKey(config));
  if(!rows.length){if(optional)return remote(url,options,log);key({},name);}
  // Text and speech have different quotas; a speech limit must not disable narration.
- const scope=url+':'+(options.body instanceof FormData?options.body.get('model'):JSON.parse(options.body||'{}').model||'');
+ let modelScope='';
+ if(options.body instanceof FormData)modelScope=options.body.get('model')||'';
+ else if(typeof options.body==='string'){try{const b=JSON.parse(options.body);modelScope=b.model||b.model_id||'';}catch{}}
+ const scope=url+':'+modelScope;
  let lastError,attempts=0;
  for(const row of rows){
   const id=secretID(row.key)+':'+scope,health=keyHealth.get(id);
   if(health?.until>Date.now())continue;
   attempts++;
-  const headers={...options.headers};if(name==='gemini')headers['x-goog-api-key']=row.key;else headers.Authorization='Bearer '+row.key;
+  const headers={...options.headers};
+  if(name==='gemini')headers['x-goog-api-key']=row.key;
+  else if(name==='elevenlabs')headers['xi-api-key']=row.key;
+  else headers.Authorization='Bearer '+row.key;
   try{const response=await remote(url,{...options,headers},log);keyHealth.set(id,{at:Date.now(),okAt:Date.now(),status:response.status,until:0});return response;}
   catch(error){
    if(![0,401,402,403,408,429].includes(error.status)&&!(error.status>=500&&error.status<=599))throw error;
    const retry=Number(error.retryAfter),date=Date.parse(error.retryAfter||'');
-   const fallback=[401,403].includes(error.status)?300:error.status===429?60:15;
+   const fallback=[401,402,403].includes(error.status)?300:error.status===429?60:15;
    const wait=error.retryAfter&&Number.isFinite(retry)?Math.max(1,retry):Number.isFinite(date)?Math.max(1,(date-Date.now())/1000):fallback;
    keyHealth.set(id,{at:Date.now(),status:error.status,until:Date.now()+wait*1000});lastError=error;
   }
@@ -63,7 +69,7 @@ async function pooledRemote(config,keys,name,url,options,log,{optional=false}={}
 function telemetry(config,kind,model,observe,extra={}){
  let provider=config.provider;
  if(kind==='stt')provider=config.sttProvider;
- if(kind==='tts')provider='openai';
+ if(kind==='tts')provider=config.ttsProvider==='elevenlabs'?'elevenlabs':'openai';
  if(provider==='compatible'){try{provider=new URL(config.baseUrl).hostname;}catch{provider='compatible';}}
  if(config.provider==='openai'&&!['stt','tts'].includes(kind)){try{if(new URL(config.baseUrl).hostname!=='api.openai.com')provider=new URL(config.baseUrl).hostname;}catch{provider='unknown';}}
  return async(r,data)=>{const timing=requestTimings.get(r);return observe?.({provider,model,kind,status:r.status,limits:limitHeaders(r.headers),data,groqBilling:config.groqBilling||'free',...extra,...(provider==='openai'?{serviceTier:data.service_tier||config.serviceTier||'default'}:{}),...(timing?{elapsedMs:Math.round(performance.now()-timing.started),headersMs:Math.round(timing.headersMs)}:{})});};
@@ -75,6 +81,7 @@ async function primaryJSON(config,keys,system,input,observe,kind='narration',onN
  if(config.provider==='openai'){
   const explicit=/^gpt-6(?:[.-]|$)/.test(config.model);
   const request={model:config.model,store:false,...(config.serviceTier==='fast'?{service_tier:'fast'}:{}),...(onNarration?{stream:true}:{}),input:openAIInput(system,input,{explicit}),text:{format:{type:'json_object'}},
+   max_output_tokens:kind==='summary'?1200:(explicit&&config.reasoningEffort==='high'?3500:1500),
    ...(explicit?{reasoning:{effort:config.reasoningEffort||'medium'},prompt_cache_options:{mode:'explicit',ttl:'30m'}}:{})};
   const r=await pooledRemote(config,keys,'openai','https://api.openai.com/v1/responses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)},log);
   const data=onNarration?await readResponseStream(r,log,onNarration,onFirstSentence):await readJSON(r,log);
@@ -116,15 +123,23 @@ export async function completeJSON(config,keys,system,input,observe,kind='narrat
 }
 export async function generate(config,keys,c,observe,onNarration,onFirstSentence){
  const isEn = (c?.language === 'en') || (config?.language === 'en');
- const system=buildSystem(c,config)+'\n\n'+(isEn?fullControlSystemEn:fullControlSystem)+(config.provider==='openai'?'\n\n'+CACHE_CONTEXT_SYSTEM:''),context=config.provider==='openai'?cachedCampaignContext(c):campaignContext(c);let reply=await completeJSON(config,keys,system,context,observe,'narration',onNarration,onFirstSentence);
+ const isSessionZero = Boolean(c?.sessionZero && !c.sessionZero.complete);
+ const boostActive = isSessionZero && config.sessionZeroBoost !== 'off';
+ const boostedEffort = boostActive ? (['xhigh','max'].includes(config.reasoningEffort) ? config.reasoningEffort : 'high') : (config.reasoningEffort || 'medium');
+ const activeConfig = boostActive ? {...config, reasoningEffort: boostedEffort} : config;
+ const system=buildSystem(c,activeConfig)+'\n\n'+(isEn?fullControlSystemEn:fullControlSystem)+(activeConfig.provider==='openai'?'\n\n'+CACHE_CONTEXT_SYSTEM:''),context=activeConfig.provider==='openai'?cachedCampaignContext(c):campaignContext(c);
+ let reply=await completeJSON(activeConfig,keys,system,context,observe,'narration',onNarration,onFirstSentence);
  if(typeof reply.recall_query==='string'&&reply.recall_query.trim()){
-  const query=reply.recall_query.slice(0,300),recall={query,events:searchArchive(c,query,10),...(config.provider==='openai'?{sourceAlreadyInReference:true}:{source:sourcePassages(c.source,query,16000)})};
-  reply=await completeJSON(config,keys,system,{...context,recall},observe,'recall');
+  const query=reply.recall_query.slice(0,300),recall={query,events:searchArchive(c,query,10),...(activeConfig.provider==='openai'?{sourceAlreadyInReference:true}:{source:sourcePassages(c.source,query,16000)})};
+  reply=await completeJSON(activeConfig,keys,system,{...context,recall},observe,'recall');
   if(reply.recall_query)throw Error('Мастер не нашёл достаточно сведений в архиве. Уточните вопрос или добавьте факт в память.');
  }
  return reply;
 }
-export const summarize=(config,keys,plan,observe)=>completeJSON(config.summaryModel?{...config,provider:'openai',model:config.summaryModel}:config,keys,(config?.language==='en'?SUMMARY_SYSTEM_EN:SUMMARY_SYSTEM),{previous:plan.previous,events:plan.events},observe,'summary');
+export const summarize=(config,keys,plan,observe)=>{
+ const useDedicatedSummary=config.summaryModel&&(config.provider==='openai'||keyPool(keys,'openai').length>0);
+ return completeJSON(useDedicatedSummary?{...config,provider:'openai',model:config.summaryModel}:config,keys,(config?.language==='en'?SUMMARY_SYSTEM_EN:SUMMARY_SYSTEM),{previous:plan.previous,events:plan.events},observe,'summary');
+};
 
 
 export const MAP_GENERATOR_SYSTEM = `Ты тактический картограф настольной D&D 5e / 2024.
@@ -391,6 +406,17 @@ export async function transcribe(config,keys,audio,mime,names=[],observe) {
 export async function speech(config,keys,text,observe) {
  const cleanText=cleanNarrationForTTS(text);
  if(config.ttsProvider==='edge')return edgeSpeech(cleanText,config.forceVoice?(config.edgeVoice||config.voice||'ru-RU-DmitryNeural'):resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',text));
+ if(config.ttsProvider==='elevenlabs'){
+  const voiceId=config.elevenVoice||'JBFqnCBsd6RMkjVDRZzb';
+  const modelId=config.elevenModel||'eleven_flash_v2_5';
+  const log=telemetry(config,'tts',modelId,observe);
+  const r=await pooledRemote(config,keys,'elevenlabs',`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`,{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({text:cleanText.slice(0,4000),model_id:modelId,voice_settings:{stability:0.5,similarity_boost:0.8}})
+  },log);
+  try{return Buffer.from(await r.arrayBuffer());}finally{await log(r,{});}
+ }
  const ttsModel=(config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel;
  const log=telemetry(config,'tts',ttsModel,observe);
  const voice=config.forceVoice?(config.voice||'onyx'):resolveOpenAiVoice(config.voice,text);
@@ -416,6 +442,19 @@ export async function* speechChunks(config,keys,text,observe,signal){
  const cleanText=cleanNarrationForTTS(text);
  if(config.ttsProvider==='edge'){
   yield* edgeSpeechChunks(cleanText,config.forceVoice?(config.edgeVoice||config.voice||'ru-RU-DmitryNeural'):resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',text),signal);
+  return;
+ }
+ if(config.ttsProvider==='elevenlabs'){
+  const voiceId=config.elevenVoice||'JBFqnCBsd6RMkjVDRZzb';
+  const modelId=config.elevenModel||'eleven_flash_v2_5';
+  const log=telemetry(config,'tts',modelId,observe);
+  const r=await pooledRemote(config,keys,'elevenlabs',`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream?output_format=mp3_44100_128`,{
+   method:'POST',
+   signal,
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({text:cleanText.slice(0,4000),model_id:modelId,voice_settings:{stability:0.5,similarity_boost:0.8}})
+  },log);
+  try{for await(const chunk of r.body)yield chunk;}finally{await log(r,{});}
   return;
  }
  const ttsModel=(config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel;

@@ -200,7 +200,10 @@ export function cleanNarrationForTTS(text){
  s = s
   .replace(/^[«"“]?\[(?:speaker:)?([^\]]+)\][:\s—-]*/gmi,'')
   .replace(/^[«"“]?([А-ЯЁ][А-ЯЁа-яёA-Za-z0-9 _-]+)\s*:\s*[—-]*/gmi,'')
-  .replace(/^([А-ЯЁ][А-ЯЁа-яёA-Za-z0-9 _-]+)\s*—\s*/gmi,'')
+  // An ordinary em dash is not a speaker delimiter: keep both "Князь —
+  // красавец" and "На одной лапе — колечко". Only strip the legacy
+  // Name — «quoted dialogue» format, also recognized by extractSpeaker.
+  .replace(/^([А-ЯЁ][А-ЯЁа-яёA-Za-z0-9 _-]+)\s*—\s*(?=[«"“])/gmi,'')
   .replace(/^[\s*•-]+\s+/gm,'')
   .replace(/^[«"“]\s*/,'')
   .replace(/\s*[»"”]$/,'')

@@ -1,3 +1,4 @@
+import {spokenRoll} from './public/voice-input.mjs';
 import {AudioStreams} from './audio-stream.mjs';
 import {gameMap} from './maps.mjs';
 import {buildPortraitPrompt} from './public/portrait-prompt.mjs';
@@ -46,10 +47,14 @@ let config={...defaults},keys={},campaigns=[];const busy=new Set();
 const keysReady=(async()=>{try{keys=await keyStore.load();}catch(e){keyStorageError=e.message;}finally{keysLoading=false;}})();
 console.log('SKAZITEL_BOOT=keys-requested');
 const voiceStatus=await localVoiceStatus(),edgeStatus=await edgeVoiceStatus();
+console.log('SKAZITEL_BOOT=voice-status-ready');
 try { config={...defaults,...JSON.parse(await fs.readFile(path.join(dataDir,'settings.json'),'utf8'))}; }catch(e){if(e.code!=='ENOENT')throw Error('Повреждён settings.json. Сохраните копию и восстановите файл.');}
 if(config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel) config.ttsModel='tts-1';
 console.log('SKAZITEL_BOOT=settings-ready');
-const campaignStore=await createCampaignStore(dataDir);console.log('SKAZITEL_BOOT=database-ready');campaigns=campaignStore.load();
+const campaignStore=await createCampaignStore(dataDir);
+console.log('SKAZITEL_BOOT=database-ready');
+campaigns=campaignStore.load();
+console.log('SKAZITEL_BOOT=campaigns-loaded');
 function normalizeCampaign(c){c.edition??='legacy';c.schemaVersion=5;c.dm=dmState(c.dm);c.clockMinutes??=0;c.memory??=[];c.inventory??=[];c.wallet??={group:0};c.loot??=[];c.actionProposals??=[];c.receipts??=[];c.images??=[];c.maps??=[];c.characters=c.characters.map(h=>({...character(h),id:h.id}));return c;}
 for(const c of campaigns)normalizeCampaign(c);
 let commitQueue=Promise.resolve();
@@ -69,6 +74,8 @@ async function body(req){let size=0,chunks=[];for await(const chunk of req){size
 const audioStreams=new AudioStreams((text,signal)=>speechChunks({...config},{...keys},text,observe,signal));
 const audioScope=(text='')=>config.ttsProvider==='edge'
  ?('edge|'+resolveEdgeVoice(config.edgeVoice||config.voice||'ru-RU-DmitryNeural',text))
+ :config.ttsProvider==='elevenlabs'
+ ?('elevenlabs|'+(config.elevenVoice||'JBFqnCBsd6RMkjVDRZzb'))
  :(((config.ttsModel==='gpt-4o-mini-tts'||!config.ttsModel)?'tts-1':config.ttsModel)+'|'+resolveOpenAiVoice(config.voice,text));
 let voiceLatencies=[];try{voiceLatencies=JSON.parse(await fs.readFile(path.join(dataDir,'voice-latency.json'),'utf8'));}catch{}
 function getOrCreateTlsCert(targetDir){
@@ -103,9 +110,15 @@ const serverHandler=async(req,res)=>{
   const activePorts=[httpPort,httpsPort].filter(Boolean);
   const lanIps=['127.0.0.1','localhost',...getLanIps()];
   const validHosts=[];
-  for(const p of activePorts){for(const ip of lanIps){validHosts.push(`${ip}:${p}`);}}
-  if(!validHosts.includes(req.headers.host))return json(res,{error:'Недопустимый Host'},403);
-  if(req.headers.origin&&!validHosts.some(h=>req.headers.origin===`http://${h}`||req.headers.origin===`https://${h}`))return json(res,{error:'Другой источник запрещён'},403);
+  for(const p of activePorts){for(const ip of lanIps){validHosts.push(`${ip}:${p}`);validHosts.push(ip);}}
+  const hostVal=(req.headers.host||'').toLowerCase();
+  const hostIp=hostVal.split(':')[0];
+  if(!validHosts.includes(hostVal)&&!validHosts.includes(hostIp)&&!hostIp.endsWith('.local')&&!/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.|198\.1[89]\.|169\.254\.)/.test(hostIp))return json(res,{error:'Недопустимый Host'},403);
+  if(req.headers.origin){
+   const originHost=req.headers.origin.replace(/^https?:\/\//i,'').toLowerCase();
+   const originIp=originHost.split(':')[0];
+   if(!validHosts.includes(originHost)&&!validHosts.includes(originIp)&&!originIp.endsWith('.local')&&!/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.|198\.1[89]\.|169\.254\.)/.test(originIp))return json(res,{error:'Другой источник запрещён'},403);
+  }
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
   res.setHeader('Content-Security-Policy',"default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
   const isHttps=!!(req.socket.encrypted||req.connection?.encrypted);
@@ -172,7 +185,21 @@ const serverHandler=async(req,res)=>{
     const port=server.address().port;
     const httpsPort=httpsServer?.address()?.port||null;
     const ips=getLanIps(),primaryIp=ips[0]||'127.0.0.1';
-    return json(res,{port,httpsPort,ips,primaryIp,playerToken,playerUrl:`http://${primaryIp}:${port}/player`,playerHttpsUrl:httpsPort?`https://${primaryIp}:${httpsPort}/player`:null,clientsCount:sseClients.size});
+    let bonjourHost=null;
+    try{bonjourHost=os.hostname();}catch{}
+    if(bonjourHost&&!bonjourHost.includes('.'))bonjourHost+='.local';
+    return json(res,{
+     port,
+     httpsPort,
+     ips,
+     primaryIp,
+     bonjourHost,
+     playerToken,
+     playerUrl:`http://${primaryIp}:${port}/player`,
+     playerHttpsUrl:httpsPort?`https://${primaryIp}:${httpsPort}/player`:null,
+     bonjourUrl:bonjourHost?`http://${bonjourHost}:${port}/player`:null,
+     clientsCount:sseClients.size
+    });
    }
    if(req.method==='GET'&&url.pathname==='/api/events'){
     const auth=req.headers['x-app-token']||req.headers['x-player-token']||url.searchParams.get('token');
@@ -203,7 +230,7 @@ const serverHandler=async(req,res)=>{
      activeCampaignId:config.activeCampaignId||c.id,
      httpsPort,
      campaign:{
-      id:c.id,name:c.name,setting:c.setting,characters:c.characters,inventory:c.inventory||[],wallet:c.wallet||{group:0},loot:c.loot||[],maps:c.maps||[],journal:journalSlice,initiative:c.initiative||null,encounter:c.encounter||null,images:(c.images||[]).filter(i=>i.status==='ready')
+      id:c.id,name:c.name,setting:c.setting,characters:c.characters,inventory:c.inventory||[],wallet:c.wallet||{group:0},loot:c.loot||[],maps:c.maps||[],journal:journalSlice,initiative:c.initiative||null,encounter:c.encounter||null,pending:c.pending||null,images:(c.images||[]).filter(i=>i.status==='ready')
      },
      campaigns:campaigns.map(x=>({id:x.id,name:x.name,heroesCount:x.characters?.length||0}))
     });
@@ -462,8 +489,12 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const original=b.campaignId?campaigns.find(x=>x.id===b.campaignId):(campaigns.find(x=>x.id===config.activeCampaignId)||campaigns[0]);
+    if(!original)throw Error('Кампания не найдена. Обновите страницу компаньона');
+    if(busy.has(original.id))return json(res,{error:'Мастер обрабатывает другой ход. Дождитесь ответа и повторите отправку'},409);
+    busy.add(original.id);
+    try {
+    const c=structuredClone(original);
     let text=String(b.text||'').trim();
     if(b.audio){
      await keysReady;
@@ -478,7 +509,7 @@ const serverHandler=async(req,res)=>{
      else if(mime.startsWith('audio/')||mime.startsWith('video/')) mime='audio/mp4';
      else throw Error('Неподдерживаемый аудиоформат: '+mime);
      const names=c.characters.map(x=>x.name);
-     costSensitive=true;costRequests++;
+     costRequests++;
      try{
       text=(await transcribe(config,keys,audioBuf,mime,names,observe)).trim();
      }finally{
@@ -489,38 +520,51 @@ const serverHandler=async(req,res)=>{
     if(url.pathname==='/api/player/transcribe'){
      return json(res,{ok:true,text});
     }
-    if(!text)throw Error('Опишите действие героя');
+    if(!text&&b.raw===undefined)throw Error('Опишите действие героя');
+    if(text.length>6000)throw Error('Слишком длинное действие');
     const hero=c.characters.find(h=>h.id===b.characterId);
     if(!hero)throw Error('Персонаж не найден');
     interruptDelivery(c);
     if(c.proposals?.length)throw Error('Сначала подтвердите или отклоните изменения HP');
-    if(c.pending)throw Error('Сначала завершите ожидаемый бросок d20 на вкладке «Кубики»');
+    let raw=b.raw;
+    if(c.pending){
+     if(c.pending.characterId!==hero.id)throw Error('Сейчас ожидается бросок другого героя');
+     if(b.rollId&&b.rollId!==c.pending.id)throw Error('Этот бросок уже завершён. Обновите страницу');
+     if(raw===undefined)raw=spokenRoll(text,c.pending.mode);
+     if(raw===null||raw===undefined)throw Error('Мастер ждёт физический d20: скажите «на кубике 14» или введите результат в панели броска');
+    }else if(raw!==undefined)throw Error('Сейчас мастер не ожидает бросок');
     checkpoint(c);
+    const roll=c.pending?resolveRoll(c,raw):null;
+    if(roll)c.journal.push({id:randomUUID(),role:'system',text:'VERIFIED_ROLL '+JSON.stringify(roll),at:new Date().toISOString()});
+    if(roll&&!text)text='Результат физического броска: '+(Array.isArray(raw)?raw.join(', '):raw);
     const isWhisper=b.isWhisper===true;
     const whisperPrefix=isWhisper?'🤫 [ШЁПОТ] ':'';
     const event={id:randomUUID(),role:'user',text:`${whisperPrefix}${hero.name}: ${text}`,isWhisper,characterId:hero.id,characterName:hero.name,at:new Date().toISOString()};
     c.journal.push(event);
-    let localReply=localCommand(c,text,hero.id,event.id);
+    broadcast('player-turn-start',{campaignId:c.id,characterId:hero.id});
+    let localReply=roll?null:localCommand(c,text,hero.id,event.id);
     if(!localReply&&/^(?:я\s+)?(?:обещаю|клянусь)(?:\s|$)/iu.test(playerSpeech(c,text,hero.id))){
      remember(c,{kind:'promise',text:playerSpeech(c,text,hero.id),actorId:hero.id},event.id);
     }
     if(config.provider!=='demo')await keysReady;
     const prepareFirst=t=>{const first=narrationParts(t)[0];if(first)audioStreams.prepare(first,audioScope(first));};
-    const speechCallback=(config.ttsProvider==='openai'||config.ttsProvider==='edge')?prepareFirst:undefined;
-    costSensitive=true;costRequests++;
+    const voiceDelivery=config.ttsProvider!=='off'&&!isWhisper;
+    const speechCallback=voiceDelivery&&(config.ttsProvider==='openai'||config.ttsProvider==='edge'||config.ttsProvider==='elevenlabs')?prepareFirst:undefined;
+    costRequests++;
     let reply;
     try{
-     reply=localReply?{narration:localReply,changes:[]}:config.provider==='demo'?demoReply(c,b,null):await generate({...config},{...keys},c,observe,speechCallback,speechCallback);
+     reply=localReply?{narration:localReply,changes:[]}:config.provider==='demo'?demoReply(c,{...b,text},roll):await generate({...config},{...keys},c,observe,speechCallback,speechCallback);
      if(isWhisper&&reply?.narration){
       reply.narration=`🤫 [Шёпотом для ${hero.name}]: `+reply.narration;
      }
     }finally{
      costRequests--;
     }
-    stageReply(c,reply);
+    if(voiceDelivery)stageReply(c,reply);else acceptReply(c,reply);
     const latest=campaigns.find(x=>x.id===c.id);
     if(latest?.summary&&(!c.summary||latest.summary.count>c.summary.count)&&summaryValid({...c,summary:latest.summary}))c.summary=latest.summary;
     await commitCampaign(c);
+    broadcast('player-turn',{campaignId:c.id,characterId:hero.id});
     if(config.autoSummary==='on'&&config.provider!=='demo'&&!summaryBusy.has(c.id)){
      const plan=summaryPlan(c);
      if(plan){
@@ -530,6 +574,7 @@ const serverHandler=async(req,res)=>{
      }
     }
     return json(res,{ok:true,characterId:hero.id,characterName:hero.name,text,narration:reply.narration});
+    }finally{busy.delete(original.id);}
    }
    if(req.headers['x-app-token']!==token)return json(res,{error:'Нужна локальная сессия приложения'},403);
   if(req.method==='GET'&&url.pathname==='/api/state')return json(res,state());
@@ -561,14 +606,16 @@ const serverHandler=async(req,res)=>{
     const data=await r.json();
     const exclude=/(whisper|tts|transcribe|embedding|moderation|dall-e|babbage|davinci|realtime|audio|clip)/i;
     const prio=m=>{
-     if(m.startsWith('gpt-6-luna'))return 1;
-     if(m==='gpt-4o')return 2;
-     if(m==='gpt-4o-mini')return 3;
-     if(m.startsWith('o3'))return 4;
-     if(m.startsWith('o1'))return 5;
-     if(m.startsWith('gpt-5'))return 6;
-     if(m.startsWith('gpt-4.1'))return 7;
-     if(m.startsWith('gpt-4'))return 8;
+     if(m.startsWith('gpt-6.1-terra'))return 1;
+     if(m.startsWith('gpt-6-luna'))return 2;
+     if(m.startsWith('gpt-6.1-sol'))return 3;
+     if(m==='gpt-4o')return 4;
+     if(m==='gpt-4o-mini')return 5;
+     if(m.startsWith('o3'))return 6;
+     if(m.startsWith('o1'))return 7;
+     if(m.startsWith('gpt-5'))return 8;
+     if(m.startsWith('gpt-4.1'))return 9;
+     if(m.startsWith('gpt-4'))return 10;
      return 20;
     };
     const models=(data.data||[])
@@ -599,8 +646,8 @@ const serverHandler=async(req,res)=>{
   }
   if(url.pathname==='/api/speech-cancel'){const job=audioStreams.jobs.get(b.ticket);if(job)audioStreams.discard(job);return json(res,{ok:true});}
   if(url.pathname==='/api/speech-prepare'){
-   if(config.ttsProvider!=='openai'&&config.ttsProvider!=='edge')throw Error('Потоковый голос доступен для OpenAI и Edge TTS');
-   if(config.ttsProvider==='openai')await keysReady;
+   if(config.ttsProvider!=='openai'&&config.ttsProvider!=='edge'&&config.ttsProvider!=='elevenlabs')throw Error('Потоковый голос доступен для OpenAI, Edge и ElevenLabs TTS');
+   if(config.ttsProvider==='openai'||config.ttsProvider==='elevenlabs')await keysReady;
    const text=String(b.text||'');if(!text.trim()||text.length>4000)throw Error('Некорректный текст озвучки');
    return json(res,{url:'/api/audio/'+audioStreams.prepare(text,audioScope(text))});
   }
@@ -613,11 +660,12 @@ const serverHandler=async(req,res)=>{
    if(next.ttsProvider==='openai'&&(next.ttsModel==='gpt-4o-mini-tts'||!next.ttsModel))next.ttsModel='tts-1';
    if(!['default','fast'].includes(next.serviceTier))throw Error('Неизвестный режим скорости OpenAI');
    if(!['cascade','live'].includes(next.voicePipeline)||!['openai','horde'].includes(next.imageProvider)||!['low','medium','high'].includes(next.imageQuality))throw Error('Неизвестный режим голоса или изображений');
-   if(next.summaryModel&&!['gpt-4.1-mini','gpt-5.4-mini'].includes(next.summaryModel))throw Error('Неизвестная модель сводок');
+   if(next.summaryModel&&!['gpt-6-luna','gpt-4.1-mini','gpt-5.4-mini'].includes(next.summaryModel))throw Error('Неизвестная модель сводок');
    if(!['low','medium','high','xhigh','max'].includes(next.reasoningEffort))throw Error('Неизвестный уровень рассуждений');
+   if(next.sessionZeroBoost&&!['on','off'].includes(next.sessionZeroBoost))throw Error('Неизвестный режим умного буста');
    if(!['free','paid'].includes(next.groqBilling))throw Error('Неизвестный тариф Groq');
    if(!['demo','openai','gemini','compatible'].includes(next.provider))throw Error('Неизвестный провайдер');
-   if(!['system','openai','silero','edge','off'].includes(next.ttsProvider)||!['openai','gemini','groq'].includes(next.sttProvider))throw Error('Неизвестный голосовой провайдер');
+   if(!['system','openai','silero','edge','elevenlabs','off'].includes(next.ttsProvider)||!['openai','gemini','groq'].includes(next.sttProvider))throw Error('Неизвестный голосовой провайдер');
    if(next.edgeVoice&&!edgeVoices.some(v=>v.id===next.edgeVoice))throw Error('Неизвестный голос Edge TTS');
    if(!['review','direct'].includes(next.voiceSendMode))throw Error('Неизвестный режим отправки голоса');
    if(!['ptt','continuous'].includes(next.listeningMode)||!['any','addressed'].includes(next.bargeInMode)||!['on','off'].includes(next.autoSummary))throw Error('Неизвестный режим прослушивания или сводки');
@@ -729,7 +777,15 @@ const serverHandler=async(req,res)=>{
     const audio=await speech(ttsCfg,keys,String(b.text||''),observe);
     res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store'});return res.end(audio);
    }
-   throw Error('Выберите Edge, Silero или OpenAI для серверного озвучивания.');
+   if(config.ttsProvider==='elevenlabs'||b.preview==='elevenlabs'){
+    await keysReady;
+    const ttsCfg={...config,ttsProvider:'elevenlabs'};
+    if(b.preview==='elevenlabs'&&b.voice)ttsCfg.elevenVoice=b.voice;
+    if(b.preview==='elevenlabs'&&b.elevenModel)ttsCfg.elevenModel=b.elevenModel;
+    const audio=await speech(ttsCfg,keys,String(b.text||''),observe);
+    res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store'});return res.end(audio);
+   }
+   throw Error('Выберите Edge, Silero, ElevenLabs или OpenAI для серверного озвучивания.');
   }
   if(url.pathname==='/api/live-start'){
    if(config.voicePipeline!=='live')throw Error('Выберите режим Live в настройках');
@@ -837,7 +893,7 @@ updateReactionClock(c,b);}
     if(c.pending&&b.raw===undefined)throw Error('Сначала внесите ожидаемый бросок d20');
     checkpoint(c);let roll=null,localReply=null;
     if(b.raw!==undefined){roll=resolveRoll(c,b.raw);c.journal.push({id:randomUUID(),role:'system',text:'VERIFIED_ROLL '+JSON.stringify(roll),at:new Date().toISOString()});}
-    else {const text=String(b.text||'').trim();if(!text)throw Error('Опишите действие');if(text.length>6000)throw Error('Слишком длинное действие');const hero=c.characters.find(x=>x.id===b.characterId);const speaker=hero?.name||(c.sessionZero&&!c.sessionZero.complete?'Игроки':null);if(!speaker)throw Error('Выберите действующего персонажа');const event={id:randomUUID(),role:'user',text:`${speaker}${b.interrupted?' (ПЕРЕБИВАЕТ МАСТЕРА)':''}: ${text}`,at:new Date().toISOString()};c.journal.push(event);
+    else {const text=String(b.text||'').trim();if(!text)throw Error('Опишите действие');if(text.length>6000)throw Error('Слишком длинное действие');const hero=c.characters.find(x=>x.id===b.characterId);const speaker=hero?.name||(c.sessionZero&&!c.sessionZero.complete?'Игроки':null);if(!speaker)throw Error('Выберите действующего персонажа');const isInterrupted=Boolean(b.interrupted&&c.reaction&&!b.passReaction);const event={id:randomUUID(),role:'user',text:`${speaker}${isInterrupted?' (ПЕРЕБИВАЕТ МАСТЕРА)':''}: ${text}`,at:new Date().toISOString()};c.journal.push(event);
      if(hero){
       localReply=localCommand(c,text,hero.id,event.id);
       if(!localReply&&/^(?:я\s+)?(?:обещаю|клянусь)(?:\s|$)/iu.test(playerSpeech(c,text,hero.id)))remember(c,{kind:'promise',text:playerSpeech(c,text,hero.id),actorId:hero.id},event.id);
@@ -845,7 +901,7 @@ updateReactionClock(c,b);}
     }
     if(config.provider!=='demo')await keysReady;
     const prepareFirst=text=>{const first=narrationParts(text)[0];if(first)audioStreams.prepare(first,audioScope(first));};
-    const speechCallback=b.voiceDelivery&&(config.ttsProvider==='openai'||config.ttsProvider==='edge')?prepareFirst:undefined;
+    const speechCallback=b.voiceDelivery&&(config.ttsProvider==='openai'||config.ttsProvider==='edge'||config.ttsProvider==='elevenlabs')?prepareFirst:undefined;
     const reply=localReply?{narration:localReply,changes:[]}:config.provider==='demo'?demoReply(c,b,roll):await generate({...config},{...keys},c,observe,speechCallback,speechCallback);if(b.voiceDelivery)stageReply(c,reply);else acceptReply(c,reply);
    } else return json(res,{error:'Неизвестный маршрут'},404);
    if(url.pathname==='/api/turn'){const latest=campaigns.find(x=>x.id===c.id);if(latest?.summary&&(!c.summary||latest.summary.count>c.summary.count)&&summaryValid({...c,summary:latest.summary}))c.summary=latest.summary;}
