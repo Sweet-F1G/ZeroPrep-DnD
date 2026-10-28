@@ -1582,6 +1582,10 @@ $('ambientAutoSync')?.addEventListener('change', e => {
  }
 });
 
+$('ambientShuffle')?.addEventListener('change', e => {
+ ambientEngine.setShuffle(e.target.checked);
+});
+
 document.querySelectorAll('.ambient-theme-opt').forEach(btn => {
  btn.addEventListener('click', () => {
   const theme = btn.dataset.ambient;
@@ -1591,6 +1595,9 @@ document.querySelectorAll('.ambient-theme-opt').forEach(btn => {
  });
 });
 
+if ($('ambientShuffle')) {
+ $('ambientShuffle').checked = ambientEngine.shuffle;
+}
 if ($('ambientVolume')) {
  $('ambientVolume').value = ambientEngine.volume;
  if ($('ambientVolVal')) $('ambientVolVal').textContent = Math.round(ambientEngine.volume * 100) + '%';

@@ -1,60 +1,86 @@
 // Ambient Soundscape Engine for Skazitel
 // Uses Apple Silicon hardware-accelerated AAC (M4A) audio tracks for 100% stability,
 // minimal CPU/memory footprint, seamless playback, and zero leaks in macOS WebKit.
+import { playSfx } from '/sfx.mjs';
 
 export const THEME_TRACKS = {
  camp: [
   { id: 'campfire_stories', title: 'Истории у костра', author: 'Veloren · CC-BY-SA', src: '/audio/camp/campfire_stories.m4a' },
   { id: 'warmth_of_the_hearth', title: 'Тепло очага', author: 'Veloren · CC-BY-SA', src: '/audio/camp/warmth_of_the_hearth.m4a' },
-  { id: 'a_peaceful_moment', title: 'Минута покоя', author: 'Veloren · CC-BY-SA', src: '/audio/camp/a_peaceful_moment.m4a' }
+  { id: 'a_peaceful_moment', title: 'Минута покоя', author: 'Veloren · CC-BY-SA', src: '/audio/camp/a_peaceful_moment.m4a' },
+  { id: 'wanderer', title: 'Странник', author: 'Wesnoth · CC-BY-SA', src: '/audio/camp/wanderer.m4a' },
+  { id: 'revelation', title: 'Откровение у костра', author: 'Wesnoth · CC-BY-SA', src: '/audio/camp/revelation.m4a' },
+  { id: 'loyalists', title: 'Верные присяге', author: 'Wesnoth · CC-BY-SA', src: '/audio/camp/loyalists.m4a' }
  ],
  tavern: [
   { id: 'fill_the_mugs', title: 'Наполняйте кружки', author: 'Veloren · CC-BY-SA', src: '/audio/tavern/fill_the_mugs.m4a' },
   { id: 'a_tale_worth_telling', title: 'Славная быль', author: 'Veloren · CC-BY-SA', src: '/audio/tavern/a_tale_worth_telling.m4a' },
   { id: 'bustle_and_bloom', title: 'Шум и веселье', author: 'Veloren · CC-BY-SA', src: '/audio/tavern/bustle_and_bloom.m4a' },
-  { id: 'traveling_minstrels', title: 'Бродячие менестрели', author: 'Wesnoth · CC-BY-SA', src: '/audio/tavern/traveling_minstrels.m4a' }
+  { id: 'traveling_minstrels', title: 'Бродячие менестрели', author: 'Wesnoth · CC-BY-SA', src: '/audio/tavern/traveling_minstrels.m4a' },
+  { id: 'three_sheets', title: 'Хмельной перепляс', author: 'Wesnoth · CC-BY-SA', src: '/audio/tavern/three-sheets.m4a' },
+  { id: 'knolls', title: 'Холмы и трактиры', author: 'Wesnoth · CC-BY-SA', src: '/audio/tavern/knolls.m4a' },
+  { id: 'fiesta_del_pueblo', title: 'Праздник в селении', author: 'Veloren · CC-BY-SA', src: '/audio/tavern/fiesta_del_pueblo.m4a' }
  ],
  battle: [
   { id: 'battle-epic', title: 'Эпическая битва', author: 'Wesnoth · CC-BY-SA', src: '/audio/battle/battle-epic.m4a' },
   { id: 'legends_of_the_north', title: 'Легенды Севера', author: 'Wesnoth · CC-BY-SA', src: '/audio/battle/legends_of_the_north.m4a' },
   { id: 'battle_theme', title: 'Боевой натиск', author: 'Flare RPG · CC-BY-SA', src: '/audio/battle/battle_theme.m4a' },
-  { id: 'boss_theme', title: 'Битва с боссом', author: 'Flare RPG · CC-BY-SA', src: '/audio/battle/boss_theme.m4a' }
+  { id: 'boss_theme', title: 'Битва с боссом', author: 'Flare RPG · CC-BY-SA', src: '/audio/battle/boss_theme.m4a' },
+  { id: 'battle_for_wesnoth', title: 'Битва за Веснот', author: 'Wesnoth · CC-BY-SA', src: '/audio/battle/battle.m4a' },
+  { id: 'casualties_of_war', title: 'Жертвы войны', author: 'Wesnoth · CC-BY-SA', src: '/audio/battle/casualties_of_war.m4a' },
+  { id: 'frantic', title: 'Неистовая схватка', author: 'Wesnoth · CC-BY-SA', src: '/audio/battle/frantic.m4a' },
+  { id: 'siege_of_laurelmor', title: 'Осада Лорелмора', author: 'Wesnoth · CC-BY-SA', src: '/audio/battle/siege_of_laurelmor.m4a' }
  ],
  dungeon: [
   { id: 'dank_dungeon', title: 'Сырые катакомбы', author: 'Veloren · CC-BY-SA', src: '/audio/dungeon/dank_dungeon.m4a' },
   { id: 'cobbled_halls', title: 'Мощёные залы', author: 'Veloren · CC-BY-SA', src: '/audio/dungeon/cobbled_halls.m4a' },
   { id: 'cavernous_hollow', title: 'Пещерная глубина', author: 'Veloren · CC-BY-SA', src: '/audio/dungeon/cavernous_hollow.m4a' },
-  { id: 'underground', title: 'Подземелье мрака', author: 'Wesnoth · CC-BY-SA', src: '/audio/dungeon/underground.m4a' }
+  { id: 'underground', title: 'Подземелье мрака', author: 'Wesnoth · CC-BY-SA', src: '/audio/dungeon/underground.m4a' },
+  { id: 'the_deep_path', title: 'Тропа глубин', author: 'Wesnoth · CC-BY-SA', src: '/audio/dungeon/the_deep_path.m4a' },
+  { id: 'ruination', title: 'Древние руины', author: 'Veloren · CC-BY-SA', src: '/audio/dungeon/ruination.m4a' },
+  { id: 'cave_ambience', title: 'Эхо подземелий', author: 'Veloren · CC-BY-SA', src: '/audio/dungeon/cave.m4a' }
  ],
  forest: [
   { id: 'calling_wild', title: 'Зов дикой природы', author: 'Veloren · CC-BY-SA', src: '/audio/forest/calling_wild.m4a' },
   { id: 'between_the_fairies', title: 'Среди фей', author: 'Veloren · CC-BY-SA', src: '/audio/forest/between_the_fairies.m4a' },
-  { id: 'elvish-theme', title: 'Эльфийские рощи', author: 'Wesnoth · CC-BY-SA', src: '/audio/forest/elvish-theme.m4a' }
+  { id: 'elvish-theme', title: 'Эльфийские рощи', author: 'Wesnoth · CC-BY-SA', src: '/audio/forest/elvish-theme.m4a' },
+  { id: 'silvan_sanctuary', title: 'Лесное святилище', author: 'Wesnoth · CC-BY-SA', src: '/audio/forest/silvan_sanctuary.m4a' },
+  { id: 'transience', title: 'Дыхание рощи', author: 'Wesnoth · CC-BY-SA', src: '/audio/forest/transience.m4a' },
+  { id: 'elf_land', title: 'Земли эльфов', author: 'Wesnoth · CC-BY-SA', src: '/audio/forest/elf-land.m4a' }
  ],
  rain: [
   { id: 'rain', title: 'Шумный ливень', author: 'Veloren · CC-BY-SA', src: '/audio/rain/rain.m4a' },
   { id: 'thunder', title: 'Далекие раскаты грома', author: 'Veloren · CC-BY-SA', src: '/audio/rain/thunder.m4a' },
-  { id: 'river_quiet', title: 'Тихая лесная река', author: 'Veloren · CC-BY-SA', src: '/audio/rain/river_quiet.m4a' }
+  { id: 'river_quiet', title: 'Тихая лесная река', author: 'Veloren · CC-BY-SA', src: '/audio/rain/river_quiet.m4a' },
+  { id: 'wind', title: 'Порывы ветра', author: 'Veloren · CC-BY-SA', src: '/audio/rain/wind.m4a' },
+  { id: 'river_loud', title: 'Бурный речной поток', author: 'Veloren · CC-BY-SA', src: '/audio/rain/river_loud.m4a' }
  ],
  mystery: [
   { id: 'ethereal_bonds', title: 'Эфирные узы', author: 'Veloren · CC-BY-SA', src: '/audio/mystery/ethereal_bonds.m4a' },
   { id: 'stars_like_stalactites', title: 'Звёзды как сталактиты', author: 'Veloren · CC-BY-SA', src: '/audio/mystery/stars_like_stalactites.m4a' },
-  { id: 'sacred_temple', title: 'Священный храм', author: 'Veloren · CC-BY-SA', src: '/audio/mystery/sacred_temple.m4a' }
+  { id: 'sacred_temple', title: 'Священный храм', author: 'Veloren · CC-BY-SA', src: '/audio/mystery/sacred_temple.m4a' },
+  { id: 'suspense', title: 'Тревожное ожидание', author: 'Wesnoth · CC-BY-SA', src: '/audio/mystery/suspense.m4a' },
+  { id: 'into_the_shadows', title: 'Во тьму теней', author: 'Wesnoth · CC-BY-SA', src: '/audio/mystery/into_the_shadows.m4a' },
+  { id: 'mysty_temple', title: 'Туманное святилище', author: 'Veloren · CC-BY-SA', src: '/audio/mystery/mysty_temple.m4a' }
  ]
 };
 
 export class AmbientEngine {
  constructor() {
   this.currentTheme = 'off';
+  this.shuffle = localStorage.getItem('skazitel-ambient-shuffle') !== 'false';
+
+  // Randomize initial starting track index for each theme on app launch
   this.themeIndices = {
-   camp: 0,
-   tavern: 0,
-   battle: 0,
-   dungeon: 0,
-   forest: 0,
-   rain: 0,
-   mystery: 0
+   camp: Math.floor(Math.random() * (THEME_TRACKS.camp?.length || 1)),
+   tavern: Math.floor(Math.random() * (THEME_TRACKS.tavern?.length || 1)),
+   battle: Math.floor(Math.random() * (THEME_TRACKS.battle?.length || 1)),
+   dungeon: Math.floor(Math.random() * (THEME_TRACKS.dungeon?.length || 1)),
+   forest: Math.floor(Math.random() * (THEME_TRACKS.forest?.length || 1)),
+   rain: Math.floor(Math.random() * (THEME_TRACKS.rain?.length || 1)),
+   mystery: Math.floor(Math.random() * (THEME_TRACKS.mystery?.length || 1))
   };
+
   this.currentAudio = null;
   this.fadeTimer = null;
   this.duckTimer = null;
@@ -63,10 +89,6 @@ export class AmbientEngine {
   this.volume = parseFloat(localStorage.getItem('skazitel-ambient-volume') || '0.35');
   this.isDucked = false;
   this.isMuted = localStorage.getItem('skazitel-ambient-muted') === 'true';
-
-  this.sfxCtx = null;
-  this.sfxGain = null;
-  this.noiseBuffer = null;
 
   this.themeLabels = {
    off: 'Выключен',
@@ -81,34 +103,24 @@ export class AmbientEngine {
 
   this.onThemeChange = null;
   this.onTrackChange = null;
+  this.onShuffleChange = null;
  }
 
  init() {
   if (this.currentAudio && this.currentAudio.paused && this.currentTheme !== 'off') {
    this.currentAudio.play().catch(() => {});
   }
-  if (!this.sfxCtx) {
-   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-   if (AudioContextClass) {
-    this.sfxCtx = new AudioContextClass();
-    this.sfxGain = this.sfxCtx.createGain();
-    this.sfxGain.gain.setValueAtTime(this.volume, this.sfxCtx.currentTime);
-    this.sfxGain.connect(this.sfxCtx.destination);
-    this.createNoiseBuffer();
-   }
-  } else if (this.sfxCtx.state === 'suspended') {
-   this.sfxCtx.resume().catch(() => {});
-  }
  }
 
- createNoiseBuffer() {
-  if (!this.sfxCtx) return;
-  const bufferSize = Math.floor(this.sfxCtx.sampleRate * 2);
-  this.noiseBuffer = this.sfxCtx.createBuffer(1, bufferSize, this.sfxCtx.sampleRate);
-  const data = this.noiseBuffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-   data[i] = Math.random() * 2 - 1;
-  }
+ setShuffle(val) {
+  this.shuffle = !!val;
+  localStorage.setItem('skazitel-ambient-shuffle', String(this.shuffle));
+  this.onShuffleChange?.(this.shuffle);
+ }
+
+ toggleShuffle() {
+  this.setShuffle(!this.shuffle);
+  return this.shuffle;
  }
 
  getTargetVolume() {
@@ -119,9 +131,6 @@ export class AmbientEngine {
  setVolume(vol) {
   this.volume = Math.max(0, Math.min(1, vol));
   localStorage.setItem('skazitel-ambient-volume', String(this.volume));
-  if (this.sfxGain && this.sfxCtx) {
-   this.sfxGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.sfxCtx.currentTime);
-  }
   if (this.currentAudio && !this.fadeTimer && !this.duckTimer) {
    this.currentAudio.volume = this.getTargetVolume();
   }
@@ -174,7 +183,7 @@ export class AmbientEngine {
   };
  }
 
- setTheme(theme, { force = false } = {}) {
+ setTheme(theme, { force = false, randomize = true } = {}) {
   const normalized = this.themeLabels[theme] ? theme : 'camp';
   if (this.currentTheme === normalized && !force) return;
 
@@ -184,6 +193,12 @@ export class AmbientEngine {
    this.onThemeChange?.(this.currentTheme);
    this.onTrackChange?.(null);
    return;
+  }
+
+  // Randomize track within the newly chosen theme when shuffle is on
+  const tracks = THEME_TRACKS[normalized];
+  if (this.shuffle && randomize && tracks && tracks.length > 1) {
+   this.themeIndices[normalized] = Math.floor(Math.random() * tracks.length);
   }
 
   this.playCurrentTrack();
@@ -197,7 +212,18 @@ export class AmbientEngine {
 
   const tracks = THEME_TRACKS[this.currentTheme];
   if (!tracks || !tracks.length) return;
-  this.themeIndices[this.currentTheme] = ((this.themeIndices[this.currentTheme] || 0) + 1) % tracks.length;
+
+  const cur = this.themeIndices[this.currentTheme] || 0;
+  if (this.shuffle && tracks.length > 1) {
+   let nextIdx;
+   do {
+    nextIdx = Math.floor(Math.random() * tracks.length);
+   } while (nextIdx === cur);
+   this.themeIndices[this.currentTheme] = nextIdx;
+  } else {
+   this.themeIndices[this.currentTheme] = (cur + 1) % tracks.length;
+  }
+
   this.playCurrentTrack();
  }
 
@@ -229,7 +255,6 @@ export class AmbientEngine {
   audio.src = track.src;
 
   audio.onended = () => {
-   // Guard against loop on premature or zero-length events
    if (audio.currentTime > 2) {
     this.nextTrack({ auto: true });
    } else {
@@ -289,7 +314,6 @@ export class AmbientEngine {
   this.currentAudio = null;
   if (!prev) return;
 
-  // Detach all listeners immediately so it never triggers nextTrack or error handlers
   prev.onended = null;
   prev.onerror = null;
   prev.oncanplay = null;
@@ -301,58 +325,15 @@ export class AmbientEngine {
   } catch {}
  }
 
- // SFX: Physical dice roll
+ // High-fidelity recorded SFX via sfx.mjs (physical dice rolls & coin clinks)
  playDiceSound() {
-  this.init();
-  if (!this.sfxCtx || this.isMuted) return;
-  const ctx = this.sfxCtx;
-  const now = ctx.currentTime;
-  const clicks = 5 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < clicks; i++) {
-   const t = now + i * (0.05 + Math.random() * 0.04);
-   if (!this.noiseBuffer) this.createNoiseBuffer();
-   if (!this.noiseBuffer) return;
-   const noise = ctx.createBufferSource();
-   noise.buffer = this.noiseBuffer;
-   const filter = ctx.createBiquadFilter();
-   filter.type = 'bandpass';
-   filter.frequency.value = 750 + Math.random() * 500;
-   filter.Q.value = 3.5;
-   const gain = ctx.createGain();
-   const isLast = i === clicks - 1;
-   gain.gain.setValueAtTime(0.001, t);
-   gain.gain.linearRampToValueAtTime(isLast ? 0.35 : 0.18 + Math.random() * 0.12, t + 0.003);
-   gain.gain.exponentialRampToValueAtTime(0.0001, t + (isLast ? 0.09 : 0.04));
-
-   noise.connect(filter);
-   filter.connect(gain);
-   gain.connect(this.sfxGain);
-   noise.start(t);
-   noise.stop(t + 0.12);
-  }
+  if (this.isMuted) return;
+  playSfx('dice');
  }
 
- // SFX: Coins clink
  playCoinSound() {
-  this.init();
-  if (!this.sfxCtx || this.isMuted) return;
-  const ctx = this.sfxCtx;
-  const now = ctx.currentTime;
-  const pitches = [2400, 2900, 3400];
-  pitches.forEach((freq, idx) => {
-   const t = now + idx * 0.07;
-   const osc = ctx.createOscillator();
-   osc.type = 'sine';
-   osc.frequency.value = freq;
-   const gain = ctx.createGain();
-   gain.gain.setValueAtTime(0.001, t);
-   gain.gain.linearRampToValueAtTime(0.14, t + 0.005);
-   gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
-   osc.connect(gain);
-   gain.connect(this.sfxGain);
-   osc.start(t);
-   osc.stop(t + 0.32);
-  });
+  if (this.isMuted) return;
+  playSfx('coin');
  }
 }
 

@@ -9,7 +9,12 @@ The application implements a subset of mechanics. Rules descriptions and present
 Icons: Lorc (http://lorcblog.blogspot.com) and Delapouite (http://delapouite.com), https://game-icons.net, CC BY 3.0, https://creativecommons.org/licenses/by/3.0/. SVGs sanitized, background removed and fill recolored. Individual source URLs, pinned repository revision and hashes are in icons/manifest.json. Full artist list: icons/LICENSE.txt.
 
 Music and Ambient Tracks:
-- Veloren (https://gitlab.com/veloren/veloren), Licensed under CC-BY-SA 3.0 / CC-BY 4.0. Tracks by Aeronic, Eden, Sharp, and contributors.
-- The Battle for Wesnoth (https://www.wesnoth.org), Licensed under CC-BY-SA / GPL. Tracks: traveling_minstrels, battle-epic, legends_of_the_north, underground, elvish-theme.
+- Veloren (https://gitlab.com/veloren/veloren), Licensed under CC-BY-SA 3.0 / CC-BY 4.0. Tracks by Aeronic, Eden, Sharp, and contributors: campfire_stories, warmth_of_the_hearth, a_peaceful_moment, fill_the_mugs, a_tale_worth_telling, bustle_and_bloom, dank_dungeon, cobbled_halls, cavernous_hollow, calling_wild, between_the_fairies, rain, thunder, river_quiet, ethereal_bonds, stars_like_stalactites, sacred_temple, fiesta_del_pueblo, ruination, cave, wind, river_loud, mysty_temple.
+- The Battle for Wesnoth (https://www.wesnoth.org), Licensed under CC-BY-SA / GPL. Tracks by Mattias Westlund, Aleksi Aubry-Carlson, Jeremy Nicoll, Doug Kaufman, Ryan Reilly: traveling_minstrels, battle-epic, legends_of_the_north, underground, elvish-theme, battle, casualties_of_war, frantic, siege_of_laurelmor, wanderer, revelation, loyalists, three-sheets, knolls, the_deep_path, silvan_sanctuary, transience, elf-land, suspense, into_the_shadows.
 - Flare RPG (https://flarerpg.org), Licensed under CC-BY-SA. Tracks: battle_theme, boss_theme by Justin Nichol / Clint Bellanger.
+
+Recorded Sound Effects (SFX):
+- The Battle for Wesnoth (https://www.wesnoth.org), CC-BY-SA / GPL: gold coins clinking (coin), sword clash (sword), holy magic cast (magic), fanfare victory (crit), healing restoration (rest), battle horn call (turn).
+- Physical Dice Recordings (diceroll / dice_1): Aarith & mcweaselson / OpenGameArt, CC0 / MIT License.
+- Fail & blunder effects: Aarith / Wesnoth, CC0 / CC-BY-SA.
 
