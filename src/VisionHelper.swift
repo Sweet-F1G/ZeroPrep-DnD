@@ -77,7 +77,21 @@ func analyzeImage(data: Data) -> [String: Any] {
             let rightEar = ear(landmarks.rightEye)
             let avgEar = (leftEar + rightEar) / 2.0
             
-            // 2. Analyze Lips geometry using spatial bounds (not arbitrary indices)
+            // 2. Measure actual mouth aperture (gap) using innerLips (closed mouth = near 0)
+            var innerAperture = 0.0
+            if let innerLips = landmarks.innerLips, innerLips.pointCount >= 4 {
+                let innerPts = innerLips.normalizedPoints
+                if let minX = innerPts.map({ $0.x }).min(),
+                   let maxX = innerPts.map({ $0.x }).max(),
+                   let minY = innerPts.map({ $0.y }).min(),
+                   let maxY = innerPts.map({ $0.y }).max() {
+                    let innerW = max(0.001, maxX - minX)
+                    let innerH = maxY - minY
+                    innerAperture = innerH / innerW
+                }
+            }
+            
+            // 3. Analyze Lips outer shape and smile geometry
             if let outerLips = landmarks.outerLips, outerLips.pointCount >= 6 {
                 let pts = outerLips.normalizedPoints
                 if let leftCorner = pts.min(by: { $0.x < $1.x }),
@@ -88,16 +102,16 @@ func analyzeImage(data: Data) -> [String: Any] {
                     let mouthWidth = max(0.001, rightCorner.x - leftCorner.x)
                     let mouthHeight = max(0.001, topLip.y - bottomLip.y)
                     let mouthAspect = mouthWidth / mouthHeight
-                    let mouthOpeningRatio = mouthHeight / mouthWidth
                     
                     let cornerAvgY = (leftCorner.y + rightCorner.y) / 2.0
                     let lipCenterY = (topLip.y + bottomLip.y) / 2.0
                     let cornerLift = cornerAvgY - lipCenterY
                     
-                    if mouthOpeningRatio > 0.40 && avgEar < 0.20 {
+                    // Speaking / Yawning based on real inner aperture
+                    if innerAperture > 0.40 && avgEar < 0.20 {
                         yawning = true
                         tired = true
-                    } else if mouthOpeningRatio > 0.26 {
+                    } else if innerAperture > 0.18 {
                         mouthOpen = true
                         speakingCount += 1
                     }
