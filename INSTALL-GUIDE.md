@@ -26,7 +26,7 @@
 ### 2. Запуск приложения
 
 #### 🍏 На macOS:
-1. Распакуйте архив `Skazitel-v0.9.0-macOS-AppleSilicon.zip` в любую удобную папку (например, `Программы` или рабочий стол).
+1. Распакуйте архив `Skazitel-v0.9.4-macOS-AppleSilicon.zip` в любую удобную папку (например, `Программы` или рабочий стол).
 2. **Основной способ (Нативное приложение):**
    - Откройте **`Skazitel.app`** двойным щелчком мыши.
    - *Примечание при первом запуске:* Если macOS покажет предупреждение о неподтверждённом разработчике, откройте *Системные настройки → Конфиденциальность и безопасность* и нажмите *«Подтвердить вход»* (или кликните правой кнопкой мыши по `Skazitel.app` и выберите *«Открыть»*).
@@ -34,7 +34,7 @@
    - Запустите файл **`Start-browser.command`** — сервер поднимется локально и откроет интерфейс в вашем браузере по адресу `http://localhost:47831`.
 
 #### 🪟 На Windows:
-1. Распакуйте архив `Skazitel-v0.9.0-Windows.zip`.
+1. Распакуйте архив `Skazitel-v0.9.4-Windows.zip`.
 2. Убедитесь, что у вас установлен Node.js (проверить в командной строке: `node -v`).
 3. **Основной способ:**
    - Запустите файл **`Start-Windows.bat`** двойным щелчком мыши.
@@ -102,7 +102,7 @@
 ### 2. How to Launch
 
 #### 🍏 On macOS:
-1. Extract `Skazitel-v0.9.0-macOS-AppleSilicon.zip` to your preferred folder (e.g., `Applications` or Desktop).
+1. Extract `Skazitel-v0.9.4-macOS-AppleSilicon.zip` to your preferred folder (e.g., `Applications` or Desktop).
 2. **Primary Method (Native Desktop App):**
    - Double-click **`Skazitel.app`**.
    - *First run note:* If macOS displays a gatekeeper warning about an unverified developer, go to *System Settings → Privacy & Security* and click *Open Anyway* (or right-click `Skazitel.app` and choose *Open*).
@@ -110,7 +110,7 @@
    - Double-click **`Start-browser.command`** — this boots the local server and opens your browser at `http://localhost:47831`.
 
 #### 🪟 On Windows:
-1. Extract `Skazitel-v0.9.0-Windows.zip`.
+1. Extract `Skazitel-v0.9.4-Windows.zip`.
 2. Ensure Node.js is installed (`node -v` in terminal).
 3. **Primary Method:**
    - Double-click **`Start-Windows.bat`**.
