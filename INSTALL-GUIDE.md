@@ -25,25 +25,20 @@
 
 ### 2. How to Launch
 
-#### 🍏 On macOS:
-1. Extract `ZeroPrep-DnD-v0.9.4-macOS-AppleSilicon.zip` to your preferred folder (e.g., `Applications` or Desktop).
-2. **Primary Method (Native Desktop App):**
-   - Double-click **`Skazitel.app`**.
-   - *First run note:* If macOS displays a gatekeeper warning about an unverified developer, go to *System Settings → Privacy & Security* and click *Open Anyway* (or right-click `Skazitel.app` and choose *Open*).
-3. **Browser Method:**
-   - Double-click **`Start-browser.command`** — this boots the local server and opens your browser at `http://localhost:47831`.
+#### 📦 Method A: From Release Binary (.zip)
+- **macOS:** Download `ZeroPrep-DnD-v0.9.4-macOS-AppleSilicon.zip` from [GitHub Releases](https://github.com/Sweet-F1G/ZeroPrep-DnD/releases), unzip, and launch `Skazitel.app` (or run `./Start-browser.command`).
+- **Windows:** Download `ZeroPrep-DnD-v0.9.4-Windows.zip`, unzip, and double-click `Start-Windows.bat`.
 
-#### 🪟 On Windows:
-1. Extract `ZeroPrep-DnD-v0.9.4-Windows.zip`.
-2. Ensure Node.js is installed (`node -v` in terminal).
-3. **Primary Method:**
-   - Double-click **`Start-Windows.bat`**.
-   - The launcher will verify the runtime, launch the local server, and open your default browser at `http://127.0.0.1:47831`.
-4. **PowerShell Method:**
-   - Open PowerShell in the project directory and run:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -File .\Start-Windows.ps1
-     ```
+#### 💻 Method B: Directly from Cloned Repository (`git clone`)
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Sweet-F1G/ZeroPrep-DnD.git
+   cd ZeroPrep-DnD
+   ```
+2. Launch the application:
+   - **macOS:** Double-click `Start-browser.command` or run `node src/server.mjs`.
+   - **Windows:** Double-click `Start-Windows.bat` or run `powershell -ExecutionPolicy Bypass -File .\Start-Windows.ps1`.
+3. Open your browser at **`http://127.0.0.1:47831`**.
 
 ---
 
@@ -110,25 +105,20 @@
 
 ### 2. Запуск приложения
 
-#### 🍏 На macOS:
-1. Распакуйте архив `ZeroPrep-DnD-v0.9.4-macOS-AppleSilicon.zip` в любую удобную папку (например, `Программы` или рабочий стол).
-2. **Основной способ (Нативное приложение):**
-   - Откройте **`Skazitel.app`** двойным щелчком мыши.
-   - *Примечание при первом запуске:* Если macOS покажет предупреждение о неподтверждённом разработчике, откройте *Системные настройки → Конфиденциальность и безопасность* и нажмите *«Подтвердить вход»* (или кликните правой кнопкой мыши по `Skazitel.app` и выберите *«Открыть»*).
-3. **Альтернативный способ (через браузер):**
-   - Запустите файл **`Start-browser.command`** — сервер поднимется локально и откроет интерфейс в вашем браузере по адресу `http://localhost:47831`.
+#### 📦 Способ А: Из архива релиза (.zip)
+- **macOS:** Скачайте `ZeroPrep-DnD-v0.9.4-macOS-AppleSilicon.zip` со страницы [GitHub Releases](https://github.com/Sweet-F1G/ZeroPrep-DnD/releases), распакуйте и запустите `Skazitel.app` (или скрипт `./Start-browser.command`).
+- **Windows:** Скачайте `ZeroPrep-DnD-v0.9.4-Windows.zip`, распакуйте и запустите `Start-Windows.bat` (требуется [Node.js 20+](https://nodejs.org/)).
 
-#### 🪟 На Windows:
-1. Распакуйте архив `ZeroPrep-DnD-v0.9.4-Windows.zip`.
-2. Убедитесь, что у вас установлен Node.js (проверить в командной строке: `node -v`).
-3. **Основной способ:**
-   - Запустите файл **`Start-Windows.bat`** двойным щелчком мыши.
-   - Скрипт проверит окружение, запустит локальный сервер и автоматически откроет браузер по адресу `http://127.0.0.1:47831`.
-4. **Запуск через PowerShell:**
-   - Откройте PowerShell в папке проекта и выполните:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -File .\Start-Windows.ps1
-     ```
+#### 💻 Способ Б: Напрямую из клонированного репозитория (`git clone`)
+1. Склонируйте репозиторий:
+   ```bash
+   git clone https://github.com/Sweet-F1G/ZeroPrep-DnD.git
+   cd ZeroPrep-DnD
+   ```
+2. Запустите сервер:
+   - **macOS:** Запустите `./Start-browser.command` или выполните команду `node src/server.mjs`.
+   - **Windows:** Запустите `Start-Windows.bat` или выполните в PowerShell: `powershell -ExecutionPolicy Bypass -File .\Start-Windows.ps1`.
+3. Откройте браузер по адресу **`http://127.0.0.1:47831`**.
 
 ---
 

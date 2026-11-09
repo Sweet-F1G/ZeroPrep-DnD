@@ -83,16 +83,16 @@ A privacy-first, self-hosted AI Dungeon Master for genuine tabletop D&D 2024 & 5
 
 ---
 
-## 📚 Project Documentation
+## 📚 Guides & Documentation
 
-- [RELEASE-0.9.4.md](RELEASE-0.9.4.md) — Flagship Release Notes (Table Vision, Living DM, Multi-Voice).
-- [INSTALL-GUIDE.md](INSTALL-GUIDE.md) — Detailed Setup & Gameplay Manual.
-- [CAMPAIGN-IDEAS.md](CAMPAIGN-IDEAS.md) — Pre-configured SSS-Tier Adventure Starters.
-- [DM-RESPONSIBILITIES.md](DM-RESPONSIBILITIES.md) — DM Operating Matrix & D&D Rules Guidelines.
+- **[Installation & User Guide](INSTALL-GUIDE.md)** — Step-by-step setup, model connection, physical dice rules, and gameplay instructions.
+- **[Release Notes (v0.9.4)](RELEASE-0.9.4.md)** — Highlights of the flagship release (Table Vision, Living DM, Multi-Voice TTS).
+- **[Russian Guide / Инструкция на русском](README.ru.md)** — Полное руководство на русском языке.
 
 ---
 
 ## 📜 License & Acknowledgments
 
+* Licensed under the [MIT License](LICENSE).
 * Game mechanics conform to D&D 5th Edition System Reference Document (SRD 5.1 & SRD 5.2.1).
 * Built with native Web Components, Apple Vision framework, and Node.js.
