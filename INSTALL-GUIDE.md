@@ -57,7 +57,7 @@
    - Or click **`Continue the Story of Theon and Alvari`** for a quick instant-start demo with pre-generated characters.
 3. **Connecting AI Models & Audio:**
    - In the bottom-left sidebar, open **`⚙ Models & Voice`**;
-   - **Game Master (DM):** choose your model provider (OpenAI `gpt-4o`, `gpt-4o-mini`, Google Gemini, or any OpenAI-compatible API);
+   - **Game Master (DM):** choose your model provider (OpenAI `gpt-6-luna` default, `gpt-6.1-terra`, `gpt-4o`, Groq `openai/gpt-oss-120b`, Google Gemini `gemini-2.0-flash`, or any OpenAI-compatible API);
    - **Speech-to-Text (STT):** select Groq (`whisper-large-v3-turbo`) or OpenAI Whisper;
    - **Audio Narration (TTS):** 
      - *OpenAI TTS* — rich baritone narrator voice `onyx` and expressive NPC voices `nova` / `echo`;
@@ -142,7 +142,7 @@
    - Либо нажмите **«Продолжить историю Теона и Альвари»** для быстрого ознакомительного старта с готовыми героями.
 3. **Подключение моделей и голоса:**
    - Внизу слева нажмите **`⚙ Модели и голос`**;
-   - **Ведущий:** выберите провайдера модели (OpenAI `gpt-4o`, `gpt-4o-mini`, Google Gemini или любой совместимый OpenAI-сервер);
+   - **Ведущий:** выберите провайдера модели (OpenAI `gpt-6-luna` по умолчанию, `gpt-6.1-terra`, `gpt-4o`, Groq `openai/gpt-oss-120b`, Google Gemini `gemini-2.0-flash` или любой совместимый OpenAI-сервер);
    - **Распознавание речи (STT):** выберите Groq (`whisper-large-v3-turbo`) или OpenAI Whisper;
    - **Озвучивание (TTS):** 
      - *OpenAI TTS* — кинематографичный баритон Мастера `onyx` и выразительные голоса NPC `nova` / `echo`;

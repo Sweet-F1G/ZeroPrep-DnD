@@ -72,14 +72,14 @@ A privacy-first, self-hosted AI Dungeon Master for genuine tabletop D&D 2024 & 5
 
 ---
 
-## ⚙️ Supported AI Providers
+## ⚙️ Supported AI Providers & Models
 
-| Provider | Supported Models | Key Features |
+| Provider | Primary & Recommended Models | Key Features |
 | :--- | :--- | :--- |
-| **OpenAI** | `gpt-4o`, `o1`, `o3-mini`, `gpt-4o-mini` | Prompt caching (~87% hit rate), Responses API, structured JSON |
-| **Google Gemini** | `gemini-1.5-pro`, `gemini-2.0-flash` | Ultra-long context, multimodal visual cues |
-| **Groq** | `llama-3.3-70b-versatile`, `whisper-large-v3-turbo` | Ultra-fast text generation & instantaneous voice transcription |
-| **OpenRouter / Local** | Gemma, Mistral, Qwen, DeepSeek, Ollama, LM Studio | Full OpenAI-compatible base URL support |
+| **OpenAI** | **`gpt-6-luna`** *(default)*, `gpt-6.1-terra`, `gpt-6.1-sol`, `gpt-6-astra`<br>• Classic: `gpt-4o`, `gpt-4o-mini`, `o3-mini`, `o1`<br>• Voice & Vision: `tts-1` (`onyx`, `fable`, `nova`, `echo`), `gpt-4o-mini-transcribe`, `gpt-live-1`, `gpt-image-2` | Responses API, 3-tier prompt caching (~87% hit rate, \$0.01/1M cache read), structured JSON game protocol, dynamic `reasoning_effort` boost during Session Zero |
+| **Groq** | **`openai/gpt-oss-120b`**, **`whisper-large-v3-turbo`** | Ultra-fast text generation & sub-second voice transcription with Free & Paid billing tiers |
+| **Google Gemini** | **`gemini-2.0-flash`**, `gemini-1.5-pro` | Ultra-low latency, multimodal comprehension, large context window |
+| **OpenRouter & Local** | **`google/gemma-4-31b-it:free`** *(zero-cost fallback)*<br>• Local: Ollama, LM Studio, vLLM, DeepSeek, Mistral, Qwen | Automatic failover to free reserve models on quota limits; full OpenAI-compatible endpoint support |
 
 ---
 
