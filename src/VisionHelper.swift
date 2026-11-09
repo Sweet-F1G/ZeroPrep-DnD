@@ -32,6 +32,8 @@ func analyzeImage(data: Data) -> [String: Any] {
     var playerDetails: [[String: Any]] = []
     var smilingCount = 0
     var tiredCount = 0
+    var surprisedCount = 0
+    var tenseCount = 0
     var neutralCount = 0
     var speakingCount = 0
     var lookingDownCount = 0
@@ -57,6 +59,8 @@ func analyzeImage(data: Data) -> [String: Any] {
         var smiling = false
         var tired = false
         var yawning = false
+        var surprised = false
+        var tense = false
         var neutral = false
         
         if let landmarks = obs.landmarks {
@@ -91,7 +95,18 @@ func analyzeImage(data: Data) -> [String: Any] {
                 }
             }
             
-            // 3. Analyze Lips outer shape and smile geometry
+            // 3. Analyze Eyebrows to Eyes distance (Corrugator / Frontalis action units)
+            func browToEyeDist(brow: VNFaceLandmarkRegion2D?, eye: VNFaceLandmarkRegion2D?) -> Double {
+                guard let brow = brow, let eye = eye, brow.pointCount > 0, eye.pointCount > 0 else { return 0.10 }
+                let browY = brow.normalizedPoints.map({ $0.y }).reduce(0, +) / Double(brow.pointCount)
+                let eyeY = eye.normalizedPoints.map({ $0.y }).reduce(0, +) / Double(eye.pointCount)
+                return abs(browY - eyeY)
+            }
+            let leftBrowDist = browToEyeDist(brow: landmarks.leftEyebrow, eye: landmarks.leftEye)
+            let rightBrowDist = browToEyeDist(brow: landmarks.rightEyebrow, eye: landmarks.rightEye)
+            let avgBrowDist = (leftBrowDist + rightBrowDist) / 2.0
+            
+            // 4. Analyze Lips outer shape and smile geometry
             if let outerLips = landmarks.outerLips, outerLips.pointCount >= 6 {
                 let pts = outerLips.normalizedPoints
                 if let leftCorner = pts.min(by: { $0.x < $1.x }),
@@ -116,17 +131,28 @@ func analyzeImage(data: Data) -> [String: Any] {
                         speakingCount += 1
                     }
                     
-                    // True smile: corners genuinely lifted upward relative to mouth center line
-                    // AND mouth horizontally elongated
-                    if cornerLift > 0.010 && mouthAspect > 2.6 {
+                    // Check Surprised (raised eyebrows + wide eyes)
+                    if avgBrowDist > 0.135 && avgEar > 0.28 {
+                        surprised = true
+                        surprisedCount += 1
+                    }
+                    // Check Tense / Suspense (furrowed brow + focused open eyes)
+                    else if avgBrowDist < 0.075 && avgEar >= 0.18 && !yawning {
+                        tense = true
+                        tenseCount += 1
+                    }
+                    // Check True smile (corners lifted upward + horizontally wide)
+                    else if cornerLift > 0.010 && mouthAspect > 2.6 {
                         smiling = true
                         smilingCount += 1
-                    } else if avgEar < 0.17 || (avgEar < 0.20 && cornerLift < -0.004) {
-                        // Heavy eyelids or drooping mouth corners -> fatigue / tired
+                    }
+                    // Check Fatigue (heavy eyelids or drooping corners)
+                    else if avgEar < 0.17 || (avgEar < 0.20 && cornerLift < -0.004) {
                         tired = true
                         tiredCount += 1
-                    } else {
-                        // Resting face with normal alertness
+                    }
+                    // Resting face with normal alertness
+                    else {
                         neutral = true
                         neutralCount += 1
                     }
@@ -141,7 +167,9 @@ func analyzeImage(data: Data) -> [String: Any] {
         }
         
         var expression = "neutral"
-        if smiling { expression = "smiling" }
+        if surprised { expression = "surprised" }
+        else if tense { expression = "tense" }
+        else if smiling { expression = "smiling" }
         else if yawning { expression = "yawning" }
         else if tired { expression = "tired" }
         else if mouthOpen { expression = "speaking" }
@@ -153,6 +181,8 @@ func analyzeImage(data: Data) -> [String: Any] {
             "mouthOpen": mouthOpen,
             "smiling": smiling,
             "tired": tired,
+            "surprised": surprised,
+            "tense": tense,
             "yawning": yawning,
             "neutral": neutral,
             "yaw": round(yaw * 100) / 100,
@@ -173,7 +203,19 @@ func analyzeImage(data: Data) -> [String: Any] {
         parts.append("Кто-то активно говорит или реагирует.")
     }
     
-    if smilingCount > 0 {
+    if surprisedCount > 0 {
+        if surprisedCount == total {
+            parts.append("Все ошеломлены или удивлены происходящим (вскинутые брови, широко раскрытые глаза).")
+        } else {
+            parts.append("Кто-то ошеломлён или удивлён (вскинутые брови, широко раскрытые глаза).")
+        }
+    } else if tenseCount > 0 {
+        if tenseCount == total {
+            parts.append("Игроки напряжённо нахмурились, затаив дыхание в ожидании (саспенс перед опасностью или броском).")
+        } else {
+            parts.append("Игрок напряжённо и сосредоточенно нахмурился, затаив дыхание в ожидании развязки.")
+        }
+    } else if smilingCount > 0 {
         if smilingCount == total {
             parts.append("Все улыбаются / смеются.")
         } else {
@@ -203,7 +245,9 @@ func analyzeImage(data: Data) -> [String: Any] {
         "attention": lookingDownCount > 0 ? "looking_down" : (lookingAwayCount > 0 ? "looking_away" : (focusedCount > 0 ? "focused" : "mixed")),
         "smiling": smilingCount > 0,
         "tired": tiredCount > 0,
-        "neutral": neutralCount > 0 && smilingCount == 0 && tiredCount == 0,
+        "surprised": surprisedCount > 0,
+        "tense": tenseCount > 0,
+        "neutral": neutralCount > 0 && smilingCount == 0 && tiredCount == 0 && surprisedCount == 0 && tenseCount == 0,
         "speaking": speakingCount > 0,
         "distracted": lookingDownCount > 0 || lookingAwayCount > 0,
         "details": playerDetails

@@ -2300,9 +2300,12 @@ async function captureVisionFrame() {
       if ($('visionAttentionBadge')) {
         let badge = 'Внимание';
         if (res.attention === 'looking_down') badge = 'Вниз / телефон';
+        else if (res.attention === 'looking_away') badge = 'Отвлёкся';
+        else if (res.surprised) badge = 'Шок / удивление';
+        else if (res.tense) badge = 'Напряжение / саспенс';
+        else if (res.speaking) badge = 'Говорит';
         else if (res.smiling) badge = 'Улыбка / азарт';
         else if (res.tired) badge = 'Усталость';
-        else if (res.speaking) badge = 'Говорит';
         else if (res.neutral) badge = 'Спокоен / фокус';
         else if (res.attention === 'focused') badge = 'На мастера';
         $('visionAttentionBadge').textContent = badge;
@@ -2334,10 +2337,10 @@ async function startVisionCamera() {
     if ($('visionToggleInput')) $('visionToggleInput').checked = true;
     if ($('visionSummaryText')) $('visionSummaryText').textContent = 'Камера подключена. Наблюдение за столом активно.';
     if (visionTimer) clearInterval(visionTimer);
-    // Background monitoring every 25 seconds
+    // Continuous background monitoring every 8 seconds
     visionTimer = setInterval(() => {
       captureVisionFrame().catch(() => {});
-    }, 25000);
+    }, 8000);
     // Initial capture after 1.5 seconds to warm up
     setTimeout(() => captureVisionFrame().catch(() => {}), 1500);
   } catch (err) {
