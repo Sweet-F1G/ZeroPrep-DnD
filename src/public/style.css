@@ -1,47 +1,53 @@
 /* ==========================================================================
-   СКАЗИТЕЛЬ · ДИЗАЙН-СИСТЕМА APPLE HIG (CUPERTINO AESTHETIC)
-   Ясность (Clarity) · Уважение к контенту (Deference) · Глубина (Depth)
+   СКАЗИТЕЛЬ · DARK FANTASY TABLETOP CRAFT DESIGN SYSTEM
+   Атмосфера хроники · Благородная античная латунь · Кинематографичный саспенс
+   По принципам: anthropics/frontend-design · leonxlnx/taste-skill · pbakaus/impeccable
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. ДВУХТЕМНЫЕ ТОКЕНЫ И ФИЗИКА ГЛУБИНЫ (DUAL-THEME ARCHITECTURE)
+   1. ДВУХТЕМНЫЕ ТОКЕНЫ И АРХИТЕКТУРА ТЕМНОЙ ФАНТАЗИИ
    -------------------------------------------------------------------------- */
 
-/* Тёмная тема (Dark Mode / OLED Luminance-Driven Depth) — по умолчанию */
+/* Тёмная тема (Dark Mode / Warm Obsidian Velvet) — по умолчанию */
 :root,
 [data-theme="dark"] {
-  --canvas: #000000;
-  --surface-1: #1C1C1E;
-  --surface-2: #2C2C2E;
-  --surface-3: #3A3A3C;
-  --surface-elevated: #242426;
+  --canvas: #090b10;
+  --surface-1: #11141c;
+  --surface-2: #181c28;
+  --surface-3: #1f2434;
+  --surface-elevated: #262c3e;
 
-  --glass: rgba(28, 28, 30, 0.78);
-  --glass-header: rgba(18, 18, 20, 0.82);
-  --glass-sidebar: rgba(18, 18, 20, 0.86);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass: rgba(17, 20, 28, 0.88);
+  --glass-header: rgba(11, 13, 19, 0.92);
+  --glass-sidebar: rgba(11, 13, 19, 0.94);
+  --glass-border: rgba(212, 163, 89, 0.16);
 
-  --text-primary: #F5F5F7;
-  --text-secondary: #86868B;
-  --text-tertiary: rgba(235, 235, 245, 0.35);
+  --text-primary: #f5eee3;
+  --text-secondary: #ab9e90;
+  --text-tertiary: #6c6458;
 
-  --hairline: rgba(255, 255, 255, 0.08);
-  --hairline-strong: rgba(255, 255, 255, 0.14);
+  --hairline: rgba(212, 163, 89, 0.12);
+  --hairline-strong: rgba(212, 163, 89, 0.28);
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.38);
-  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.55);
-  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.85);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.65);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.88);
 
-  --accent-blue: #0A84FF;
-  --accent-blue-hover: #409CFF;
-  --accent-green: #30D158;
-  --accent-red: #FF453A;
-  --accent-orange: #FF9F0A;
-  --accent-purple: #BF5AF2;
-  --accent-gold: #D4AF37;
-  --accent-gold-hover: #E5C258;
+  --accent-gold: #d4a359;
+  --accent-gold-hover: #e8ba6e;
+  --accent-blue: #d4a359;
+  --accent-blue-hover: #e8ba6e;
+  --accent-green: #2ecc71;
+  --accent-red: #e74c3c;
+  --accent-orange: #e67e22;
+  --accent-purple: #9b59b6;
 
-  --focus-ring: 0 0 0 3px rgba(10, 132, 255, 0.35);
+  --focus-ring: 0 0 0 3px rgba(212, 163, 89, 0.35);
+
+  --font-display: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', 'Georgia', serif;
+  --font-prose: 'Lora', 'Charter', 'Cambria', 'Georgia', serif;
+  --font-ui: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
 
   /* Обратная совместимость с кодом */
   --bg: var(--canvas);
@@ -54,40 +60,45 @@
   --red: var(--accent-red);
 }
 
-/* Светлая тема (Light Mode / Shadow-Driven Depth) */
+/* Светлая тема (Light Mode / Warm Antique Parchment Manuscript) */
 [data-theme="light"] {
-  --canvas: #F5F5F7;
-  --surface-1: #FFFFFF;
-  --surface-2: #F2F2F7;
-  --surface-3: #FFFFFF;
-  --surface-elevated: #FFFFFF;
+  --canvas: #f7f4ec;
+  --surface-1: #fdfbf7;
+  --surface-2: #ede7d8;
+  --surface-3: #ffffff;
+  --surface-elevated: #ffffff;
 
-  --glass: rgba(255, 255, 255, 0.78);
-  --glass-header: rgba(245, 245, 247, 0.84);
-  --glass-sidebar: rgba(242, 242, 247, 0.88);
-  --glass-border: rgba(0, 0, 0, 0.07);
+  --glass: rgba(253, 251, 247, 0.90);
+  --glass-header: rgba(247, 244, 236, 0.94);
+  --glass-sidebar: rgba(240, 235, 224, 0.95);
+  --glass-border: rgba(150, 111, 40, 0.16);
 
-  --text-primary: #1D1D1F;
-  --text-secondary: #86868B;
-  --text-tertiary: rgba(60, 60, 67, 0.35);
+  --text-primary: #221c15;
+  --text-secondary: #685b4d;
+  --text-tertiary: #968674;
 
-  --hairline: rgba(0, 0, 0, 0.08);
-  --hairline-strong: rgba(0, 0, 0, 0.15);
+  --hairline: rgba(150, 111, 40, 0.14);
+  --hairline-strong: rgba(150, 111, 40, 0.30);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 4px rgba(34, 28, 21, 0.08);
+  --shadow-md: 0 8px 24px rgba(34, 28, 21, 0.10);
+  --shadow-lg: 0 24px 60px rgba(34, 28, 21, 0.18);
 
-  --accent-blue: #007AFF;
-  --accent-blue-hover: #0062CC;
-  --accent-green: #34C759;
-  --accent-red: #FF3B30;
-  --accent-orange: #FF9500;
-  --accent-purple: #AF52DE;
-  --accent-gold: #B28328;
-  --accent-gold-hover: #C79836;
+  --accent-gold: #966f28;
+  --accent-gold-hover: #825f20;
+  --accent-blue: #966f28;
+  --accent-blue-hover: #825f20;
+  --accent-green: #27ae60;
+  --accent-red: #c0392b;
+  --accent-orange: #d35400;
+  --accent-purple: #8e44ad;
 
-  --focus-ring: 0 0 0 3px rgba(0, 122, 255, 0.25);
+  --focus-ring: 0 0 0 3px rgba(150, 111, 40, 0.25);
+
+  --font-display: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', 'Georgia', serif;
+  --font-prose: 'Lora', 'Charter', 'Cambria', 'Georgia', serif;
+  --font-ui: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
 
   /* Обратная совместимость с кодом */
   --bg: var(--canvas);
@@ -102,38 +113,43 @@
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --canvas: #F5F5F7;
-    --surface-1: #FFFFFF;
-    --surface-2: #F2F2F7;
-    --surface-3: #FFFFFF;
-    --surface-elevated: #FFFFFF;
+    --canvas: #f7f4ec;
+    --surface-1: #fdfbf7;
+    --surface-2: #ede7d8;
+    --surface-3: #ffffff;
+    --surface-elevated: #ffffff;
 
-    --glass: rgba(255, 255, 255, 0.78);
-    --glass-header: rgba(245, 245, 247, 0.84);
-    --glass-sidebar: rgba(242, 242, 247, 0.88);
-    --glass-border: rgba(0, 0, 0, 0.07);
+    --glass: rgba(253, 251, 247, 0.90);
+    --glass-header: rgba(247, 244, 236, 0.94);
+    --glass-sidebar: rgba(240, 235, 224, 0.95);
+    --glass-border: rgba(150, 111, 40, 0.16);
 
-    --text-primary: #1D1D1F;
-    --text-secondary: #86868B;
-    --text-tertiary: rgba(60, 60, 67, 0.35);
+    --text-primary: #221c15;
+    --text-secondary: #685b4d;
+    --text-tertiary: #968674;
 
-    --hairline: rgba(0, 0, 0, 0.08);
-    --hairline-strong: rgba(0, 0, 0, 0.15);
+    --hairline: rgba(150, 111, 40, 0.14);
+    --hairline-strong: rgba(150, 111, 40, 0.30);
 
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-    --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03);
-    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 4px rgba(34, 28, 21, 0.08);
+    --shadow-md: 0 8px 24px rgba(34, 28, 21, 0.10);
+    --shadow-lg: 0 24px 60px rgba(34, 28, 21, 0.18);
 
-    --accent-blue: #007AFF;
-    --accent-blue-hover: #0062CC;
-    --accent-green: #34C759;
-    --accent-red: #FF3B30;
-    --accent-orange: #FF9500;
-    --accent-purple: #AF52DE;
-    --accent-gold: #B28328;
-    --accent-gold-hover: #C79836;
+    --accent-gold: #966f28;
+    --accent-gold-hover: #825f20;
+    --accent-blue: #966f28;
+    --accent-blue-hover: #825f20;
+    --accent-green: #27ae60;
+    --accent-red: #c0392b;
+    --accent-orange: #d35400;
+    --accent-purple: #8e44ad;
 
-    --focus-ring: 0 0 0 3px rgba(0, 122, 255, 0.25);
+    --focus-ring: 0 0 0 3px rgba(150, 111, 40, 0.25);
+
+    --font-display: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', 'Georgia', serif;
+    --font-prose: 'Lora', 'Charter', 'Cambria', 'Georgia', serif;
+    --font-ui: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
 
     --bg: var(--canvas);
     --panel: var(--surface-1);
@@ -158,18 +174,20 @@ body {
   margin: 0;
   background-color: var(--canvas);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
-  font-size: 14px;
-  line-height: 1.55;
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-image: radial-gradient(circle at 50% 0%, rgba(212, 163, 89, 0.05) 0%, transparent 60%);
+  background-attachment: fixed;
   transition: background-color 0.28s cubic-bezier(0.22, 1, 0.36, 1), color 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 h1, h2, h3, h4 {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
-  letter-spacing: -0.025em;
+  letter-spacing: 0.035em;
   margin-top: 0;
   color: var(--text-primary);
 }
