@@ -2372,6 +2372,28 @@ function initVisionSystem() {
   const closeBtn = $('closeVisionPopoverBtn');
   const toggleInput = $('visionToggleInput');
   const snapBtn = $('visionSnapNowBtn');
+  const testBtn = $('testVisionBtn');
+  const testStatus = $('testVisionStatus');
+
+  if (testBtn) {
+    testBtn.onclick = async () => {
+      testBtn.disabled = true;
+      if (testStatus) testStatus.textContent = 'Активация веб-камеры и запуск Apple Neural Engine…';
+      try {
+        if (!visionStream) await startVisionCamera();
+        const t0 = performance.now();
+        await captureVisionFrame();
+        const elapsed = Math.round(performance.now() - t0);
+        if (testStatus) {
+          testStatus.textContent = `✓ Apple Vision: ${latestVisionObservation || 'Кадр обработан'} (${elapsed} мс)`;
+        }
+      } catch (err) {
+        if (testStatus) testStatus.textContent = 'Ошибка теста зрения: ' + err.message;
+      } finally {
+        testBtn.disabled = false;
+      }
+    };
+  }
 
   if (btn && popover) {
     btn.onclick = (e) => {
