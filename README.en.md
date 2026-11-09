@@ -18,14 +18,14 @@ An atmospheric tabletop roleplaying AI Dungeon Master application for macOS (App
 * **Firm Boundaries & Tactile Agency:** The Master can say a firm "No" to mechanical abuse, rewards creative improvisation, and makes behind-the-screen quips.
 * **Dynamic Session Zero:** Deep reasoning (`reasoning_effort: high`) during world-building, tailoring adventures and NPC arcs to player desires.
 
-### 3. 🎙️ Cinematic Multi-Voice TTS & Voice Input
-* **Instant Streaming Narration:** First audio bytes play within 350 ms via streamed SSE tickets.
-* **Supported Voice Engines:**
-  * **Microsoft Edge Neural TTS:** High-fidelity natural Russian and English voices (Free, zero API keys required).
-  * **OpenAI TTS:** Deep velvet baritone (`Onyx`, `Fable`, `Nova`, `Echo`, `Alloy`, `Shimmer`).
-  * **ElevenLabs:** Cinematic studio-grade voices (`Eleven Flash v2.5` with character voice routing).
-  * **Silero TTS:** 100% offline local neural voice on CPU.
-* **Smart Noise-Gated Transcription:** Groq Whisper and browser speech recognition with natural capitalization and D&D term normalization.
+### 3. 🎙️ Cinematic Multi-Voice TTS (OpenAI TTS Engine)
+* **Flagship Neural Voice Pipeline:** Powered by OpenAI TTS (`tts-1`) with dynamic character acting and multi-voice dialogue routing:
+  * Dungeon Master narration: deep velvet baritone (**`Onyx`**) or classic storyteller (**`Fable`**);
+  * Female NPCs and witches: expressive (**`Nova`**) and soft (**`Shimmer`**);
+  * Young rogues and bards: agile (**`Echo`**).
+* **Instant Streaming Narration:** First audio bytes play within 250–350 ms via streamed SSE tickets.
+* **Smart Diction & Intonation:** Strip technical prefixes (`[Hero]: ` is never read aloud), normalize dice formulas (`1d20+4` → *"one d twenty plus four"*), auto-stress accents, and natural pause punctuation.
+* **Alternative Engines:** ElevenLabs (`Eleven Flash v2.5`), local offline Silero TTS, or system voices.
 
 ### 4. 🗺️ Tactical Display & Fog of War
 * **Draggable Tactical HUD:** Resizable floating window with grid coordinates, marker tokens, line-of-sight fog of war, and ambient soundtrack player (camp, tavern, battle, dungeon, forest, rain, mystery).
