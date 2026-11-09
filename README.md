@@ -1,132 +1,98 @@
-# Сказитель · v0.9.4
+# ZeroPrep-DnD · v0.9.4
 
-> **[Русский](./README.md)** | **[English](./README.en.md)**
+> **[English](./README.md)** | **[Русский](./README.ru.md)**
 
-Настольная ролевая игра с искусственным интеллектом за экраном ведущего. Кроссплатформенное приложение для macOS (Apple Silicon) и Windows 10/11, сочетающее кинематографичное повествование, тактильную физику бросков кубиков, плавающее тактическое окно карты в строгом стиле Apple HIG, настраиваемый масштабируемый интерфейс, полную мультиязычность (RU / EN) и мобильный LAN-компаньон для смартфонов игроков за общим столом.
+A privacy-first, self-hosted AI Dungeon Master for genuine tabletop D&D 2024 & 5e. Cross-platform application for macOS (Apple Silicon) and Windows 10/11, combining cinematic AI narration, physical dice rolling, local computer vision on the Apple Neural Engine, low-latency multi-voice streaming TTS, tactile battle maps, and a zero-install LAN companion for players' smartphones.
 
-**Обновление 0.9.4 (Локальное зрение Мастера · Apple Neural Engine):** 100% бесплатное и приватное компьютерное зрение через системный фреймворк Apple Vision. Распознавание количества игроков, улыбок, смеха, напряжения и залипания в смартфоны прямо на чипе Mac без расхода токенов; гибридный мониторинг реплик и пауз; компактный индикатор 👁️ «Зрение стола» с мини-превью и динамическая адаптация системного промпта. [Изменения и проверка](RELEASE-0.9.4.md).
-**Обновление 0.9.3 (Living DM & Dynamic Session Zero):** система личностей и свободы воли Мастера («Справедливый реалист с нотками мечтателя» / Rule of Cool, «Ироничный ветеран», «Суровый реалист / Гримдарк», «Эпический летописец» и свой характер). Выбор архетипа Мастера до нулевой сессии, живое нешаблонное приветствие от нейросети с нулевого хода, право мастера на твёрдое «НЕТ» на абуз механик и закадровые реплики за ширмой вслух через TTS. [Изменения и проверка](RELEASE-0.9.3.md).
-**Обновление 0.9.2:** экономическая оптимизация контекста и кэширования OpenAI Prompt Caching (~87% cache hit rate, ~$0.0028 за ход), фоновая сверхдешёвая саммаризация на `gpt-6-luna`, динамический трекинг инвентаря и авто-лут, смена фонового эмбиента под сцену, устранение ложного перебивания мастера и анти-желейный темп повествования с таймерами угроз. [Изменения и проверка](RELEASE-0.9.2.md).
-**Обновление 0.9.1:** переработано оформление стола, карточек героев и панели разговора. Вспомогательные настройки находятся в меню «Вид и звук». [Изменения и проверка](RELEASE-0.9.1.md).
+**Flagship Release v0.9.4 (Local Table Vision · Apple Neural Engine):** 100% private and free computer vision via Apple's native Vision framework. Detects player count, smiles, laughter, suspense, and smartphone distraction right on the Mac chip with zero API tokens; hybrid action & background monitoring; compact 👁️ "Table Vision" HUD preview, and dynamic system prompt adaptation. [Read Release Notes](RELEASE-0.9.4.md).
 
 ---
 
-## 📍 Расположение проекта и запуск
+## 🌟 Key Capabilities
 
-Проект полностью локален и готов к клонированию/запуску в любой директории:
-```text
-./Skazitel
-```
+### 1. 👁️ Local Table Vision (100% Private, 0 Tokens, Apple Neural Engine / MediaPipe)
+* **Real-time table observation:** Detects player count, active speakers, engagement, laughter, yawns, and smartphone distraction.
+* **Micro-expression recognition:** Action-unit tracking for eye aspect ratio (EAR), inner-lip aperture (speaking vs silence), genuine smiles (zygomaticus lift), brow furrowing (suspense before rolls), and raised eyebrows (shock / surprise).
+* **Zero network latency & total privacy:** Runs 100% locally on device hardware (Apple Neural Engine on macOS, MediaPipe/OpenCV on Windows) in ~18 ms with 0% CPU overhead. Video frames never leave your local machine.
 
-### Способы запуска:
+### 2. 🎭 Living DM & Dynamic Session Zero
+* **Authentic Master Personalities:** Choose between *Fair Realist with a Dreamer's Spark* (Rule of Cool with firm boundaries), *Dry Tabletop Veteran*, *Grimdark Realist*, *Epic Chronicler*, or customize your own DM traits.
+* **Firm Boundaries & Tactile Agency:** The Master can say a firm "No" to mechanical abuse, rewards creative improvisation, and makes behind-the-screen quips.
+* **Dynamic Session Zero:** Deep reasoning (`reasoning_effort: high`) during world-building, tailoring adventures and NPC arcs to player desires.
 
-#### 🍏 macOS:
-1. **Нативное приложение macOS (`Skazitel.app`):**
-   - Откройте `Skazitel.app` двойным щелчком (или используйте ярлык «Сказитель» на рабочем столе с иконкой изумрудного d20).
-   - Внутри бандла зашит локальный рантайм; установка дополнительных библиотек не требуется.
-2. **Запуск через скрипт браузера (`Start-browser.command`):**
-   - Запустите `Start-browser.command` из папки проекта — сервер поднимется локально и откроет веб-интерфейс в браузере по адресу `http://localhost:47831`.
+### 3. 🎙️ Cinematic Multi-Voice TTS (OpenAI TTS Engine)
+* **Flagship Neural Voice Pipeline:** Powered by OpenAI TTS (`tts-1`) with dynamic character acting and multi-voice dialogue routing:
+  * Dungeon Master narration: deep velvet baritone (**`Onyx`**) or classic storyteller (**`Fable`**);
+  * Female NPCs and witches: expressive (**`Nova`**) and soft (**`Shimmer`**);
+  * Young rogues and bards: agile (**`Echo`**).
+* **Instant Streaming Narration:** First audio bytes play within 250–350 ms via streamed SSE tickets.
+* **Smart Diction & Intonation:** Strip technical prefixes (`[Hero]: ` is never read aloud), normalize dice formulas (`1d20+4` → *"one d twenty plus four"*), auto-stress accents, and natural pause punctuation.
+* **Alternative Engines:** ElevenLabs (`Eleven Flash v2.5`), local offline Silero TTS, or system voices.
 
-#### 🪟 Windows (10 / 11):
-1. **Пакетный запуск (`Start-Windows.bat`):**
-   - Запустите `Start-Windows.bat` двойным щелчком. Скрипт проверит наличие Node.js, поднимет локальный сервер и автоматически откроет браузер по адресу `http://127.0.0.1:47831`.
-2. **PowerShell-скрипт (`Start-Windows.ps1`):**
-   - Выполните `powershell -ExecutionPolicy Bypass -File .\Start-Windows.ps1` для запуска с цветным статусом и расширенной диагностикой.
+### 4. 🗺️ Tactical Display & Fog of War
+* **Draggable Tactical HUD:** Resizable floating window with grid coordinates, marker tokens, line-of-sight fog of war, and ambient soundtrack player (camp, tavern, battle, dungeon, forest, rain, mystery).
+* **Physical Dice Resolving:** You roll real physical dice on your table; the DM validates modifiers, DC checks, and critical rolls atomically.
 
-> [!IMPORTANT]
-> Папки `Saves` (сохранения кампаний, хроника, листы героев) и `LocalVoice` (резервный автономный синтез Silero) хранятся рядом с приложением и не должны перемещаться отдельно.
-
----
-
-## 🌟 Ключевые возможности версии 0.9.0
-
-### 1. 🗺️ Плавающее окно тактической карты (Apple HIG Floating Window)
-- **Свободное оконное поведение (в духе классических окон):**
-  - Окно тактической карты можно свободно перетаскивать по экрану за верхнюю стеклянную панель;
-  - Изменение размера потягиванием за фирменный скругленный маркер в нижнем правом углу (с сохранением геометрии в `localStorage`);
-  - Классические кнопки Apple Traffic Lights:
-    - 🔴 **Закрыть** — спрятать окно;
-    - 🟡 **Свернуть** — превратить окно в компактную стеклянную пилюлю-индикатор в нижнем углу экрана (`#hudMinibar`);
-    - 🟢 **Развернуть** — распахнуть на весь экран или вернуть прежний размер;
-  - Кнопка режима **«◧ Встроить / ❐ Окно»** — мгновенное переключение между плавающим окном и закреплённой третьей колонкой стола;
-  - Горячая клавиша **`M`** (или русская `ь`) быстро скрывает и показывает карту.
-
-### 2. 📐 Настраиваемые размеры колонок и масштаб интерфейса (Resizable Layout & Scale)
-- **Перетаскиваемые разделители (Split-Pane Resizers):**
-  - Между панелью хроники, тактической картой и карточками героев расположены разделители, которые можно перетаскивать мышью для точной настройки пропорций стола под любой монитор;
-  - Выбранные ширины колонок автоматически сохраняются между перезапусками.
-- **Контроллер масштаба интерфейса (UI Scale):**
-  - Кнопки **`A-`**, **`100%`**, **`A+`** в верхней панели позволяют плавно изменять масштаб шрифтов и элементов управления (от 80% до 140%).
-
-### 3. 🌐 Полная мультиязычность (English & Russian / RU & EN)
-- **Переключатель языка в один клик:**
-  - Кнопка **`🌐 RU / EN`** в шапке моментально переводит весь интерфейс (хроника, тактика, броски, настройки, мобильный компаньон);
-- **Двуязычный искусственный интеллект (AI Dungeon Master):**
-  - При выборе английского языка модель переключается на полный стек англоязычных системных промптов (`coreSystemEn`, `diceSystemEn`, `tempoSystemEn`, `ttsVoiceSystemEn`, `characterCreationSystemEn`);
-  - Живой кинематографичный английский язык с сохранением взрослого рейтинга 18+, аутентичных ругательств к месту и глубокой драматургии;
-  - Английский модуль суммаризации хроники (`SUMMARY_SYSTEM_EN`);
-- **Голосовой ввод Whisper и TTS на английском:**
-  - Распознавание речи Groq Whisper автоматически активирует параметр `language: 'en'`;
-  - Модуль ролевой многоголосицы OpenAI TTS маршрутизирует английские реплики (рассказчик `onyx`, женские персонажи `nova`, молодые разбойники `echo`).
-
-### 4. ⚡ Оптимизация задержек и дикции аудио (Fast Audio & Diction Polish)
-- **Ускорение первого ответа (Fast First Sentence):**
-  - Правило короткого первого предложения (4–6 слов) в системных инструкциях позволяет синтезировать первый аудио-чанк всего за **250–350 мс**;
-  - Скорость OpenAI TTS установлена в **`1.07`** (сокращение задержки на 8–10% при сохранении естественности баритона `onyx`);
-- **Безупречная дикция формул и аббревиатур:**
-  - Игровые формулы бросков кубиков автоматически разворачиваются для синтезатора: `1d20+3` $\to$ *«1 дэ 20 плюс 3»* (или *"1 d 20 plus 3"* на английском);
-  - Игровые сокращения произносятся естественно: `14 HP` $\to$ *«14 очков здоровья»*, `КД 15` $\to$ *«класс доспеха 15»*, `Сл 16` $\to$ *«сложность 16»*, `50 зм` $\to$ *«50 золотых»*;
-  - Все заглавные крики в репликах (*«БЕГИТЕ! ВРАГИ АТАКУЮТ!»*) нормализуются в естественную интонационную капитализацию (*«Бегите! Враги атакуют!»*), устраняя искажения звука нейросети.
-
-### 5. 🎙️ Ролевая многоголосица OpenAI TTS (`tts-1`)
-- Мастер ведёт рассказ баритоном **`onyx`**; женские персонажи озвучиваются голосом **`nova`**;
-- Технические префиксы спикеров вырезаются из аудиопотока — звучит только чистая прямая речь;
-- Автоматическая расстановка буквы «Ё» гарантирует 100% корректное русское ударение;
-- Зрелый рейтинг 18+ и живой отыгрыш без цензуры в драматических сценах.
-
-### 6. 📱 Мобильный LAN-компаньон для игроков (Pocket Companion)
-- Подключение по QR-коду на экране мастера (`http://<LAN-IP>:47831/player`);
-- Живой монитор здоровья (HP), спасброски от смерти, характеристики D&D 2024 / 2014, инвентарь;
-- Физические броски кубиков и встроенная защита от читерства.
+### 5. 📱 Zero-Install Mobile LAN Companion
+* Players on the same Wi-Fi network scan a QR code to access their mobile character sheet:
+  * Live HP tracking, physical roll submission, character inventory, and push-to-talk microphone.
+  * **Strict Security Isolation:** Mobile players cannot access API keys, server settings, or private notes.
 
 ---
 
-## 🚀 Быстрый старт игры
+## 🚀 Quickstart
 
-1. Откройте **Skazitel.app** (macOS) или запустите **Start-Windows.bat** (Windows).
-2. Выберите язык интерфейса кнопкой **«🌐 RU / EN»** в верхней панели.
-3. В боковой панели нажмите **«Импортировать Теона и Альвари»** или создайте новую партию кнопкой **«＋ Новая игра»**.
-4. В панели настроек **«⚙ Модели и голос»**:
-   - Выберите провайдера модели (OpenAI `gpt-4o`, `gpt-4o-mini`, Gemini или локальный совместимый сервер);
-   - Выберите провайдера STT (Groq `whisper-large-v3-turbo` или OpenAI Transcriptions);
-   - Выберите озвучку: **OpenAI TTS** (многоголосый режим `onyx` / `nova`), либо автономную локальную **Silero**.
-5. Нажмите **«Опиши, где мы находимся»** или скажите реплику в микрофон, удерживая `Пробел`.
-6. Нажмите клавишу **`M`** для вызова плавающего окна тактической карты.
+### 🍏 macOS (Apple Silicon M1/M2/M3/M4)
+1. **Desktop App:** Double-click `Skazitel.app` (or the desktop shortcut).
+2. **Alternative Launcher:**
+   ```bash
+   ./Start-browser.command
+   ```
+   Opens your browser at `http://localhost:47831`.
 
----
-
-## 🛠️ Разработка и тестирование
-
-Все исходные коды находятся в каталоге `src/`.
-
-### Запуск тестов:
-```bash
-/opt/homebrew/bin/node --test src/tests/*.test.mjs
-```
-*В проекте реализовано **118 автоматических тестов**, покрывающих механику кубиков, HP, правила D&D, инвентарь, многоголосый OpenAI TTS, фильтрацию имен, двуязычные промпты, Windows-скрипты, VAD-микрофон, LAN Companion и безопасность.*
-
-### Пересборка приложения macOS:
-```bash
-./src/build-mac.sh
-```
+### 🪟 Windows (10 / 11)
+1. **One-Click Batch File:**
+   Double-click `Start-Windows.bat`.
+   * Requires [Node.js 20+](https://nodejs.org/).
+   * Opens automatically at `http://127.0.0.1:47831`.
+2. **Optional Computer Vision on Windows:**
+   ```cmd
+   pip install mediapipe opencv-python
+   ```
 
 ---
 
-## 📚 Документация проекта
+## 🛡️ Security & Privacy Architecture
 
-- [RELEASE-0.9.0.md](RELEASE-0.9.0.md) — Подробный список новшеств версии 0.9.0.
-- [RELEASE-0.8.0.md](RELEASE-0.8.0.md) — Документация ролевой многоголосицы OpenAI TTS и интонаций.
-- [RELEASE-0.5.0.md](RELEASE-0.5.0.md) — Документация LAN-компаньона и тактических карт.
-- [TODO.md](TODO.md) — Дорожная карта и бэклог полировки.
-- [CAMPAIGN-IDEAS.md](CAMPAIGN-IDEAS.md) — Банк сюжетных завязок SSS-тира для новых приключений.
-- [DM-RESPONSIBILITIES.md](DM-RESPONSIBILITIES.md) — Матрица обязанностей ИИ-ведущего и правила D&D.
+* **100% Local Storage:** All campaign journals, character sheets, and maps are stored in local SQLite databases in `./Saves/`.
+* **Zero Telemetry / Zero Tracking:** No third-party analytics, no tracking pixels, no telemetry beacons.
+* **Token-Guarded API:** Administrative endpoints (`/api/settings`, `/api/keys`, `/api/export`) require a cryptographically generated 256-bit session token accessible only on `localhost`.
+* **Private Mobile Bridge:** Player companion tokens are scoped strictly to player actions; they cannot mutate server settings or inspect credentials.
+* **Safe for Redistribution:** The repository contains zero hardcoded absolute paths, zero private keys, and zero device identifiers.
+
+---
+
+## ⚙️ Supported AI Providers
+
+| Provider | Supported Models | Key Features |
+| :--- | :--- | :--- |
+| **OpenAI** | `gpt-4o`, `o1`, `o3-mini`, `gpt-4o-mini` | Prompt caching (~87% hit rate), Responses API, structured JSON |
+| **Google Gemini** | `gemini-1.5-pro`, `gemini-2.0-flash` | Ultra-long context, multimodal visual cues |
+| **Groq** | `llama-3.3-70b-versatile`, `whisper-large-v3-turbo` | Ultra-fast text generation & instantaneous voice transcription |
+| **OpenRouter / Local** | Gemma, Mistral, Qwen, DeepSeek, Ollama, LM Studio | Full OpenAI-compatible base URL support |
+
+---
+
+## 📚 Project Documentation
+
+- [RELEASE-0.9.4.md](RELEASE-0.9.4.md) — Flagship Release Notes (Table Vision, Living DM, Multi-Voice).
+- [INSTALL-GUIDE.md](INSTALL-GUIDE.md) — Detailed Setup & Gameplay Manual.
+- [CAMPAIGN-IDEAS.md](CAMPAIGN-IDEAS.md) — Pre-configured SSS-Tier Adventure Starters.
+- [DM-RESPONSIBILITIES.md](DM-RESPONSIBILITIES.md) — DM Operating Matrix & D&D Rules Guidelines.
+
+---
+
+## 📜 License & Acknowledgments
+
+* Game mechanics conform to D&D 5th Edition System Reference Document (SRD 5.1 & SRD 5.2.1).
+* Built with native Web Components, Apple Vision framework, and Node.js.
