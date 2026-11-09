@@ -11,11 +11,11 @@ export function character(c={}) {
  const avatar=typeof c.avatar==='string'?c.avatar.slice(0,250000):'';
  return {id:randomUUID(),name,avatar,description:String(c.description||'Искатель приключений').slice(0,500),maxHp,hp:integer(c.hp??maxHp,0,maxHp,'HP'),ac:integer(c.ac??12,0,50,'КД'),...sheet(c),...heroRecords(c)};
 }
-export function makeCampaign({name,setting,source='',characters=[],edition='legacy'}) {
+export function makeCampaign({name,setting,source='',characters=[],edition='legacy',persona='realist_dreamer',personaDetails=''}) {
  if(!Array.isArray(characters)||characters.length>12)throw Error('В партии должно быть не больше 12 героев');
  edition=String(edition);if(!Object.hasOwn(editions,edition))throw Error('Неизвестная редакция правил');
  if(!String(name||'').trim()) throw Error('Укажите название кампании');
- return {id:randomUUID(),schemaVersion:5,dm:dmState(),edition,clockMinutes:0,maps:[],memory:[],inventory:[],wallet:{group:0},loot:[],actionProposals:[],receipts:[],name:String(name).slice(0,100),setting:String(setting||'Фэнтези, исследование и приключения').slice(0,10000),source:String(source).slice(0,120000),characters:characters.map(character),journal:[],rolls:[],pending:null,reaction:null,delivery:null,summary:null,proposals:[],undo:[],createdAt:new Date().toISOString()};
+ return {id:randomUUID(),schemaVersion:5,dm:dmState(),edition,persona:String(persona||'realist_dreamer').slice(0,50),personaDetails:String(personaDetails||'').slice(0,1000),clockMinutes:0,maps:[],memory:[],inventory:[],wallet:{group:0},loot:[],actionProposals:[],receipts:[],name:String(name).slice(0,100),setting:String(setting||'Фэнтези, исследование и приключения').slice(0,10000),source:String(source).slice(0,120000),characters:characters.map(character),journal:[],rolls:[],pending:null,reaction:null,delivery:null,summary:null,proposals:[],undo:[],createdAt:new Date().toISOString()};
 }
 export function checkpoint(c) { const {undo,...rest}=c; c.undo.push(structuredClone(rest)); c.undo=c.undo.slice(-20); }
 export function undo(c) { if(!c.undo.length) throw Error('Нет действия для отмены'); const previous=c.undo.pop(), history=c.undo; Object.assign(c,{reaction:null,delivery:null,summary:null,profile:null,sessionZero:null,maps:[],memory:[],inventory:[],wallet:{group:0},loot:[],actionProposals:[],dm:dmState(),encounter:null,clockMinutes:0},previous,{undo:history}); }

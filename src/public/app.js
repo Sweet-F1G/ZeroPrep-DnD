@@ -212,10 +212,11 @@ document.addEventListener('change',e=>{if(e.target.matches('[data-field="bonusMo
 function openNew(){stopListening();pauseReactionClock();$('campaignForm').reset();$('heroForms').innerHTML=heroFields();$('campaignDialog').showModal();}
 async function created(route,data){setBusy(true,'Готовим игровой стол…');try{state=await api(route,data);activeId=state.activeId;localStorage.setItem('skazitel-active',activeId);api('settings',{activeCampaignId:activeId}).catch(()=>{});selectedId=null;render();scrollToLatest();}catch(e){toast(e.message);}finally{setBusy(false);render();}}
 $('new').onclick=openNew;$('welcomeNew').onclick=openNew;
-$('sessionZero').onclick=()=>{stopListening();pauseReactionClock();$('startForm').reset();$('startDialog').showModal();};
-$('startForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);$('startDialog').close();await created('create',{name:f.get('name'),edition:f.get('edition'),sessionZero:true,characters:[]});if($('autoVoice').checked)speak(current()?.journal.at(-1)?.text||'');$('mic').focus();};
+if($('startPersona'))$('startPersona').onchange=()=>{$('customPersonaGroup').hidden=$('startPersona').value!=='custom';};
+$('sessionZero').onclick=()=>{stopListening();pauseReactionClock();$('startForm').reset();if($('customPersonaGroup'))$('customPersonaGroup').hidden=true;$('startDialog').showModal();};
+$('startForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const persona=f.get('persona')||'realist_dreamer',personaDetails=persona==='custom'?(f.get('personaCustom')||''):'';$('startDialog').close();await created('create',{name:f.get('name'),edition:f.get('edition'),persona,personaDetails,sessionZero:true,characters:[]});if($('autoVoice').checked)speak(current()?.journal.at(-1)?.text||'');$('mic').focus();};
 $('seed').onclick=$('welcomeSeed').onclick=()=>created('create',{seed:true});
-$('campaignForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);$('campaignDialog').close();await created('create',{name:f.get('name'),edition:f.get('edition'),setting:f.get('setting'),source:f.get('source'),characters:readHeroes($('heroForms'))});};
+$('campaignForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);$('campaignDialog').close();await created('create',{name:f.get('name'),edition:f.get('edition'),persona:f.get('persona')||'realist_dreamer',setting:f.get('setting'),source:f.get('source'),characters:readHeroes($('heroForms'))});};
 $('addHero').onclick=()=>{if($('heroForms').children.length>=6)return toast('В форме демо максимум 6 героев.');$('heroForms').insertAdjacentHTML('beforeend',heroFields());};
 $('sourceFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(f.size>200000)return toast('Файл должен быть не больше 200 КБ.');$('campaignForm').elements.source.value=await f.text();};
 let openAIModelsCache=null;

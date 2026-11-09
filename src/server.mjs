@@ -710,15 +710,31 @@ const serverHandler=async(req,res)=>{
   }
   if(url.pathname==='/api/create'){
    let c;
-   if(b.seed){const source=await fs.readFile(path.join(root,'seed','theon-alvari.md'),'utf8');c=makeCampaign({name:'Теон и Альвари',setting:'D&D 2024 Cinematic. Закат у старой башни на северном тракте. Встреча с Э ещё НЕ началась. Неизвестные тайны из файла остаются неизвестными. КД Альвари 12 — временно по предложенному варианту со щитом, подтвердить с игроком.',source,characters:[{name:'Теон',description:'Полуэльф · Artificer 4 · Artillerist',maxHp:31,ac:15,bonuses:{strength:0,dexterity:2,constitution:2,intelligence:4,wisdom:1,charisma:-1,perception:3,investigation:6,arcana:6,stealth:2,athletics:0,persuasion:-1,survival:1,insight:1}},{name:'Альвари',description:'Полуэльф · Druid 4 · Circle of Stars',maxHp:31,ac:12,bonuses:{strength:1,dexterity:-1,constitution:2,intelligence:2,wisdom:4,charisma:0,perception:6,investigation:2,arcana:2,stealth:-1,athletics:1,persuasion:0,survival:6,insight:6}}]});}
-   else c=makeCampaign({...b,characters:Array.isArray(b.characters)?b.characters:[]});
-   if(b.dm)c.dm=dmState(b.dm);if(b.sessionZero===true)beginSessionZero(c,config.provider);
+   if(b.seed){const source=await fs.readFile(path.join(root,'seed','theon-alvari.md'),'utf8');c=makeCampaign({name:'Теон и Альвари',setting:'D&D 2024 Cinematic. Закат у старой башни на северном тракте. Встреча с Э ещё НЕ началась. Неизвестные тайны из файла остаются неизвестными. КД Альвари 12 — временно по предложенному варианту со щитом, подтвердить с игроком.',source,characters:[{name:'Теон',description:'Полуэльф · Artificer 4 · Artillerist',maxHp:31,ac:15,bonuses:{strength:0,dexterity:2,constitution:2,intelligence:4,wisdom:1,charisma:-1,perception:3,investigation:6,arcana:6,stealth:2,athletics:0,persuasion:-1,survival:1,insight:1}},{name:'Альвари',description:'Полуэльф · Druid 4 · Circle of Stars',maxHp:31,ac:12,bonuses:{strength:1,dexterity:-1,constitution:2,intelligence:2,wisdom:4,charisma:0,perception:6,investigation:2,arcana:2,stealth:-1,athletics:1,persuasion:0,survival:6,insight:6}}],persona:b.persona||'realist_dreamer',personaDetails:b.personaDetails||''});}
+   else c=makeCampaign({...b,characters:Array.isArray(b.characters)?b.characters:[],persona:b.persona||'realist_dreamer',personaDetails:b.personaDetails||''});
+   if(b.dm)c.dm=dmState(b.dm);
+   if(b.sessionZero===true){
+    beginSessionZero(c,config.provider,c.persona);
+    if(config.provider!=='demo'){
+     await keysReady;
+     const tempSysId=randomUUID();
+     c.journal.push({id:tempSysId,role:'system',text:`[Инструкция для приветствия]: Нулевая сессия только начинается. Поприветствуй игроков за столом лично в своём неповторимом характере Мастера (${c.persona||'realist_dreamer'}). Кратко и сочно задай тон вашей игры, объясни, что они могут выбрать любой мир и сеттинг или просто попросить тебя сгенерировать всё на твой вкус и начать, и спроси, в каком мире они хотят оказаться. Отвечай строго по JSON-протоколу с полем "narration".`,at:new Date().toISOString()});
+     try{
+      const reply=await generate({...config},{...keys},c,observe);
+      c.journal=c.journal.filter(e=>e.id!==tempSysId);
+      c.journal=c.journal.filter(e=>!(e.role==='assistant'&&e.text.includes('Приветствую за игровым столом')));
+      acceptReply(c,reply);
+     }catch(err){
+      c.journal=c.journal.filter(e=>e.id!==tempSysId);
+     }
+    }
+   }
    config.activeCampaignId=c.id;
    await commitCampaign(c);return json(res,{...state(),activeId:c.id,activeCampaignId:c.id});
   }
   if(url.pathname==='/api/import'){
    const imported=b.campaign;if(b.format!=='skazitel-v1'||!imported)throw Error('Нужен JSON-экспорт Сказителя');
-   const c=makeCampaign({name:imported.name,setting:imported.setting,source:imported.source,edition:imported.edition||'legacy',characters:[]});
+   const c=makeCampaign({name:imported.name,setting:imported.setting,source:imported.source,edition:imported.edition||'legacy',characters:[],persona:imported.persona||'realist_dreamer',personaDetails:imported.personaDetails||''});
    if((imported.characters||[]).length>12)throw Error('В партии больше 12 героев');
    const idMap=new Map();c.characters=(imported.characters||[]).map(x=>{const v=character(x);idMap.set(x.id,v.id);return v;});
    if(imported.profile)c.profile={rules:String(imported.profile.rules||'').slice(0,1000),style:String(imported.profile.style||'').slice(0,6000),boundaries:String(imported.profile.boundaries||'').slice(0,6000),heroes:String(imported.profile.heroes||'').slice(0,6000),dice:'Все броски физические'};

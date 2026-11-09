@@ -5,7 +5,7 @@ const without=(value,keys)=>Object.fromEntries(Object.entries(value||{}).filter(
 const pick=(value,keys)=>Object.fromEntries(keys.filter(key=>value?.[key]!==undefined).map(key=>[key,value[key]]));
 export function cachedCampaignContext(c){
  const context=campaignContext(c);
- const reference={name:c.name,edition:c.edition||'legacy',setting:c.setting,profile:c.profile||null,source:c.source||'',
+ const reference={name:c.name,edition:c.edition||'legacy',setting:c.setting,persona:c.persona||'realist_dreamer',profile:c.profile||null,source:c.source||'',
   world:(c.dm?.world||[]).filter(w=>['npc','faction','quest','location'].includes(w.kind)).map(w=>pick(w,['id','kind','name','description','location','attitude','stage','links'])),
   characters:c.characters.map(h=>({id:h.id,name:h.name,bio:h.bio,description:h.description,className:h.className,notes:h.notes||'',features:h.features||[],spells:(h.spells||[]).map(s=>without(s,['prepared'])),resources:(h.resources||[]).map(r=>without(r,['current','readyAt']))})),
   inventory:(c.inventory||[]).map(i=>without(i,['iconId','quantity','charges','equipped','attuned','ownerId','carrierId','containerId']))};
