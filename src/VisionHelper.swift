@@ -31,6 +31,8 @@ func analyzeImage(data: Data) -> [String: Any] {
     
     var playerDetails: [[String: Any]] = []
     var smilingCount = 0
+    var tiredCount = 0
+    var neutralCount = 0
     var speakingCount = 0
     var lookingDownCount = 0
     var lookingAwayCount = 0
@@ -53,36 +55,92 @@ func analyzeImage(data: Data) -> [String: Any] {
         
         var mouthOpen = false
         var smiling = false
+        var tired = false
+        var yawning = false
+        var neutral = false
         
         if let landmarks = obs.landmarks {
+            // 1. Analyze Eyes (Eye Aspect Ratio / EAR) for alertness vs fatigue
+            func ear(_ region: VNFaceLandmarkRegion2D?) -> Double {
+                guard let region = region, region.pointCount >= 4 else { return 0.25 }
+                let pts = region.normalizedPoints
+                guard let minX = pts.map({ $0.x }).min(),
+                      let maxX = pts.map({ $0.x }).max(),
+                      let minY = pts.map({ $0.y }).min(),
+                      let maxY = pts.map({ $0.y }).max() else { return 0.25 }
+                let width = max(0.001, maxX - minX)
+                let height = maxY - minY
+                return height / width
+            }
+            
+            let leftEar = ear(landmarks.leftEye)
+            let rightEar = ear(landmarks.rightEye)
+            let avgEar = (leftEar + rightEar) / 2.0
+            
+            // 2. Analyze Lips geometry using spatial bounds (not arbitrary indices)
             if let outerLips = landmarks.outerLips, outerLips.pointCount >= 6 {
                 let pts = outerLips.normalizedPoints
-                let leftCorner = pts.first!
-                let rightCorner = pts.last!
-                let cornerY = (leftCorner.y + rightCorner.y) / 2.0
-                let topLip = pts[pts.count / 4]
-                let bottomLip = pts[pts.count * 3 / 4]
-                let mouthHeight = abs(topLip.y - bottomLip.y)
-                let mouthWidth = max(0.001, abs(rightCorner.x - leftCorner.x))
-                let ratio = mouthHeight / mouthWidth
-                
-                if ratio > 0.20 {
-                    mouthOpen = true
-                    speakingCount += 1
+                if let leftCorner = pts.min(by: { $0.x < $1.x }),
+                   let rightCorner = pts.max(by: { $0.x < $1.x }),
+                   let topLip = pts.max(by: { $0.y < $1.y }),
+                   let bottomLip = pts.min(by: { $0.y < $1.y }) {
+                    
+                    let mouthWidth = max(0.001, rightCorner.x - leftCorner.x)
+                    let mouthHeight = max(0.001, topLip.y - bottomLip.y)
+                    let mouthAspect = mouthWidth / mouthHeight
+                    let mouthOpeningRatio = mouthHeight / mouthWidth
+                    
+                    let cornerAvgY = (leftCorner.y + rightCorner.y) / 2.0
+                    let lipCenterY = (topLip.y + bottomLip.y) / 2.0
+                    let cornerLift = cornerAvgY - lipCenterY
+                    
+                    if mouthOpeningRatio > 0.40 && avgEar < 0.20 {
+                        yawning = true
+                        tired = true
+                    } else if mouthOpeningRatio > 0.26 {
+                        mouthOpen = true
+                        speakingCount += 1
+                    }
+                    
+                    // True smile: corners genuinely lifted upward relative to mouth center line
+                    // AND mouth horizontally elongated
+                    if cornerLift > 0.010 && mouthAspect > 2.6 {
+                        smiling = true
+                        smilingCount += 1
+                    } else if avgEar < 0.17 || (avgEar < 0.20 && cornerLift < -0.004) {
+                        // Heavy eyelids or drooping mouth corners -> fatigue / tired
+                        tired = true
+                        tiredCount += 1
+                    } else {
+                        // Resting face with normal alertness
+                        neutral = true
+                        neutralCount += 1
+                    }
                 }
-                
-                if cornerY > (topLip.y + bottomLip.y) / 2.0 - 0.015 {
-                    smiling = true
-                    smilingCount += 1
-                }
+            } else {
+                neutral = true
+                neutralCount += 1
             }
+        } else {
+            neutral = true
+            neutralCount += 1
         }
+        
+        var expression = "neutral"
+        if smiling { expression = "smiling" }
+        else if yawning { expression = "yawning" }
+        else if tired { expression = "tired" }
+        else if mouthOpen { expression = "speaking" }
         
         playerDetails.append([
             "index": idx + 1,
             "attention": attention,
+            "expression": expression,
             "mouthOpen": mouthOpen,
             "smiling": smiling,
+            "tired": tired,
+            "yawning": yawning,
+            "neutral": neutral,
             "yaw": round(yaw * 100) / 100,
             "pitch": round(pitch * 100) / 100
         ])
@@ -107,14 +165,20 @@ func analyzeImage(data: Data) -> [String: Any] {
         } else {
             parts.append("На лицах видны улыбки и азарт.")
         }
+    } else if tiredCount > 0 {
+        if tiredCount == total {
+            parts.append("Игрок выглядит усталым (тяжёлые веки, спокойный утомлённый взгляд).")
+        } else {
+            parts.append("Кто-то за столом выглядит уставшим или сонным.")
+        }
     } else if lookingDownCount > 0 {
         if lookingDownCount == total {
             parts.append("Все смотрят вниз (в телефоны, листы или кубики).")
         } else {
             parts.append("Кто-то смотрит вниз (в телефон или на кубики).")
         }
-    } else if focusedCount > 0 {
-        parts.append("Игроки внимательно и сосредоточенно смотрят на мастера.")
+    } else if neutralCount > 0 || focusedCount > 0 {
+        parts.append("Игрок спокойно и внимательно слушает мастера (нейтральное, сосредоточенное выражение лица).")
     }
     
     let summaryText = parts.joined(separator: " ")
@@ -122,8 +186,10 @@ func analyzeImage(data: Data) -> [String: Any] {
     return [
         "faces": total,
         "summary": summaryText,
-        "attention": lookingDownCount > 0 ? "looking_down" : (focusedCount > 0 ? "focused" : "mixed"),
+        "attention": lookingDownCount > 0 ? "looking_down" : (lookingAwayCount > 0 ? "looking_away" : (focusedCount > 0 ? "focused" : "mixed")),
         "smiling": smilingCount > 0,
+        "tired": tiredCount > 0,
+        "neutral": neutralCount > 0 && smilingCount == 0 && tiredCount == 0,
         "speaking": speakingCount > 0,
         "distracted": lookingDownCount > 0 || lookingAwayCount > 0,
         "details": playerDetails

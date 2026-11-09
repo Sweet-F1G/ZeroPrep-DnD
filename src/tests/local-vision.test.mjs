@@ -15,6 +15,7 @@ test('buildSystem dynamically includes VISION_SYSTEM when vision is on', () => {
   const sysPrompt = buildSystem(c, {vision: 'on'});
   assert.ok(sysPrompt.includes('ЗРИТЕЛЬНЫЙ КОНТАКТ С ИГРОКАМИ (ЛОКАЛЬНОЕ ЗРЕНИЕ МАСТЕРА)'));
   assert.ok(sysPrompt.includes('Apple Neural Engine'));
+  assert.ok(sysPrompt.includes('Если игрок выглядит уставшим или сонным'));
 });
 
 test('buildSystem completely excludes VISION_SYSTEM when vision is off', () => {

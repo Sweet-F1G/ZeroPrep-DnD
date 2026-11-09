@@ -2300,8 +2300,10 @@ async function captureVisionFrame() {
       if ($('visionAttentionBadge')) {
         let badge = 'Внимание';
         if (res.attention === 'looking_down') badge = 'Вниз / телефон';
-        else if (res.smiling) badge = 'Улыбки / смех';
+        else if (res.smiling) badge = 'Улыбка / азарт';
+        else if (res.tired) badge = 'Усталость';
         else if (res.speaking) badge = 'Говорит';
+        else if (res.neutral) badge = 'Спокоен / фокус';
         else if (res.attention === 'focused') badge = 'На мастера';
         $('visionAttentionBadge').textContent = badge;
       }
