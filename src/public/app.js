@@ -85,7 +85,7 @@ function render(){
  $('proposals').innerHTML=c.proposals.map(p=>`<div class="proposal">${esc(c.characters.find(x=>x.id===p.characterId)?.name)}: HP ${p.hpDelta>0?'+':''}${p.hpDelta}. ${esc(p.reason)}<br><button data-proposal="${p.id}" data-accept="yes">✓ Применить</button><button data-proposal="${p.id}" data-accept="no">Отклонить</button></div>`).join('');
  $('reactionPanel').hidden=!c.reaction;if(c.reaction){$('reactionPrompt').textContent=c.reaction.prompt;$('reactionStakes').textContent=c.reaction.stakes;}
  $('passReaction').disabled=busy;$('reactNow').disabled=busy;
- if(!busy&&!recording)$('status').textContent=c.reaction?'Сцена на паузе — ждём решения игроков':interruptionActive?'Мастер прерван — ваша реплика':state.config.listeningMode==='continuous'?(ambientMic.active?'Мастер слушает игроков':'Включите микрофон для постоянного прослушивания'):'Мастер слушает по кнопке';
+ if(!busy&&!recording)$('status').textContent=c.reaction?(getLanguage()==='en'?'Scene paused — awaiting player decisions':'Сцена на паузе — ждём решения игроков'):interruptionActive?(getLanguage()==='en'?'Dungeon Master interrupted — your turn':'Мастер прерван — ваша реплика'):state.config.listeningMode==='continuous'?(ambientMic.active?(getLanguage()==='en'?'Dungeon Master is listening':'Мастер слушает игроков'):(getLanguage()==='en'?'Turn on microphone for continuous listening':'Включите микрофон для постоянного прослушивания')):(getLanguage()==='en'?'Dungeon Master is listening on tap':'Мастер слушает по кнопке');
  $('send').disabled=busy||!!c.pending||!!c.proposals.length;$('message').disabled=!!c.pending||!!c.proposals.length;$('mic').disabled=busy;
  renderCombatTracker();
  renderTacticalHud();

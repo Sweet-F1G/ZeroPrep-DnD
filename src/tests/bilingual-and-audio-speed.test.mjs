@@ -45,7 +45,7 @@ test('resolveOpenAiVoice routes English NPC characters and dialogue cues', () =>
 });
 
 test('defaults includes language and ttsSpeed settings', () => {
-  assert.equal(defaults.language, 'ru');
+  assert.equal(defaults.language, 'en');
   assert.equal(defaults.ttsSpeed, 1.07);
 });
 

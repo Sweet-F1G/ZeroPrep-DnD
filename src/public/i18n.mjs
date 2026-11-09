@@ -119,7 +119,8 @@ export const translations = {
 
     // Splitter & Scaling
     splitResizerTooltip: "Перетащите мышью, чтобы изменить ширину колонок",
-    uiScaleTooltip: "Масштаб интерфейса"
+    uiScaleTooltip: "Масштаб интерфейса",
+    tableNote: "Настоящие кубики.<br>Ваши решения.<br>Общая история."
   },
   en: {
     // Brand & Header
@@ -241,18 +242,19 @@ export const translations = {
 
     // Splitter & Scaling
     splitResizerTooltip: "Drag to adjust column widths",
-    uiScaleTooltip: "UI & Font Scale"
+    uiScaleTooltip: "UI & Font Scale",
+    tableNote: "Real physical dice.<br>Your decisions.<br>A shared story."
   }
 };
 
-let currentLang = 'ru';
+let currentLang = 'en';
 
 export function getLanguage(){
   return currentLang;
 }
 
 export function setLanguage(lang){
-  currentLang = (lang === 'en' ? 'en' : 'ru');
+  currentLang = (lang === 'ru' ? 'ru' : 'en');
   document.documentElement.setAttribute('lang', currentLang);
   localStorage.setItem('skazitel-lang', currentLang);
   applyTranslations();
@@ -260,13 +262,12 @@ export function setLanguage(lang){
 }
 
 export function t(key){
-  return translations[currentLang]?.[key] || translations['ru']?.[key] || key;
+  return translations[currentLang]?.[key] || translations['en']?.[key] || translations['ru']?.[key] || key;
 }
 
 export function initLanguage(){
   const saved = localStorage.getItem('skazitel-lang');
-  const browserEn = navigator.language && navigator.language.toLowerCase().startsWith('en');
-  setLanguage(saved || (browserEn ? 'en' : 'ru'));
+  setLanguage(saved || 'en');
 }
 
 export function applyTranslations(){

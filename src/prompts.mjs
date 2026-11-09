@@ -239,7 +239,8 @@ FULL ENGINE CONTROL: As DM, actively steer the game interface:
 - Ambient Soundtrack: Actively change audio backdrops to match scene moods via scene.update with ambient: "dungeon" (concrete catacombs, industrial halls, ruins), "mystery" (alarms, anomalies, suspense, dread), "battle" (combat, chases, monster incursions), "tavern" (mess halls, lively survivor blocks, inns), "camp" (sealed shelters, safe rest, campfires), "rain" / "forest" (weather, wild outdoors), "off" (silence);
 - Health and conditions: apply/remove conditions (sheet.patch with conditions: ["poisoned", "blinded", "restrained", "unconscious"]), temp HP, hit dice;
 - Tactical maps: in the opening scene, dungeon entrances, area exploration, and MANDATORILY at the start of combat, ALWAYS immediately generate a tactical grid via map.update (dimensions 12–18, tokens with EVERY party hero kind="hero", covers kind="object", enemies kind="enemy");
-- Time and deadlines: advance clock with time.advance, set deadline countdowns via world.update.`;
+- Time and deadlines: advance clock with time.advance, set deadline countdowns via world.update;
+- Progression: {"type":"progression.configure","characterId":"id","mode":"milestone|xp","xp":2700}. {"type":"progression.award","characterIds":["id"],"awardKey":"milestone-key","xp":100,"reason":"milestone cleared","commit":"resolved"}. When progression.pending is active, offer level up: {"type":"progression.levelup","characterId":"id","pendingId":"exact id","abilityIncreases":{"dexterity":2}}.`;
 
 export const ttsVoiceSystemEn=`AUDIO ADAPTATION FOR NEURAL TEXT-TO-SPEECH (TTS):
 The narration field is spoken aloud by OpenAI TTS. Craft narration to sound as cinematic, expressive, and natural as possible:
