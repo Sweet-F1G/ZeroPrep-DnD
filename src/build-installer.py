@@ -6,8 +6,8 @@ SRC=Path(__file__).resolve().parent
 OUT=SRC.parent.parent/'Installers';OUT.mkdir(exist_ok=True)
 STAGE=Path(tempfile.mkdtemp(prefix='skazitel-installer-',dir='/private/tmp'))
 APP=STAGE/'payload/Skazitel.app';RES=APP/'Contents/Resources';CODE=RES/'src'
-PYTHON=Path(os.environ.get('SKAZITEL_PYTHON', '/Users/sweet_f1g/.cache/codex-runtimes/codex-primary-runtime/dependencies/python'))
-NODE=Path(os.environ.get('SKAZITEL_NODE', '/Users/sweet_f1g/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node'))
+PYTHON=Path(os.environ.get('SKAZITEL_PYTHON', shutil.which('python3') or '/usr/bin/python3'))
+NODE=Path(os.environ.get('SKAZITEL_NODE', shutil.which('node') or '/usr/local/bin/node'))
 VOICE=Path(os.environ.get('SKAZITEL_VOICE_SOURCE',str(SRC.parent/'LocalVoice')))
 CACHE=Path(os.environ.get('SKAZITEL_BUILD_CACHE','/private/tmp/skazitel-installer-swift-cache'));CACHE.mkdir(exist_ok=True)
 VERSION='0.7.0'

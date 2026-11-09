@@ -304,7 +304,7 @@ main > header {
   color: var(--accent-gold);
 }
 
-.header-actions > button, .ambient-btn, .view-menu > summary {
+.header-actions > button, .ambient-btn {
   min-height: 36px;
   font-size: 12.5px;
   border-radius: 8px;
@@ -313,9 +313,183 @@ main > header {
   color: var(--text-primary);
 }
 
-.header-actions > button:hover, .ambient-btn:hover, .view-menu > summary:hover {
+.header-actions > button:hover, .ambient-btn:hover {
   border-color: var(--accent-gold);
   background: var(--surface-3);
+}
+
+/* --------------------------------------------------------------------------
+   МЕНЮ НАСТРОЕК СТОЛА (.view-menu)
+   -------------------------------------------------------------------------- */
+.view-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.view-menu > summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  white-space: nowrap;
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  min-height: 36px;
+  transition: all 0.18s ease;
+}
+
+.view-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.view-menu > summary:hover {
+  border-color: var(--accent-gold);
+  background: var(--surface-3);
+}
+
+.view-menu[open] > summary {
+  background: var(--surface-3);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 1px var(--accent-gold);
+}
+
+.view-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 310px;
+  max-width: calc(100vw - 32px);
+  padding: 18px;
+  z-index: 1000;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 14px;
+  background-color: var(--surface-3);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(212, 163, 89, 0.15);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  color: var(--text-primary);
+  animation: viewMenuFade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes viewMenuFade {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.view-menu-heading {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--accent-gold);
+  font-weight: 600;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+}
+
+.view-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 10px 0;
+  font-size: 13px;
+  font-family: var(--font-ui);
+}
+
+.view-menu-row > button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+
+.view-menu-row > button:hover {
+  border-color: var(--accent-gold);
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+
+.view-menu-divider {
+  height: 1px;
+  background: var(--hairline);
+  margin: 14px 0;
+}
+
+.ui-scale-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.ui-scale-btn {
+  min-height: 34px;
+  min-width: 36px;
+  font-size: 13px;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.ui-scale-btn:hover {
+  background: var(--surface-1);
+  color: var(--accent-gold);
+}
+
+.ui-scale-val {
+  padding: 0 10px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--accent-gold);
+}
+
+.view-menu-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: 9px;
+  min-height: 40px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-menu-settings:hover {
+  border-color: var(--accent-gold);
+  background: var(--surface-1);
+  color: var(--accent-gold);
 }
 
 /* --------------------------------------------------------------------------
@@ -607,4 +781,33 @@ dialog::backdrop {
   letter-spacing: 0.14em;
   color: var(--accent-gold);
   margin-top: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   АДАПТИВНОСТЬ И РЕСПОНСИВНОСТЬ
+   -------------------------------------------------------------------------- */
+@media (max-width: 1250px) {
+  .header-actions > #undo { font-size: 0; padding: 6px; width: 34px; }
+  .header-actions > #undo::before { content: '↶'; font-size: 18px; }
+  .header-actions .tactical-hud-btn kbd { display: none; }
+}
+
+@media (max-width: 1050px) and (min-width: 801px) {
+  .header-left .breadcrumb { display: none; }
+  .session-cost > span, .view-menu > summary > span[data-i18n], #ambientCurrentLabel { display: none; }
+  .header-actions { flex: 1; justify-content: flex-end; }
+  .composer { grid-template-columns: 1fr; gap: 8px; }
+  .composer-top { justify-content: flex-start; }
+}
+
+@media (max-width: 800px) {
+  body { overflow-x: hidden; }
+  .sidebar { position: relative; width: auto; padding: 12px 16px; max-height: 220px; overflow: auto; }
+  .sidebar .section-label, .sidebar .sidebar-bottom, .sidebar-collapse-btn { display: none; }
+  body.sidebar-collapsed .sidebar { display: none; }
+  main { margin-left: 0; }
+  main > header { padding: 10px 14px; gap: 8px; }
+  .view-menu-panel { position: fixed; right: 12px; top: auto; margin-top: 10px; }
+  .table-grid { display: flex; flex-direction: column-reverse; padding: 0 16px 16px; gap: 12px; }
+  .composer { left: 0; padding: 10px 14px; }
 }
