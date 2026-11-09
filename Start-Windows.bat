@@ -12,11 +12,18 @@ echo.
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
     echo [ОШИБКА] Node.js не найден в системе.
-    echo Пожалуйста, установите Node.js версии 22 или новее с https://nodejs.org/
+    echo Пожалуйста, установите Node.js версии 20 или новее с https://nodejs.org/
     echo и перезапустите этот скрипт.
     echo.
     pause
     exit /b 1
+)
+
+where python >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    echo [+] Python обнаружен: локальное зрение Мастера поддерживается (MediaPipe / OpenCV).
+) else (
+    echo [i] Python не найден: Сказитель работает в режиме текста, живого голоса и тактических карт.
 )
 
 set "TASK_DIR=%~dp0"

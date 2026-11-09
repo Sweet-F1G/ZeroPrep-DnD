@@ -831,15 +831,26 @@ const serverHandler=async(req,res)=>{
    if(!base64Data)throw Error('Нет изображения для анализа');
    const buffer=Buffer.from(base64Data,'base64');
    if(buffer.length<100||buffer.length>10000000)throw Error('Некорректный размер изображения');
-   const helperPath=[
+   const helperCandidates=[
+    path.join(root,'VisionHelper.exe'),
     path.join(root,'VisionHelper'),
+    path.join(root,'src','VisionHelper.exe'),
     path.join(root,'src','VisionHelper'),
+    path.join(root,'src','vision_helper.py'),
+    path.join(root,'vision_helper.py'),
     path.join(root,'..','VisionHelper'),
     path.join(process.resourcesPath||'','VisionHelper')
-   ].find(p=>fsSync.existsSync(p))||path.join(root,'VisionHelper');
+   ];
+   const helperPath=helperCandidates.find(p=>fsSync.existsSync(p));
    const analysis=await new Promise(resolve=>{
     try{
-     const p=spawn(helperPath,[],{stdio:['pipe','pipe','ignore']});
+     if(!helperPath){
+      return resolve({faces:0,summary:'Локальный VisionHelper недоступен'});
+     }
+     const isPy=helperPath.endsWith('.py');
+     const cmd=isPy?(process.platform==='win32'?'python':'python3'):helperPath;
+     const cmdArgs=isPy?[helperPath]:[];
+     const p=spawn(cmd,cmdArgs,{stdio:['pipe','pipe','ignore']});
      let out='';
      p.stdout.on('data',chunk=>{out+=chunk;});
      p.on('error',err=>resolve({faces:0,summary:'Локальный VisionHelper недоступен',error:err.message}));
@@ -852,7 +863,7 @@ const serverHandler=async(req,res)=>{
      });
      p.stdin.end(buffer);
     }catch(err){
-     resolve({faces:0,summary:'Ошибка запуска Apple Vision',error:err.message});
+     resolve({faces:0,summary:'Ошибка запуска компьютерного зрения',error:err.message});
     }
    });
    const active=campaigns.find(x=>x.id===config.activeCampaignId);
