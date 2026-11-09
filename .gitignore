@@ -40,3 +40,5 @@ __pycache__/
 
 # Native Mac application bundle (built via src/build-mac.sh)
 Skazitel.app/
+src/VisionHelper
+VisionHelper

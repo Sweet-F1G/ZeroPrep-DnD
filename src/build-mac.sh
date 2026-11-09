@@ -18,6 +18,8 @@ done
 cp -RX "$TASK_SRC/public" "$TASK_APP/Contents/Resources/src/"
 cp -RX "$TASK_SRC/seed" "$TASK_APP/Contents/Resources/src/"
 cp -X "$TASK_SRC/assets/Skazitel.icns" "$TASK_APP/Contents/Resources/Skazitel.icns"
+swiftc -O -target arm64-apple-macos14.0 -module-cache-path "$TASK_CACHE" "$TASK_SRC/VisionHelper.swift" -o "$TASK_APP/Contents/Resources/VisionHelper" -framework Vision -framework AppKit
+cp -X "$TASK_APP/Contents/Resources/VisionHelper" "$TASK_SRC/VisionHelper"
 # Keep the credential reader's signed identity stable unless Keychain.swift changes.
 if [[ -d "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app" && "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app/Contents/MacOS/Skazitel" -nt "$TASK_SRC/Keychain.swift" ]]; then
   ditto --norsrc --noextattr "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app" "$TASK_APP/Contents/Resources/KeyStore.app"
@@ -43,10 +45,11 @@ cat > "$TASK_APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Сказитель</string>
 <key>CFBundleDisplayName</key><string>Сказитель</string>
 <key>CFBundleIconFile</key><string>Skazitel.icns</string>
-<key>CFBundleVersion</key><string>23</string>
-<key>CFBundleShortVersionString</key><string>0.9.3</string>
+<key>CFBundleVersion</key><string>24</string>
+<key>CFBundleShortVersionString</key><string>0.9.4</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
+<key>NSCameraUsageDescription</key><string>Мастер наблюдает за эмоциями, взглядами и вовлечённостью игроков за столом.</string>
 <key>NSMicrophoneUsageDescription</key><string>Распознавать игровые реплики: по кнопке или при включённом постоянном прослушивании.</string>
 <key>NSDocumentsFolderUsageDescription</key><string>Сказителю нужен доступ к папке сохранений и локальным моделям голоса.</string>
 <key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
@@ -54,11 +57,12 @@ cat > "$TASK_APP/Contents/Info.plist" <<'PLIST'
 </dict></plist>
 PLIST
 chmod -R u+w "$TASK_APP"
-chmod +x "$TASK_APP/Contents/MacOS/Skazitel" "$TASK_APP/Contents/Resources/node"
+chmod +x "$TASK_APP/Contents/MacOS/Skazitel" "$TASK_APP/Contents/Resources/node" "$TASK_APP/Contents/Resources/VisionHelper"
 dot_clean "$TASK_APP" 2>/dev/null || true
 xattr -cr "$TASK_APP" 2>/dev/null || true
 xattr -dr com.apple.FinderInfo "$TASK_APP" 2>/dev/null || true
 codesign --force --sign - "$TASK_APP/Contents/Resources/node"
+codesign --force --sign - "$TASK_APP/Contents/Resources/VisionHelper"
 codesign --force --sign - "$TASK_APP"
 codesign --verify --deep --strict "$TASK_APP"
 rm -rf "$TASK_OUT/Skazitel.app"

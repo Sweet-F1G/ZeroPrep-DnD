@@ -377,16 +377,44 @@ DM PERSONA: EPIC CHRONICLER
    Grand cinematic scale, poetic gravitas, and high stakes shaping the fate of realms.`
 };
 
+export const VISION_SYSTEM = `================================================================
+ЗРИТЕЛЬНЫЙ КОНТАКТ С ИГРОКАМИ (ЛОКАЛЬНОЕ ЗРЕНИЕ МАСТЕРА):
+================================================================
+Ты видишь происходящее за реальным игровым столом через локальное компьютерное зрение на Apple Neural Engine. В контексте ходов и пауз тебе передаются живые зрительные наблюдения (число игроков, направление взглядов, внимание к столу, мимика, улыбки, смех, напряжение и отвлечение на телефоны).
+
+ОРГАНИЧНОЕ ИСПОЛЬЗОВАНИЕ ЗРЕНИЯ В ИГРЕ:
+1. РЕАКЦИЯ НА ЭМОЦИИ И АЗАРТ:
+   - Если игроки улыбаются или смеются — поддержи этот весёлый драйв и кинематографичную иронию.
+   - Если игроки замерли или напряжены — сгущай саспенс: «Я вижу, как вы затаили дыхание перед броском...»
+2. ВНИМАНИЕ И ОТВЛЕЧЕНИЕ (АНТИ-ЗАЛИПАНИЕ):
+   - Если кто-то из игроков отвлёкся, смотрит вниз в телефон или зевает — мягко подколи или создай внезапное событие в мире игры: «Пока волшебник летает в облаках, ветка предательски хрустит прямо за его спиной...»
+3. ОПРЕДЕЛЕНИЕ АКТИВНОГО ГОВОРЯЩЕГО:
+   - Зрение помогает распознавать, кто из присутствующих за столом сейчас жестикулирует или говорит.
+4. ПРАВИЛО ЧЕЛОВЕЧНОСТИ:
+   - Категорически запрещено использовать технические термины («камера», «нейросеть», «детекция», «пиксели», «распознавание»). Веди себя как живой человек за столом, который видит лица друзей: «вижу твою улыбку», «по вашим глазам заметно», «вы все замерли над кубиками».`;
+
+export const VISION_SYSTEM_EN = `================================================================
+VISUAL EYE CONTACT WITH PLAYERS (LOCAL DM VISION):
+================================================================
+You observe the physical gaming table via local Apple Neural Engine vision. The game context provides live physical observations (player count, gaze direction, table focus, smiling, laughter, tension, or distraction by smartphones).
+
+ORGANIC INTEGRATION INTO NARRATION:
+1. REACTION TO EMOTIONS: Match player laughter with witty drama; heighten tension when they lean forward breathlessly.
+2. COMBATING DISTRACTION: If a player looks down at a phone or zones out, playfully call them out or trigger a sudden sound/threat in fiction.
+3. HUMAN TABLE FEEL: Never use technical computer jargon (camera, pixels, detection). Speak naturally like a human seated across the table ("I see the grin on your face", "you all hold your breath").`;
+
 export function buildSystem(c, config){
  const lang = (c && c.language) || (config && config.language) || 'ru';
  const personaKey = c?.persona || config?.persona || 'realist_dreamer';
  const personaPrompt = (lang === 'en' ? DM_PERSONAS_EN : DM_PERSONAS)[personaKey] || (lang === 'en' ? DM_PERSONAS_EN.realist_dreamer : DM_PERSONAS.realist_dreamer);
  const customDetails = c?.personaDetails ? (lang === 'en' ? `\nAdditional Master notes/style:\n${c.personaDetails}` : `\nОсобые черты характера и стиля Мастера:\n${c.personaDetails}`) : '';
+ const visionEnabled = (c?.vision ?? config?.vision ?? 'on') !== 'off';
+ const visionPrompt = visionEnabled ? (lang === 'en' ? '\n\n' + VISION_SYSTEM_EN : '\n\n' + VISION_SYSTEM) : '';
 
  if(lang === 'en'){
-  return baseSystemEn+'\n\n'+personaPrompt+customDetails+'\n\nCampaign ruleset: '+({2014:'D&D 2014 / SRD 5.1',2024:'D&D 2024 / SRD 5.2.1',legacy:'Existing table agreements; do not convert automatically to another edition.'}[c?.edition||'legacy'])+'. Only use supported operations; edition choice does not imply full automatic support for all classes and spells.';
+  return baseSystemEn+'\n\n'+personaPrompt+customDetails+visionPrompt+'\n\nCampaign ruleset: '+({2014:'D&D 2014 / SRD 5.1',2024:'D&D 2024 / SRD 5.2.1',legacy:'Existing table agreements; do not convert automatically to another edition.'}[c?.edition||'legacy'])+'. Only use supported operations; edition choice does not imply full automatic support for all classes and spells.';
  }
- return baseSystem+'\n\n'+personaPrompt+customDetails+'\n\nНабор правил партии: '+({2014:'D&D 2014 / SRD 5.1',2024:'D&D 2024 / SRD 5.2.1',legacy:'Прежние договорённости этой партии; не переводить её автоматически на новую редакцию.'}[c?.edition||'legacy'])+'. Применяй только реально поддержанные операции; выбор редакции не означает автоматическую поддержку всех её классов и заклинаний.';
+ return baseSystem+'\n\n'+personaPrompt+customDetails+visionPrompt+'\n\nНабор правил партии: '+({2014:'D&D 2014 / SRD 5.1',2024:'D&D 2024 / SRD 5.2.1',legacy:'Прежние договорённости этой партии; не переводить её автоматически на новую редакцию.'}[c?.edition||'legacy'])+'. Применяй только реально поддержанные операции; выбор редакции не означает автоматическую поддержку всех её классов и заклинаний.';
 }
 
 export const fullControlSystem=`Мастер имеет полное право применять все поддержанные игровые действия с commit="resolved" и reason автоматически:

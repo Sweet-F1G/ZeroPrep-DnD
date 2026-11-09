@@ -5,7 +5,7 @@ import {buildPortraitPrompt} from './public/portrait-prompt.mjs';
 import {dmState,publicDM,worldRecord} from './dm-state.mjs';import {heroRecords} from './progression.mjs';
 import http from 'node:http';
 import https from 'node:https';
-import {execSync} from 'node:child_process';
+import {execSync,spawn} from 'node:child_process';
 import os from 'node:os';
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
@@ -663,6 +663,7 @@ const serverHandler=async(req,res)=>{
    if(next.summaryModel&&!['gpt-6-luna','gpt-4.1-mini','gpt-5.4-mini'].includes(next.summaryModel))throw Error('Неизвестная модель сводок');
    if(!['low','medium','high','xhigh','max'].includes(next.reasoningEffort))throw Error('Неизвестный уровень рассуждений');
    if(next.sessionZeroBoost&&!['on','off'].includes(next.sessionZeroBoost))throw Error('Неизвестный режим умного буста');
+   if(next.vision&&!['on','off'].includes(next.vision))throw Error('Неизвестный режим зрения');
    if(!['free','paid'].includes(next.groqBilling))throw Error('Неизвестный тариф Groq');
    if(!['demo','openai','gemini','compatible'].includes(next.provider))throw Error('Неизвестный провайдер');
    if(!['system','openai','silero','edge','elevenlabs','off'].includes(next.ttsProvider)||!['openai','gemini','groq'].includes(next.sttProvider))throw Error('Неизвестный голосовой провайдер');
@@ -824,6 +825,42 @@ const serverHandler=async(req,res)=>{
    await commitCampaign(c);
    return json(res,{ok:true,map,state:state()});
   }
+  if(url.pathname==='/api/vision/analyze'){
+   if(config.vision==='off')return json(res,{ok:false,disabled:true,summary:'Зрение отключено в настройках'});
+   const base64Data=String(b.image||'').replace(/^data:image\/[a-z]+;base64,/i,'');
+   if(!base64Data)throw Error('Нет изображения для анализа');
+   const buffer=Buffer.from(base64Data,'base64');
+   if(buffer.length<100||buffer.length>10000000)throw Error('Некорректный размер изображения');
+   const helperPath=[
+    path.join(root,'VisionHelper'),
+    path.join(root,'src','VisionHelper'),
+    path.join(root,'..','VisionHelper'),
+    path.join(process.resourcesPath||'','VisionHelper')
+   ].find(p=>fsSync.existsSync(p))||path.join(root,'VisionHelper');
+   const analysis=await new Promise(resolve=>{
+    try{
+     const p=spawn(helperPath,[],{stdio:['pipe','pipe','ignore']});
+     let out='';
+     p.stdout.on('data',chunk=>{out+=chunk;});
+     p.on('error',err=>resolve({faces:0,summary:'Локальный VisionHelper недоступен',error:err.message}));
+     p.on('close',()=>{
+      try{
+       resolve(JSON.parse(out.trim()));
+      }catch(e){
+       resolve({faces:0,summary:'За столом никого не видно',raw:out});
+      }
+     });
+     p.stdin.end(buffer);
+    }catch(err){
+     resolve({faces:0,summary:'Ошибка запуска Apple Vision',error:err.message});
+    }
+   });
+   const active=campaigns.find(x=>x.id===config.activeCampaignId);
+   if(active&&analysis.summary){
+    active.visionObservation=analysis.summary;
+   }
+   return json(res,{ok:true,...analysis});
+  }
   if(url.pathname==='/api/image-prompt'){const c=campaigns.find(c=>c.id===b.id);if(!c)throw Error('Кампания не найдена');return json(res,buildPortraitPrompt(c,b.characterId));}
   if(['/api/image-request','/api/image-check'].includes(url.pathname)){
    const campaign=campaigns.find(c=>c.id===b.id);if(!campaign)throw Error('Кампания не найдена');if(imageBusy.has(b.id))throw Error('Предыдущий запрос к очереди ещё выполняется');imageBusy.add(b.id);
@@ -901,6 +938,7 @@ updateReactionClock(c,b);}
    }
    else if(url.pathname==='/api/turn'){
     interruptDelivery(c);
+    if(typeof b.visionObservation==='string')c.visionObservation=b.visionObservation.slice(0,500);
     if(!c.characters.length&&(!c.sessionZero||c.sessionZero.complete))throw Error('Добавьте хотя бы одного героя');if(c.proposals.length)throw Error('Сначала подтвердите или отклоните изменения HP');
     if(b.reactionId&&b.reactionId!==c.reaction?.id)throw Error('Эта пауза уже завершена');
     if(b.timedOut&&(!c.reaction||c.reaction.paused||!c.reaction.deadlineAt||Date.now()<c.reaction.deadlineAt))throw Error('Таймер реакции ещё не истёк');

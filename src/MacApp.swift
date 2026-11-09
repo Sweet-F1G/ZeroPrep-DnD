@@ -159,8 +159,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKUIDelegate, WKNaviga
         else { decisionHandler(.cancel) }
     }
     func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType, decisionHandler: @escaping (WKPermissionDecision) -> Void) {
-        guard origin.host == "127.0.0.1", origin.port == baseURL?.port, type == .microphone else { decisionHandler(.deny); return }
-        AVCaptureDevice.requestAccess(for: .audio) { granted in DispatchQueue.main.async { decisionHandler(granted ? .grant : .deny) } }
+        guard origin.host == "127.0.0.1", origin.port == baseURL?.port else { decisionHandler(.deny); return }
+        if type == .microphone {
+            AVCaptureDevice.requestAccess(for: .audio) { granted in DispatchQueue.main.async { decisionHandler(granted ? .grant : .deny) } }
+        } else if type == .camera {
+            AVCaptureDevice.requestAccess(for: .video) { granted in DispatchQueue.main.async { decisionHandler(granted ? .grant : .deny) } }
+        } else if type == .cameraAndMicrophone {
+            AVCaptureDevice.requestAccess(for: .video) { vGranted in
+                AVCaptureDevice.requestAccess(for: .audio) { aGranted in
+                    DispatchQueue.main.async { decisionHandler((vGranted && aGranted) ? .grant : .deny) }
+                }
+            }
+        } else {
+            decisionHandler(.grant)
+        }
     }
     func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {
         let panel = NSOpenPanel()

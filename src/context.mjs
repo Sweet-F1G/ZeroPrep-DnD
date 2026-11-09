@@ -40,7 +40,7 @@ export function campaignContext(c){
  const memory=memoryContext(c,query);
  memory.obligations=memory.obligations.map(n=>pick(n,['id','kind','title','text','status','sourceId','actorId','target','deadlineMinutes']));
  return {
-  maps:c.maps||[],dm,encounter:c.encounter||null,hints,name:c.name,edition:c.edition||'legacy',persona:c.persona||'realist_dreamer',personaDetails:c.personaDetails||'',clockMinutes:c.clockMinutes||0,setting:c.setting,
+  maps:c.maps||[],dm,encounter:c.encounter||null,hints,name:c.name,edition:c.edition||'legacy',persona:c.persona||'realist_dreamer',personaDetails:c.personaDetails||'',visionObservation:c.visionObservation||null,clockMinutes:c.clockMinutes||0,setting:c.setting,
   source:sourcePassages(c.source||'',query,2400),sourceIsExcerpt:(c.source||'').length>2400,
   memory,inventory:inventoryContext(c,query).map(i=>{const {iconId,...item}=i;return item;}),inventoryIsExcerpt:(c.inventory||[]).length>50,
   wallet:c.wallet||{group:0},loot:(c.loot||[]).filter(l=>!l.claimed),actionProposals:c.actionProposals||[],profile:c.profile||null,

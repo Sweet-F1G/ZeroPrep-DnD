@@ -195,7 +195,9 @@ async function turn(data,{keepDraft=false}={}){
  if(busy)return;
  await haltNarration();const voiceAtStart=speechVersion;setBusy(true);let shouldPlay=false;
  try{
-  const turnStarted=performance.now();const sendingInterrupted=interruptionActive;interruptionActive=false;state=await api('turn',{id:activeId,characterId:selectedId,interrupted:sendingInterrupted,rollId:current()?.pending?.id,voiceDelivery:!liveDelegating&&!liveVoice.active&&$('autoVoice').checked&&state.config.ttsProvider!=='off',...data});
+  const turnStarted=performance.now();const sendingInterrupted=interruptionActive;interruptionActive=false;
+  if(state?.config?.vision!=='off'&&visionStream)captureVisionFrame().catch(()=>{});
+  state=await api('turn',{id:activeId,characterId:selectedId,interrupted:sendingInterrupted,rollId:current()?.pending?.id,visionObservation:state?.config?.vision!=='off'?latestVisionObservation:undefined,voiceDelivery:!liveDelegating&&!liveVoice.active&&$('autoVoice').checked&&state.config.ttsProvider!=='off',...data});
   if(voiceLatency)voiceLatency.turnMs=performance.now()-turnStarted;
   const interruptedDuringReply=speechVersion!==voiceAtStart;interruptionActive=interruptedDuringReply;if(!keepDraft)$('message').value='';render();$('mic').focus({preventScroll:true});
   if(current()?.delivery){if(interruptedDuringReply)await cancelDelivery();else shouldPlay=true;}
@@ -430,7 +432,7 @@ $('settingsForm').onsubmit=async e=>{
   if(values.length!==old.length||values.some((r,i)=>r.id!==old[i]?.id||r.key.trim()))data.keyPools[section.dataset.pool]=values;
  }
  const submit=e.target.querySelector('[type="submit"]');submit.disabled=true;
- try{state=await api('settings',data);e.target.reset();for(const [k,v] of Object.entries(state.config))if(e.target.elements[k])e.target.elements[k].value=v;keyFields();render();toast(state.keyStorage?.persistent?'Все ключи и порядок резервов сохранены. Они останутся после перезапуска.':'Ключи подключены только в текущем сеансе.');}
+ try{state=await api('settings',data);e.target.reset();for(const [k,v] of Object.entries(state.config))if(e.target.elements[k])e.target.elements[k].value=v;keyFields();if(state.config.vision==='off')stopVisionCamera(false);else if(!visionStream)startVisionCamera();render();toast(state.keyStorage?.persistent?'Все ключи и порядок резервов сохранены. Они останутся после перезапуска.':'Ключи подключены только в текущем сеансе.');}
  catch(err){toast(err.message);}finally{submit.disabled=false;}
 };
 $('clearKeys').onclick=async()=>{
@@ -2273,3 +2275,153 @@ document.addEventListener('keydown', event => {
 });
 
 $('tableModelSettings').onclick = () => { tableViewMenu.open = false; $('settings').click(); };
+
+// ==========================================================================
+// Local Vision System (Apple Neural Engine / Vision.framework)
+// ==========================================================================
+let visionStream = null;
+let visionTimer = null;
+let latestVisionObservation = '';
+
+async function captureVisionFrame() {
+  const video = $('visionVideo');
+  const canvas = $('visionCanvas');
+  if (!video || !canvas || !visionStream || video.readyState < 2) return;
+  canvas.width = 320;
+  canvas.height = 240;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+  try {
+    const res = await api('vision/analyze', { image: dataUrl });
+    if (res && res.ok) {
+      latestVisionObservation = res.summary || '';
+      if ($('visionFacesText')) $('visionFacesText').textContent = (res.faces || 0) + ' игроков';
+      if ($('visionAttentionBadge')) {
+        let badge = 'Внимание';
+        if (res.attention === 'looking_down') badge = 'Вниз / телефон';
+        else if (res.smiling) badge = 'Улыбки / смех';
+        else if (res.speaking) badge = 'Говорит';
+        else if (res.attention === 'focused') badge = 'На мастера';
+        $('visionAttentionBadge').textContent = badge;
+      }
+      if ($('visionSummaryText')) $('visionSummaryText').textContent = res.summary || 'Мастер наблюдает за столом.';
+    }
+  } catch (err) {
+    // Silent catch on background analyze
+  }
+}
+
+async function startVisionCamera() {
+  try {
+    if (visionStream) {
+      visionStream.getTracks().forEach(t => t.stop());
+      visionStream = null;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 320, height: 240, frameRate: 10 }
+    });
+    visionStream = stream;
+    const video = $('visionVideo');
+    if (video) {
+      video.srcObject = stream;
+      video.play().catch(() => {});
+    }
+    if ($('visionIndicatorBtn')) $('visionIndicatorBtn').classList.remove('off');
+    if ($('visionLabel')) $('visionLabel').textContent = 'Зрение стола';
+    if ($('visionToggleInput')) $('visionToggleInput').checked = true;
+    if ($('visionSummaryText')) $('visionSummaryText').textContent = 'Камера подключена. Наблюдение за столом активно.';
+    if (visionTimer) clearInterval(visionTimer);
+    // Background monitoring every 25 seconds
+    visionTimer = setInterval(() => {
+      captureVisionFrame().catch(() => {});
+    }, 25000);
+    // Initial capture after 1.5 seconds to warm up
+    setTimeout(() => captureVisionFrame().catch(() => {}), 1500);
+  } catch (err) {
+    console.warn('Vision camera access denied or unavailable:', err);
+    stopVisionCamera(false);
+    if ($('visionSummaryText')) $('visionSummaryText').textContent = 'Доступ к веб-камере не предоставлен.';
+  }
+}
+
+function stopVisionCamera(disableSettings = true) {
+  if (visionTimer) {
+    clearInterval(visionTimer);
+    visionTimer = null;
+  }
+  if (visionStream) {
+    visionStream.getTracks().forEach(t => t.stop());
+    visionStream = null;
+  }
+  const video = $('visionVideo');
+  if (video) video.srcObject = null;
+  latestVisionObservation = '';
+  if ($('visionIndicatorBtn')) $('visionIndicatorBtn').classList.add('off');
+  if ($('visionLabel')) $('visionLabel').textContent = 'Зрение выкл';
+  if ($('visionToggleInput')) $('visionToggleInput').checked = false;
+  if ($('visionSummaryText')) $('visionSummaryText').textContent = 'Зрение Мастера отключено.';
+  if (disableSettings && state?.config?.vision !== 'off') {
+    api('settings', { vision: 'off' }).catch(() => {});
+  }
+}
+
+function initVisionSystem() {
+  const btn = $('visionIndicatorBtn');
+  const popover = $('visionPopover');
+  const closeBtn = $('closeVisionPopoverBtn');
+  const toggleInput = $('visionToggleInput');
+  const snapBtn = $('visionSnapNowBtn');
+
+  if (btn && popover) {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      popover.hidden = !popover.hidden;
+      if (!popover.hidden && !visionStream && state?.config?.vision !== 'off') {
+        startVisionCamera();
+      }
+    };
+  }
+  if (closeBtn && popover) {
+    closeBtn.onclick = (e) => {
+      e.stopPropagation();
+      popover.hidden = true;
+    };
+  }
+  document.addEventListener('pointerdown', (e) => {
+    if (popover && !popover.hidden && !popover.contains(e.target) && !btn?.contains(e.target)) {
+      popover.hidden = true;
+    }
+  });
+
+  if (toggleInput) {
+    toggleInput.onchange = async () => {
+      const enabled = toggleInput.checked;
+      if (enabled) {
+        await api('settings', { vision: 'on' }).catch(() => {});
+        startVisionCamera();
+        toast('👁️ Зрение Мастера включено');
+      } else {
+        stopVisionCamera(true);
+        toast('👁️‍🗨️ Зрение Мастера выключено');
+      }
+    };
+  }
+
+  if (snapBtn) {
+    snapBtn.onclick = () => {
+      captureVisionFrame();
+      toast('📸 Снимок стола передан Мастеру');
+    };
+  }
+
+  // Auto-start camera if enabled in config
+  setTimeout(() => {
+    if (state?.config?.vision !== 'off' && navigator.mediaDevices?.getUserMedia) {
+      startVisionCamera();
+    }
+  }, 1000);
+}
+
+initVisionSystem();
+

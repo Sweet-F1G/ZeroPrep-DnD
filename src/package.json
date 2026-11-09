@@ -1,1 +1,1 @@
-{"name":"skazitel-demo","version":"0.9.3","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test tests/*.test.mjs"},"engines":{"node":">=24"}}
+{"name":"skazitel-demo","version":"0.9.4","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test tests/*.test.mjs"},"engines":{"node":">=24"}}
