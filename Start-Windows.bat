@@ -12,9 +12,16 @@ echo.
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
     echo [ОШИБКА] Node.js не найден в системе.
-    echo Пожалуйста, установите Node.js версии 20 или новее с https://nodejs.org/
+    echo Пожалуйста, установите Node.js версии 24 или новее с https://nodejs.org/
     echo и перезапустите этот скрипт.
     echo.
+    pause
+    exit /b 1
+)
+
+for /f "tokens=1 delims=." %%v in ('node -p "process.versions.node"') do set "TASK_NODE_MAJOR=%%v"
+if %TASK_NODE_MAJOR% LSS 24 (
+    echo [ОШИБКА] Требуется Node.js 24 или новее. Обновите Node.js и перезапустите приложение.
     pause
     exit /b 1
 )

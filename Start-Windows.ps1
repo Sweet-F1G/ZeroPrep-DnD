@@ -10,8 +10,15 @@ Write-Host ""
 $nodePath = Get-Command node -ErrorAction SilentlyContinue
 if (-not $nodePath) {
     Write-Host "[ОШИБКА] Node.js не найден в системе." -ForegroundColor Red
-    Write-Host "Пожалуйста, установите Node.js 22+ с официального сайта https://nodejs.org/" -ForegroundColor Yellow
+    Write-Host "Пожалуйста, установите Node.js 24+ с официального сайта https://nodejs.org/" -ForegroundColor Yellow
     Write-Host "После установки перезапустите этот скрипт."
+    Read-Host "Нажмите Enter для выхода..."
+    exit 1
+}
+
+$taskNodeMajor = [int]((& node -p "process.versions.node").Split('.')[0])
+if ($taskNodeMajor -lt 24) {
+    Write-Host "[ОШИБКА] Требуется Node.js 24 или новее. Обновите Node.js и перезапустите приложение." -ForegroundColor Red
     Read-Host "Нажмите Enter для выхода..."
     exit 1
 }

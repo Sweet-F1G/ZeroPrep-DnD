@@ -8,6 +8,7 @@ export const questions=[
  'Расскажите о героях: классы, цели и отношения. Если знаете HP и КД, скажите: «Имя, HP 20, КД 12». Пока бонусы навыков — ноль, HP 20 и КД 12: это временные значения, их нужно сверить с листами. Все кубики, включая броски за врагов, бросаем на столе.'
 ];
 const fields=['world','style','boundaries','roster','sheets'];
+const hasStarter=c=>Boolean(c.scenario||/^(?:ЗАГОТОВКА МАСТЕРА|GM STARTER)/u.test(c.source||''));
 function entry(c,role,text){c.journal.push({id:randomUUID(),role,text,at:new Date().toISOString()});}
 export const personaGreetings = {
  realist_dreamer: 'Приветствую за игровым столом! Я ваш Мастер. В этой кампании мы играем по логике и здравому смыслу, но главное — «Правило крутизны»: если у вас родится безумная, кинематографичная или остроумная идея, я с удовольствием дам шанс её воплотить. На откровенный абуз правил отвечу твёрдым «нет», но дерзость и фантазию поддержу всем сердцем.\n\nВ каком мире и жанре хотите сыграть? Можно назвать любой сеттинг, назвать своих персонажей или просто сказать: «Мастер, сгенерируй случайных персонажей и начни приключение!»',
@@ -19,7 +20,7 @@ export const personaGreetings = {
 export function beginSessionZero(c,provider='demo',persona='realist_dreamer'){
  c.sessionZero={version:1,step:0,answers:{},draft:[],complete:false,editing:false};
  const aiGreeting = personaGreetings[persona] || personaGreetings.realist_dreamer;
- entry(c,'assistant',provider==='demo'?questions[0]:aiGreeting);
+ entry(c,'assistant',provider==='demo'&&hasStarter(c)?`${c.setting}\n\nЭто заготовка. В демо доступна учебная сцена без свободного ведения сюжета. Скажите «оставить», чтобы принять завязку, или опишите свой мир.`:provider==='demo'?questions[0]:aiGreeting);
 }
 export function restoreSessionZero(value){
  if(!value||value.version!==1||!Number.isInteger(value.step)||value.step<0||value.step>5||typeof value.complete!=='boolean')throw Error('Некорректная нулевая сессия');
@@ -56,7 +57,7 @@ export function sessionZeroTurn(c,text){
    const next=character({...h,maxHp:hp?Number(hp[1]):h.maxHp,hp:hp?Number(hp[1]):h.hp,ac:ac?Number(ac[1]):h.ac});Object.assign(h,next,{id:h.id});
   }
  }
- s.answers[fields[s.step]]=text;entry(c,'user',text);
+ s.answers[fields[s.step]]=s.step===0&&hasStarter(c)&&/^(?:оставить|принять|да|оставить завязку)$/iu.test(normalized)?c.setting:text;entry(c,'user',text);
  if(s.editing&&s.step!==3){s.step=5;s.editing=false;}else s.step++;
  entry(c,'assistant',s.step===5?summary(s):questions[s.step]);
 }

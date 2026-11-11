@@ -1,3 +1,4 @@
+import {scenarioOptions} from '/scenario-options.mjs';
 import {ContinuousMic,addressed,speakingCharacter,continuousTurnPlan,spokenRoll,spokenApproval,spokenHpPlan} from '/voice-input.mjs';
 const $=id=>document.getElementById(id), token=document.querySelector('meta[name="app-token"]').content;
 import {skills,abilities,skillAbilities,editions} from '/rule-data.mjs';
@@ -53,7 +54,7 @@ async function api(route,data){const r=await fetch('/api/'+route,{method:data===
 function current(){return state?.campaigns.find(x=>x.id===activeId);}
 function setBusy(value,label){busy=value;$('listeningMode').disabled=value||!!recording||recordStarting;document.body.classList.toggle('busy',value);$('status').textContent=label||(value?t('statusBusy'):t('statusIdle'));for(const id of ['send','mic','begin','undo','new','sessionZero','seed','import','settings','export','editHeroes'])$(id).disabled=value;document.querySelectorAll('#rollForm button,#proposals button').forEach(el=>el.disabled=value);}
 function choose(id){if(busy||recording||recordStarting)return;stopListening();pauseReactionClock();haltNarration();interruptionActive=false;lastKnownMapHash='';activeId=id;localStorage.setItem('skazitel-active',id);api('settings',{activeCampaignId:id}).catch(()=>{});selectedId=null;render();scrollToLatest();}
-function scrollToLatest(){const target=current()?.pending?$('rollPanel'):$('journal').lastElementChild;target?.scrollIntoView({block:'end'});}
+function scrollToLatest(){const target=current()?.pending?$('rollPanel'):$('journal').lastElementChild;const story=document.querySelector('.story');if(target&&story){const delta=target.getBoundingClientRect().bottom-story.getBoundingClientRect().bottom;story.scrollTop+=delta;}}
 function render(){
  applyTranslations();
  const c=current();$('campaigns').innerHTML=state.campaigns.map(x=>`<div class="campaign-item-row"><button class="campaign-item ${x.id===activeId?'active':''}" data-campaign="${x.id}">${esc(x.name)}<small>${x.characters.length} ${getLanguage()==='en'?'heroes':'героя'} · ${x.journal.length} ${t('eventsCount').toLowerCase()}</small></button><button class="campaign-delete-btn" data-delete-campaign="${x.id}" title="${getLanguage()==='en'?'Delete campaign':'Удалить партию'} «${esc(x.name)}»" aria-label="Delete «${esc(x.name)}»" type="button">✕</button></div>`).join('');
@@ -70,7 +71,7 @@ function render(){
   return `<article class="entry ${esc(x.role)}${x.isWhisper?' is-whisper':''}"><div class="entry-label"><span>${x.isWhisper?'<span class="whisper-badge">🤫 ШЁПОТ</span>':''}${x.role==='assistant'?'✦ СКАЗИТЕЛЬ':x.role==='user'?'ДЕЙСТВИЕ ГЕРОЯ':'◇ ИГРОВОЕ СОБЫТИЕ'}</span><time>${new Date(x.at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</time></div><p>${esc(text)}${c.delivery?.entryId===x.id?`<span class="narrating">${text?' ':''}${esc(c.delivery.displayText||c.delivery.text?.replace(/^\[[^\]]+\]\s*/,'')||'')}</span>`:''}</p>${x.role==='assistant'?`<button class="replay" data-replay="${i}">▷ Озвучить</button>`:''}${x.automaticChanges?.length?`<details class="automatic-changes"><summary>✓ Записано мастером · ${x.automaticChanges.length}</summary>${x.automaticChanges.map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}${x.tacticalHints?.length?`<div class="tactical-hints">${x.tacticalHints.map(h=>`<p>✦ ${esc(h.text)}</p>`).join('')}</div>`:''}${x.illustrationSuggestion?`<div class="image-suggestion"><span>✧ ${esc(x.illustrationSuggestion.reason)}</span><button class="quiet" data-suggest-image="${x.id}">Предлагаю иллюстрацию ↗</button></div>`:''}</article>`;}).slice(-50).join('');
  const pw=$('partyWallet');if(pw)pw.textContent=money(c.wallet?.group||0);
  const charsEl=$('characters');if(charsEl)charsEl.innerHTML=c.characters.map(renderHero).join('');
- if(lastVisibleHeroId!==selectedId){document.querySelector('.hero.selected')?.scrollIntoView({block:'nearest'});lastVisibleHeroId=selectedId;}
+ if(lastVisibleHeroId!==selectedId){const card=document.querySelector('.hero.selected'),party=card?.closest('.party');if(card&&party){const r=card.getBoundingClientRect(),p=party.getBoundingClientRect();if(r.top<p.top)party.scrollTop+=r.top-p.top;else if(r.bottom>p.bottom)party.scrollTop+=r.bottom-p.bottom;}lastVisibleHeroId=selectedId;}
  $('speaker').innerHTML=c.characters.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');$('speaker').value=selectedId;
  $('sessionZeroGuide').hidden=!c.sessionZero||c.sessionZero.complete;
  const boostNotice=$('sessionZeroBoostNotice');
@@ -211,14 +212,20 @@ function heroFields(c={}){return `<div class="hero-form" ${c.id?`data-id="${c.id
 function readHeroes(container){return [...container.querySelectorAll('.hero-form')].map(el=>{const old=current()?.characters.find(h=>h.id===el.dataset.id)||{},c={...old,sheetVerified:true,id:el.dataset.id,bonuses:{},saves:{},abilityScores:{},training:{},saveTraining:{},resources:[]};el.querySelectorAll('[data-field]').forEach(x=>c[x.dataset.field]=x.type==='number'?Number(x.value):x.value);for(const [attribute,key] of [['bonus','bonuses'],['save','saves'],['score','abilityScores'],['training','training'],['save-training','saveTraining']])el.querySelectorAll(`[data-${attribute}]`).forEach(x=>c[key][x.getAttribute('data-'+attribute)]=Number(x.value));c.hitDice={};el.querySelectorAll('[data-hit-dice]').forEach(x=>c.hitDice[x.dataset.hitDice]=Number(x.value));c.conditions=el.querySelector('[data-list="conditions"]').value.split(',').map(s=>s.trim()).filter(Boolean);el.querySelectorAll('.resource-form').forEach(row=>{const previous=old.resources?.find(r=>r.id===row.dataset.resourceId)||{};const r={...previous,id:row.dataset.resourceId};row.querySelectorAll('[data-resource]').forEach(x=>r[x.dataset.resource]=x.type==='number'?Number(x.value):x.value);if(r.resetOn==='none')r.resetOn=null;c.resources.push(r);});return c;});}
 document.addEventListener('click',e=>{const add=e.target.closest('[data-add-resource]'),remove=e.target.closest('[data-remove-resource]');if(add)add.closest('.hero-form').querySelector('.resource-forms').insertAdjacentHTML('beforeend',resourceFields());if(remove)remove.closest('.resource-form').remove();});
 document.addEventListener('change',e=>{if(e.target.matches('[data-field="bonusMode"]')){const form=e.target.closest('.hero-form');form.querySelector('.manual-fields').hidden=e.target.value==='calculated';form.querySelector('.calculated-fields').hidden=e.target.value!=='calculated';}});
-function openNew(){stopListening();pauseReactionClock();$('campaignForm').reset();$('heroForms').innerHTML=heroFields();$('campaignDialog').showModal();}
+function setupScenarios(formId,descriptionId){
+ const form=$(formId),select=form.elements.scenario,description=$(descriptionId),en=getLanguage()==='en';
+ select.replaceChildren(new Option(en?'Create your own':'Своя история',''),...scenarioOptions.map(s=>new Option(en?s.en:s.ru,s.id)));
+ const update=()=>{const item=scenarioOptions.find(s=>s.id===select.value);description.textContent=(item?(en?item.descEn:item.descRu):(en?'Start with your own idea.':'Начните со своей идеи.'))+(en?' Prepared adventures require an AI provider; demo mode uses a fixed tutorial.':' Для заготовок нужен ИИ-провайдер; в демо используется учебная сцена.');};
+ select.onchange=update;update();
+}
+function openNew(){stopListening();pauseReactionClock();$('campaignForm').reset();setupScenarios('campaignForm','campaignScenarioDescription');$('heroForms').innerHTML=heroFields();$('campaignDialog').showModal();}
 async function created(route,data){setBusy(true,'Готовим игровой стол…');try{state=await api(route,data);activeId=state.activeId;localStorage.setItem('skazitel-active',activeId);api('settings',{activeCampaignId:activeId}).catch(()=>{});selectedId=null;render();scrollToLatest();}catch(e){toast(e.message);}finally{setBusy(false);render();}}
 $('new').onclick=openNew;$('welcomeNew').onclick=openNew;
 if($('startPersona'))$('startPersona').onchange=()=>{$('customPersonaGroup').hidden=$('startPersona').value!=='custom';};
-$('sessionZero').onclick=()=>{stopListening();pauseReactionClock();$('startForm').reset();if($('customPersonaGroup'))$('customPersonaGroup').hidden=true;$('startDialog').showModal();};
-$('startForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const persona=f.get('persona')||'realist_dreamer',personaDetails=persona==='custom'?(f.get('personaCustom')||''):'';$('startDialog').close();await created('create',{name:f.get('name'),edition:f.get('edition'),persona,personaDetails,sessionZero:true,characters:[]});if($('autoVoice').checked)speak(current()?.journal.at(-1)?.text||'');$('mic').focus();};
+$('sessionZero').onclick=()=>{stopListening();pauseReactionClock();$('startForm').reset();setupScenarios('startForm','startScenarioDescription');if($('customPersonaGroup'))$('customPersonaGroup').hidden=true;$('startDialog').showModal();};
+$('startForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const persona=f.get('persona')||'realist_dreamer',personaDetails=persona==='custom'?(f.get('personaCustom')||''):'';$('startDialog').close();await created('create',{name:f.get('name'),edition:f.get('edition'),persona,personaDetails,scenario:f.get('scenario'),sessionZero:true,characters:[]});if($('autoVoice').checked)speak(current()?.journal.at(-1)?.text||'');$('mic').focus();};
 $('seed').onclick=$('welcomeSeed').onclick=()=>created('create',{seed:true});
-$('campaignForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);$('campaignDialog').close();await created('create',{name:f.get('name'),edition:f.get('edition'),persona:f.get('persona')||'realist_dreamer',setting:f.get('setting'),source:f.get('source'),characters:readHeroes($('heroForms'))});};
+$('campaignForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);$('campaignDialog').close();await created('create',{name:f.get('name'),edition:f.get('edition'),persona:f.get('persona')||'realist_dreamer',setting:f.get('setting'),source:f.get('source'),scenario:f.get('scenario'),characters:readHeroes($('heroForms'))});};
 $('addHero').onclick=()=>{if($('heroForms').children.length>=6)return toast('В форме демо максимум 6 героев.');$('heroForms').insertAdjacentHTML('beforeend',heroFields());};
 $('sourceFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(f.size>200000)return toast('Файл должен быть не больше 200 КБ.');$('campaignForm').elements.source.value=await f.text();};
 let openAIModelsCache=null;
@@ -800,7 +807,19 @@ $('memoryCreate').onclick=()=>memoryAction('create');$('memoryClear').onclick=()
 setInterval(async()=>{if(!state?.keyStorage?.loading||busy)return;try{const next=await api('state');state.keyStorage=next.keyStorage;state.keysPresent=next.keysPresent;state.keyPools=next.keyPools;if($('settingsDialog').open&&!$('keyPools').querySelector('input:focus'))keyFields();}catch{}},1500);
 refresh().catch(e=>toast(e.message));
 
-function renderHero(h){const low=(h.resources||[]).filter(r=>r.current<r.max).slice(0,3);const portrait=current()?.images?.findLast(i=>i.status==='ready'&&i.kind==='portrait'&&i.characterId===h.id);return `<article class="hero ${h.id===selectedId?'selected':''}"><div class="compact-hero"><button class="portrait-button" data-portrait="${h.id}" aria-label="Портрет ${esc(h.name)}" title="Создать или обновить портрет">${portrait?`<img class="hero-portrait" src="/images/${portrait.file}" width="64" height="64" alt="Портрет ${esc(h.name)}">`:`<span>${esc(h.name.slice(0,1))}</span><small>＋ портрет</small>`}</button><button data-hero="${h.id}" class="hero-name" aria-label="Выбрать ${esc(h.name)}">${esc(h.name)}<small>${h.className?esc(h.className)+' · ':''}${h.level||1} ур.${h.sheetVerified?'':' · лист нужно сверить'} · КД ${h.ac}</small></button><button data-sheet="${h.id}" class="quiet" aria-label="Лист ${esc(h.name)}">Лист ↗</button></div><div class="hp"><span>HP</span><strong>${h.hp}/${h.maxHp}${h.tempHp?' + '+h.tempHp+' врем.':''}</strong></div><progress class="hp-progress" max="${h.maxHp}" value="${h.hp}" aria-label="Здоровье ${esc(h.name)}"></progress>${h.hp===0?`<small>От смерти: ✓ ${h.deathSaves?.successes||0} / ✕ ${h.deathSaves?.failures||0}</small>`:''}${h.concentration?`<small>Концентрация: ${esc(h.concentration)}</small>`:''}${(h.conditions||[]).length?`<p class="condition-chips">${h.conditions.map(x=>`<span>${esc(x)}</span>`).join('')}</p>`:''}${low.length?`<p class="resource-chips">${low.map(r=>`<span>${esc(r.name)} ${r.current}/${r.max}</span>`).join('')}</p>`:''}<button class="hero-growth quiet" data-growth="${h.id}">${h.progression?.pending?`✦ Доступен ${h.progression.pending.targetLevel} уровень`:'↗ Развитие и способности'}</button><button class="hero-inventory" data-inventory="${h.id}">▣ Инвентарь <small>${money(current()?.wallet?.[h.id]||0)}</small></button></article>`;}
+function renderHero(h){
+ const low=(h.resources||[]).filter(r=>r.current<r.max).slice(0,3);
+ const portrait=current()?.images?.findLast(i=>i.status==='ready'&&i.kind==='portrait'&&i.characterId===h.id);
+ const statuses=[...(h.hp===0?[`От смерти: ✓ ${h.deathSaves?.successes||0} / ✕ ${h.deathSaves?.failures||0}`]:[]),...(h.concentration?[`Концентрация: ${h.concentration}`]:[]),...(h.conditions||[]),...low.map(r=>`${r.name} ${r.current}/${r.max}`)];
+ const statusText=statuses.join(' · ');
+ return `<article class="hero ${h.id===selectedId?'selected':''}" aria-label="${esc(h.name)}">
+  <button type="button" class="portrait-button" data-portrait="${h.id}" aria-label="Создать или обновить портрет: ${esc(h.name)}" title="Создать или обновить портрет">${portrait?`<img class="hero-portrait" src="/images/${portrait.file}" width="80" height="88" alt="">`:`<span aria-hidden="true">${esc(h.name.slice(0,1))}</span><small>＋ портрет</small>`}</button>
+  <div class="hero-overview"><button type="button" data-hero="${h.id}" class="hero-name" aria-label="Выбрать ${esc(h.name)}" aria-pressed="${h.id===selectedId}" title="${esc(h.name)}">${esc(h.name)}<small>${h.className?esc(h.className)+' · ':''}${h.level||1} ур. · КД ${h.ac}</small></button>
+   <div class="hp"><span>HP</span><strong>${h.hp}/${h.maxHp}${h.tempHp?' + '+h.tempHp+' врем.':''}</strong></div><progress class="hp-progress" max="${h.maxHp}" value="${h.hp}" aria-label="Здоровье ${esc(h.name)}"></progress>
+   ${!h.sheetVerified?'<span class="hero-unverified" title="Сверьте данные листа героя">Лист не сверен</span>':''}${statusText?`<div class="hero-status" title="${esc(statusText)}">${esc(statusText)}</div>`:''}</div>
+  <div class="hero-actions"><button type="button" data-sheet="${h.id}" aria-label="Лист героя: ${esc(h.name)}">Лист</button><button type="button" class="hero-growth ${h.progression?.pending?'growth-ready':''}" data-growth="${h.id}" aria-label="Развитие и способности: ${esc(h.name)}" title="${h.progression?.pending?`Доступен ${h.progression.pending.targetLevel} уровень`:'Развитие и способности'}">${h.progression?.pending?'✦ Рост':'Рост'}</button><button type="button" class="hero-inventory" data-inventory="${h.id}" aria-label="Инвентарь: ${esc(h.name)}" title="Инвентарь · ${esc(money(current()?.wallet?.[h.id]||0))}">Вещи</button></div>
+ </article>`;
+}
 async function openSheet(id){await haltNarration();const hero=current()?.characters.find(h=>h.id===id);if(!hero)return toast('Сначала создайте героя');stopListening();pauseReactionClock();$('campaignToolsDialog').close();$('heroEditFields').innerHTML=heroFields(hero);$('heroDialog').showModal();}
 function actionDescription(a,c){const hero=c.characters.find(h=>h.id===a.characterId)?.name||'Группа',item=c.inventory?.find(i=>i.id===a.itemId),resource=c.characters.find(h=>h.id===a.characterId)?.resources?.find(r=>r.id===a.resourceId);return ({'map.update':()=>`Обновить карту: ${a.map?.name||a.map?.id}`,'map.remove':()=>`Удалить карту: ${c.maps?.find(m=>m.id===a.mapId)?.name||a.mapId}`,'item.update':()=>`Обновить ${item?.name||'вещь'}: ${Object.keys(a.patch||{}).join(', ')}`,'feature.remove':()=>`${hero}: удалить способность ${a.recordId}`,'spell.remove':()=>`${hero}: удалить заклинание ${a.recordId}`,'resource.remove':()=>`${hero}: удалить ресурс ${a.recordId}`,'progression.award':()=>`Награда: ${a.reason||''}`,'progression.levelup':()=>`${hero}: повышение уровня с выбранными изменениями`,'feature.learn':()=>`${hero}: способность ${a.entry?.name}`,'spell.learn':()=>`${hero}: заклинание ${a.entry?.name}`,'world.update':()=>`Обновить журнал мира: ${a.entry?.visibility==='gm'?'скрытая запись':a.entry?.name||''}`,'hero.record':()=>`${hero}: заполнить сведения листа`,'memory.add':()=>`Записать: ${a.note?.text||''}`,'memory.status':()=>`Обновить: ${c.memory?.find(n=>n.id===a.memoryId)?.title||'запись'} → ${a.status}`,'sheet.patch':()=>`${hero}: ${Object.entries(a.patch||{}).map(([k,v])=>typeof v==='object'&&!Array.isArray(v)?Object.entries(v).map(([field,value])=>`${k==='saves'?'спасбросок ':''}${skills[field]||field}: ${value}`).join(', '):`${({level:'уровень',hp:'HP',maxHp:'максимум HP',tempHp:'временные HP',ac:'КД',conditions:'состояния',concentration:'концентрация',className:'класс',notes:'заметка'}[k]||k)}: ${Array.isArray(v)?v.join(', '):v}`).join('; ')}`,'resource.use':()=>`${hero}: потратить ${a.amount||1} × ${resource?.name||'ресурс'}`,'resource.add':()=>`${hero}: добавить ${a.resource?.name}, ${a.resource?.current??a.resource?.max}/${a.resource?.max}`,'item.add':()=>`Добавить: ${a.item?.name} ×${a.item?.quantity||1}`,'item.consume':()=>`Потратить: ${item?.name||'вещь'} ×${a.quantity||1}`,'item.transfer':()=>`Передать ${item?.name||'вещь'} ×${a.quantity||item?.quantity} → ${c.characters.find(h=>h.id===a.ownerId)?.name||'группа'}`,'item.equip':()=>`${a.equipped?'Экипировать':'Снять'}: ${item?.name}`,'item.store':()=>`Переместить ${item?.name} в контейнер`,'item.buy':()=>`Купить ${item?.name} ×${a.quantity||1} за ${a.costCp} мм`,'wallet.change':()=>`Казна: ${a.deltaCp>0?'+':''}${a.deltaCp} мм`,'rest':()=>`${a.kind==='long'?'Долгий':'Короткий'} отдых`,'time.advance':()=>`Продвинуть время на ${a.minutes} минут`,'loot.roll':()=>`Определить находку по таблице ${a.table==='ruins'?'руины':'дорога'}`,'loot.claim':()=>`Получить найденную добычу`}[a.type]||(()=>a.reason||'Игровое действие'))();}
 async function tableActions(actions){if(busy)return;if(actions?.some(a=>['wallet.change','loot.claim','item.buy'].includes(a.type)))ambientEngine.playCoinSound();setBusy(true,'Обновляем состояние…');try{state=await api('actions',{id:activeId,actions});render();return true;}catch(e){toast(e.message);return false;}finally{setBusy(false);render();}}
@@ -1789,6 +1808,11 @@ function renderCombatTracker() {
   const c = current();
   const bar = $('combatTracker');
   if (!bar) return;
+  const startBtn = $('hudCombatStartBtn');
+  if (startBtn) {
+    startBtn.disabled = Boolean(c?.initiative?.active);
+    startBtn.title = c?.initiative?.active ? (getLanguage()==='en'?'Combat is already active':'Бой уже идёт') : (getLanguage()==='en'?'Start combat':'Начать тактический бой');
+  }
   if (!c || !c.initiative?.active) {
     bar.hidden = true;
     return;
@@ -1799,7 +1823,7 @@ function renderCombatTracker() {
 
   const orderList = $('combatOrderList');
   if (orderList) {
-    orderList.innerHTML = (c.initiative.order || []).map((cb, idx) => {
+    orderList.innerHTML = (c.initiative.combatants || c.initiative.order || []).map((cb, idx) => {
       const isTurn = idx === (c.initiative.turnIndex || 0);
       const isHero = cb.kind === 'hero';
       const hpStr = cb.hp != null && cb.maxHp ? ` · ❤️ ${cb.hp}/${cb.maxHp}` : '';
@@ -1843,16 +1867,66 @@ $('combatEndBtn')?.addEventListener('click', async () => {
   }
 });
 
-$('hudCombatStartBtn')?.addEventListener('click', async () => {
-  if (busy || !activeId) return;
+let combatSetupCampaignId = null;
+let combatStartSubmitting = false;
+function updateCombatRollInputs(){
+  const isPhysical = $('combatRollMode').value === 'physical';
+  $('combatHeroRolls').hidden = !isPhysical;
+  const en = getLanguage() === 'en';
+  $('combatRollHelp').textContent = isPhysical ? (en ? 'Enter the number showing on each die, without bonuses. The app adds Dexterity. Enemies roll automatically.' : 'Введите число на каждом кубике без бонусов. Приложение добавит модификатор Ловкости. Противники бросают автоматически.') : (en ? 'The app rolls d20s for heroes and enemies and adds the heroes’ Dexterity modifiers.' : 'Приложение бросит d20 за героев и противников и добавит героям модификатор Ловкости.');
+  $('combatHeroRolls').querySelectorAll('input').forEach(input => { input.disabled = !isPhysical; input.required = isPhysical; });
+}
+$('combatRollMode').addEventListener('change', updateCombatRollInputs);
+$('combatStartCancel').addEventListener('click', () => $('combatStartDialog').close());
+$('hudCombatStartBtn')?.addEventListener('click', () => {
+  const c = current();
+  if (busy || !activeId || !c || combatStartSubmitting) return;
+  if (c.initiative?.active) return toast(getLanguage()==='en'?'Combat is already active.':'Бой уже идёт.');
+  if (!c.characters.length) return toast(getLanguage()==='en'?'Add a hero before starting combat.':'Добавьте героя перед началом боя.');
+  const en = getLanguage() === 'en';
+  combatSetupCampaignId = c.id;
+  $('combatStartTitle').textContent = en ? 'Roll initiative' : 'Инициатива';
+  $('combatRollModeLabel').textContent = en ? 'How should heroes roll?' : 'Как определить инициативу героев';
+  const mode = $('combatRollMode');
+  mode.options[0].textContent = en ? 'Physical d20s' : 'Физические d20';
+  mode.options[1].textContent = en ? 'Automatic rolls' : 'Автоматические броски';
+  mode.value = 'physical';
+  $('combatStartError').hidden = true;
+  $('combatStartError').textContent = '';
+  $('combatStartDialog').querySelector('[data-close]').setAttribute('aria-label', en ? 'Close' : 'Закрыть');
+  $('combatStartCancel').textContent = en ? 'Cancel' : 'Отмена';
+  $('combatStartConfirm').textContent = en ? 'Start combat' : 'Начать бой';
+  $('combatHeroRolls').innerHTML = c.characters.map(h => `<label><span>${esc(h.name)} · d20</span><input type="number" min="1" max="20" step="1" inputmode="numeric" data-roll-hero="${esc(h.id)}" placeholder="1–20" required></label>`).join('');
+  updateCombatRollInputs();
+  $('combatStartDialog').showModal();
+});
+$('combatStartForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const en = getLanguage() === 'en', c = current();
+  if (combatStartSubmitting || busy) return;
+  if (!c || c.id !== combatSetupCampaignId) { $('combatStartError').hidden = false; $('combatStartError').textContent = en?'Campaign changed. Reopen the combat setup.':'Кампания изменилась. Откройте подготовку боя заново.'; return; }
+  if (c.initiative?.active) { $('combatStartDialog').close(); return toast(en?'Combat is already active.':'Бой уже идёт.'); }
+  const body = {id: c.id};
+  if ($('combatRollMode').value === 'physical') {
+    body.heroRolls = Object.fromEntries(Array.from($('combatHeroRolls').querySelectorAll('input')).map(input => [input.dataset.rollHero, Number(input.value)]));
+  }
+  combatStartSubmitting = true;
+  $('combatStartError').hidden = true;
+  $('combatStartConfirm').disabled = true;
   try {
+    const res = await api('combat/start', body);
+    const campaign = state.campaigns.find(x => x.id === body.id);
+    if (campaign) campaign.initiative = res.initiative;
+    $('combatStartDialog').close();
+    if (activeId === body.id) renderCombatTracker();
     playSfx('sword');
-    const res = await api('combat/start', { id: activeId });
-    if (current()) current().initiative = res.initiative;
-    renderCombatTracker();
-    toast('⚔️ Тактический бой начат! Инициатива подсчитана.');
-  } catch (e) {
-    toast(e.message);
+    toast(en?'Combat started. Initiative is ready.':'⚔️ Бой начат. Инициатива определена.');
+  } catch (error) {
+    if ($('combatStartDialog').open) { $('combatStartError').textContent = error.message; $('combatStartError').hidden = false; }
+    else toast(error.message);
+  } finally {
+    combatStartSubmitting = false;
+    $('combatStartConfirm').disabled = false;
   }
 });
 

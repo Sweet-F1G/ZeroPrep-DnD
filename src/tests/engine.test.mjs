@@ -9,6 +9,15 @@ test('reject invalid raw dice without consuming pending check',()=>{const c=camp
 test('reject fabricated skill, character and difficulty',()=>{const c=campaign();for(const p of [{characterId:c.characters[0].id,skill:'fake',dc:12},{characterId:'fake',skill:'perception',dc:12},{characterId:c.characters[0].id,skill:'perception',dc:100}])assert.throws(()=>acceptReply(c,{narration:'test',roll_request:p}));});
 test('HP cannot change until player accepts proposal; limits and undo work',()=>{const c=campaign(),id=c.characters[0].id;acceptReply(c,{narration:'Попадание',changes:[{characterId:id,hpDelta:-30,reason:'Урон'}]});assert.equal(c.characters[0].hp,20);const p=c.proposals[0];checkpoint(c);approveProposal(c,p.id,true);assert.equal(c.characters[0].hp,0);assert.throws(()=>approveProposal(c,p.id,true));undo(c);assert.equal(c.characters[0].hp,20);assert.equal(c.proposals.length,1);approveProposal(c,p.id,false);assert.equal(c.characters[0].hp,20);});
 
+test('temporary HP absorbs confirmed damage before ordinary HP and undo restores both',()=>{
+ const c=campaign(),hero=c.characters[0];hero.tempHp=5;
+ acceptReply(c,{narration:'Удар',changes:[{characterId:hero.id,hpDelta:-3,reason:'Урон'}]});checkpoint(c);approveProposal(c,c.proposals[0].id,true);
+ assert.equal(c.characters[0].hp,20);assert.equal(c.characters[0].tempHp,2);
+ acceptReply(c,{narration:'Ещё удар',changes:[{characterId:hero.id,hpDelta:-4,reason:'Урон'}]});checkpoint(c);approveProposal(c,c.proposals[0].id,true);
+ assert.equal(c.characters[0].hp,18);assert.equal(c.characters[0].tempHp,0);undo(c);
+ assert.equal(c.characters[0].hp,20);assert.equal(c.characters[0].tempHp,2);
+});
+
 test('reaction waits before consequences and supports intervention, pass, and undo',()=>{
  const c=campaign();
  acceptReply(c,demoReply(c,{text:'гипноз'},null));

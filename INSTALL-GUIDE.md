@@ -19,15 +19,15 @@
 
 #### 🪟 Windows:
 - Operating System: **Windows 10** or **Windows 11** (64-bit);
-- **Node.js 20 LTS** or newer installed ([download from nodejs.org](https://nodejs.org/)).
+- **Node.js 24 LTS** or newer installed ([download from nodejs.org](https://nodejs.org/)).
 
 ---
 
 ### 2. How to Launch
 
 #### 📦 Method A: From Release Binary (.zip)
-- **macOS:** Download `ZeroPrep-DnD-v0.9.4-macOS-AppleSilicon.zip` from [GitHub Releases](https://github.com/Sweet-F1G/ZeroPrep-DnD/releases), unzip, and launch `Skazitel.app` (or run `./Start-browser.command`).
-- **Windows:** Download `ZeroPrep-DnD-v0.9.4-Windows.zip`, unzip, and double-click `Start-Windows.bat`.
+- **macOS:** Download `ZeroPrep-DnD-v0.9.5-macOS-AppleSilicon.zip` from [GitHub Releases](https://github.com/Sweet-F1G/ZeroPrep-DnD/releases), unzip, and launch `Skazitel.app` (or run `./Start-browser.command`).
+- **Windows:** Download `ZeroPrep-DnD-v0.9.5-Windows.zip` from [GitHub Releases](https://github.com/Sweet-F1G/ZeroPrep-DnD/releases), unzip, and double-click `Start-Windows.bat` (requires [Node.js 24+](https://nodejs.org/)).
 
 #### 💻 Method B: Directly from Cloned Repository (`git clone`)
 1. Clone the repository:
@@ -99,15 +99,15 @@
 
 #### 🪟 Windows:
 - Операционная система: **Windows 10** или **Windows 11** (64-bit);
-- Установленный **Node.js 20 LTS** или новее ([скачать с официального сайта nodejs.org](https://nodejs.org/)).
+- Установленный **Node.js 24 LTS** или новее ([скачать с официального сайта nodejs.org](https://nodejs.org/)).
 
 ---
 
 ### 2. Запуск приложения
 
 #### 📦 Способ А: Из архива релиза (.zip)
-- **macOS:** Скачайте `ZeroPrep-DnD-v0.9.4-macOS-AppleSilicon.zip` со страницы [GitHub Releases](https://github.com/Sweet-F1G/ZeroPrep-DnD/releases), распакуйте и запустите `Skazitel.app` (или скрипт `./Start-browser.command`).
-- **Windows:** Скачайте `ZeroPrep-DnD-v0.9.4-Windows.zip`, распакуйте и запустите `Start-Windows.bat` (требуется [Node.js 20+](https://nodejs.org/)).
+- **macOS:** Скачайте `ZeroPrep-DnD-v0.9.5-macOS-AppleSilicon.zip` со страницы [GitHub Releases](https://github.com/Sweet-F1G/ZeroPrep-DnD/releases), распакуйте и запустите `Skazitel.app` (или скрипт `./Start-browser.command`).
+- **Windows:** Скачайте `ZeroPrep-DnD-v0.9.5-Windows.zip` со страницы [GitHub Releases](https://github.com/Sweet-F1G/ZeroPrep-DnD/releases), распакуйте и запустите `Start-Windows.bat` (требуется [Node.js 24+](https://nodejs.org/)).
 
 #### 💻 Способ Б: Напрямую из клонированного репозитория (`git clone`)
 1. Склонируйте репозиторий:

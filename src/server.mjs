@@ -1,6 +1,7 @@
 import {spokenRoll} from './public/voice-input.mjs';
 import {AudioStreams} from './audio-stream.mjs';
 import {gameMap} from './maps.mjs';
+import {applyScenario} from './scenarios.mjs';
 import {buildPortraitPrompt} from './public/portrait-prompt.mjs';
 import {dmState,publicDM,worldRecord} from './dm-state.mjs';import {heroRecords} from './progression.mjs';
 import http from 'node:http';
@@ -39,6 +40,7 @@ let lastTextRoute=null;
 const observe=async event=>{if(event.kind==='narration'&&event.status>=200&&event.status<300)lastTextRoute={provider:event.provider,model:event.model,at:new Date().toISOString()};try{await usageStore.record(event);usageError='';}catch{usageError='Не удалось сохранить статистику расхода токенов.';}};
 const token=process.env.SKAZITEL_TOKEN||randomBytes(32).toString('hex');
 const playerToken=process.env.SKAZITEL_PLAYER_TOKEN||randomBytes(16).toString('hex');
+function isLoopback(req){const addr=req.socket.remoteAddress||'';return addr==='::1'||/^127\./.test(addr)||/^::ffff:127\./i.test(addr);}
 function getLanIps(){const ips=[];try{const ifaces=os.networkInterfaces();for(const name of Object.keys(ifaces)){for(const iface of ifaces[name]||[]){if(iface.family==='IPv4'&&!iface.internal)ips.push(iface.address);}}}catch{}return ips;}
 const sseClients=new Set();
 function broadcast(eventName,data){const payload=`event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;for(const client of sseClients){try{client.write(payload);}catch{sseClients.delete(client);}}}
@@ -58,7 +60,7 @@ console.log('SKAZITEL_BOOT=campaigns-loaded');
 function normalizeCampaign(c){c.edition??='legacy';c.schemaVersion=5;c.dm=dmState(c.dm);c.clockMinutes??=0;c.memory??=[];c.inventory??=[];c.wallet??={group:0};c.loot??=[];c.actionProposals??=[];c.receipts??=[];c.images??=[];c.maps??=[];c.characters=c.characters.map(h=>({...character(h),id:h.id}));return c;}
 for(const c of campaigns)normalizeCampaign(c);
 let commitQueue=Promise.resolve();
-async function commitCampaign(c){const task=commitQueue.then(async()=>{normalizeCampaign(c);const latest=campaigns.find(x=>x.id===c.id);if(latest?.images)c.images=latest.images;const next=campaigns.slice(),index=next.findIndex(x=>x.id===c.id);if(index>=0)next[index]=c;else next.push(c);await campaignStore.save(next);campaigns=next;broadcast('campaign',{campaignId:c.id});});commitQueue=task.catch(()=>{});return task;}
+async function commitCampaign(c){const task=commitQueue.then(async()=>{normalizeCampaign(c);const latest=campaigns.find(x=>x.id===c.id);if(latest?.images)c.images=latest.images;if(latest?.summary&&(!c.summary||latest.summary.count>c.summary.count)&&summaryValid({...c,summary:latest.summary}))c.summary=latest.summary;const next=campaigns.slice(),index=next.findIndex(x=>x.id===c.id);if(index>=0)next[index]=c;else next.push(c);await campaignStore.save(next);campaigns=next;broadcast('campaign',{campaignId:c.id});});commitQueue=task.catch(()=>{});return task;}
 for(const c of campaigns)interruptDelivery(c);
 for(const c of campaigns)if(c.reaction){const r=c.reaction;r.remainingMs=r.deadlineAt?Math.max(0,r.deadlineAt-Date.now()):(r.remainingMs??30000);r.deadlineAt=null;r.paused=true;}
 let queue=Promise.resolve(),settingsLock=Promise.resolve();
@@ -67,6 +69,20 @@ const liveSessions=new Map();let liveStarting=false;
 const summaryBusy=new Set();
 const imageBusy=new Set(),imageChecks=new Map();
 async function updateImage(campaignId,fn){const task=commitQueue.then(async()=>{const index=campaigns.findIndex(c=>c.id===campaignId);if(index<0)throw Error('Кампания не найдена');const c=structuredClone(campaigns[index]);fn(c);const next=campaigns.slice();next[index]=c;await campaignStore.save(next);campaigns=next;broadcast('campaign',{campaignId});});commitQueue=task.catch(()=>{});await task;}
+function lockPlayerCampaign(b,req){
+ const id=b.campaignId||b.id||config.activeCampaignId;
+ const original=campaigns.find(x=>x.id===id)||(!id?campaigns[0]:null);
+ if(!original)throw Error('Кампания не найдена');
+ if(busy.has(original.id))throw Error('Мастер обрабатывает другой ход. Дождитесь ответа и повторите действие');
+ busy.add(original.id);req.playerCampaignLock=original.id;
+ return structuredClone(original);
+}
+function playerMap(map){
+ if(!map.fogOfWar)return map;
+ const revealed=new Set(map.revealedCells||[]),heroes=(map.tokens||[]).filter(t=>t.kind==='hero');
+ const visible=t=>revealed.has(`${t.x},${t.y}`)||heroes.some(h=>Math.max(Math.abs(h.x-t.x),Math.abs(h.y-t.y))<=6);
+ return {...map,tokens:(map.tokens||[]).filter(visible)};
+}
 function publicCampaign(c){const {undo,source,...rest}=c;return {...rest,dm:publicDM(c.dm),actionProposals:(c.actionProposals||[]).map(p=>p.action.type==='world.update'&&(p.action.entry?.visibility==='gm'||c.dm?.world?.some(w=>w.id===p.action.entry?.id&&w.visibility==='gm'))?{...p,reason:'Скрытая запись мира',action:{type:'world.update',entry:{visibility:'gm'}}}:p),journal:c.journal.slice(-120),journalTotal:c.journal.length,receipts:undefined,delivery:publicDelivery(c.delivery),summaryValid:summaryValid(c),sourceLength:source.length,canUndo:undo.length>0};}
 function state(){return {config,storage:campaignStore.status(),lastTextRoute,usage:usageStore.report(),usageError,keyStorage:{persistent:keyStore.persistent,loading:keysLoading,error:keyStorageError},localVoice:voiceStatus,edgeVoice:edgeStatus,keyPools:poolMetadata(config,keys),keysPresent:Object.fromEntries(Object.entries(poolMetadata(config,keys)).map(([k,v])=>[k,v.length>0])),campaigns:campaigns.map(publicCampaign)};}
 function json(res,obj,status=200){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(obj));}
@@ -108,22 +124,24 @@ const serverHandler=async(req,res)=>{
   const httpPort=server?.address()?.port;
   const httpsPort=httpsServer?.address()?.port;
   const activePorts=[httpPort,httpsPort].filter(Boolean);
-  const lanIps=['127.0.0.1','localhost',...getLanIps()];
+  const hostname=os.hostname().toLowerCase();
+  const lanIps=['127.0.0.1','localhost',...getLanIps(),hostname,hostname.endsWith('.local')?hostname:hostname+'.local'];
   const validHosts=[];
   for(const p of activePorts){for(const ip of lanIps){validHosts.push(`${ip}:${p}`);validHosts.push(ip);}}
   const hostVal=(req.headers.host||'').toLowerCase();
   const hostIp=hostVal.split(':')[0];
-  if(!validHosts.includes(hostVal)&&!validHosts.includes(hostIp)&&!hostIp.endsWith('.local')&&!/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.|198\.1[89]\.|169\.254\.)/.test(hostIp))return json(res,{error:'Недопустимый Host'},403);
+  if(!validHosts.includes(hostVal))return json(res,{error:'Недопустимый Host'},403);
   if(req.headers.origin){
    const originHost=req.headers.origin.replace(/^https?:\/\//i,'').toLowerCase();
    const originIp=originHost.split(':')[0];
-   if(!validHosts.includes(originHost)&&!validHosts.includes(originIp)&&!originIp.endsWith('.local')&&!/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.|198\.1[89]\.|169\.254\.)/.test(originIp))return json(res,{error:'Другой источник запрещён'},403);
+   if(!validHosts.includes(originHost))return json(res,{error:'Другой источник запрещён'},403);
   }
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
   res.setHeader('Content-Security-Policy',"default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
   const isHttps=!!(req.socket.encrypted||req.connection?.encrypted);
   const proto=isHttps?'https':'http';
   const url=new URL(req.url,`${proto}://${req.headers.host}`);
+  if(!isLoopback(req)&&(req.headers['x-app-token']===token||url.searchParams.get('token')===token))return json(res,{error:'Административная сессия доступна только на этом компьютере'},403);
   if(!url.pathname.startsWith('/api/')) {
    if(/^\/images\/[a-f0-9-]{36}\.(webp|png|jpg)$/.test(url.pathname)){try{const file=path.join(dataDir,'Images',path.basename(url.pathname)),data=await fs.readFile(file);res.writeHead(200,{'Content-Type':file.endsWith('.png')?'image/png':file.endsWith('.jpg')?'image/jpeg':'image/webp','Cache-Control':'private,max-age=86400'});return res.end(data);}catch{res.writeHead(404);return res.end();}}
    if(/^\/icons\/[a-z0-9-]+\.svg$/.test(url.pathname)||['/icons/manifest.json','/icons/LICENSE.txt'].includes(url.pathname)){const file=path.join(root,'public',url.pathname.slice(1));try{const data=await fs.readFile(file);res.writeHead(200,{'Content-Type':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.json')?'application/json':'text/plain; charset=utf-8','Cache-Control':file.endsWith('.json')?'no-store':'public,max-age=86400'});return res.end(data);}catch{res.writeHead(404);return res.end();}}
@@ -174,6 +192,7 @@ const serverHandler=async(req,res)=>{
      try{await fs.access(path.join(root,'public',candidate));file=candidate;}catch{}
     }
     if(!file){res.writeHead(404);return res.end();}
+    if(file==='index.html'&&!isLoopback(req))return json(res,{error:'Интерфейс ведущего доступен только на этом компьютере'},403);
     let content=await fs.readFile(path.join(root,'public',file));if(file==='index.html')content=Buffer.from(content.toString().replace('__APP_TOKEN__',token));
     if(file==='player.html')content=Buffer.from(content.toString().replace(/__PLAYER_TOKEN__/g,playerToken).replace(/__APP_TOKEN__/g,playerToken));
     res.writeHead(200,{'Content-Type':file.endsWith('html')?'text/html; charset=utf-8':file.endsWith('js')||file.endsWith('mjs')?'text/javascript; charset=utf-8':file.endsWith('.txt')?'text/plain; charset=utf-8':'text/css; charset=utf-8','Cache-Control':'no-store'});return res.end(content);
@@ -221,8 +240,8 @@ const serverHandler=async(req,res)=>{
     const httpsPort=httpsServer?.address()?.port||null;
     if(!c)return json(res,{campaign:null,campaigns:[],httpsPort});
     const journalSlice=(c.journal||[]).slice(-40).map(j=>{
-     if(j.isWhisper&&auth===playerToken&&heroId&&j.characterId!==heroId){
-      return {...j,text:`🤫 ${j.characterName||'Герой'} что-то шепчет Мастеру...`};
+     if(auth===playerToken&&(j.isWhisper||/^🤫 \[Шёпотом для /.test(j.text||''))){
+      return {id:j.id,role:j.role,at:j.at,isWhisper:true,characterId:j.characterId,characterName:j.characterName,text:`🤫 ${j.characterName||'Герой'} обменивается сообщением с Мастером...`};
      }
      return j;
     });
@@ -230,7 +249,7 @@ const serverHandler=async(req,res)=>{
      activeCampaignId:config.activeCampaignId||c.id,
      httpsPort,
      campaign:{
-      id:c.id,name:c.name,setting:c.setting,characters:c.characters,inventory:c.inventory||[],wallet:c.wallet||{group:0},loot:c.loot||[],maps:c.maps||[],journal:journalSlice,initiative:c.initiative||null,encounter:c.encounter||null,pending:c.pending||null,images:(c.images||[]).filter(i=>i.status==='ready')
+      id:c.id,name:c.name,setting:c.setting,characters:c.characters,inventory:c.inventory||[],wallet:c.wallet||{group:0},loot:c.loot||[],maps:(c.maps||[]).map(playerMap),journal:journalSlice,initiative:c.initiative||null,encounter:c.encounter||null,pending:c.pending?.isWhisper&&auth===playerToken?{...c.pending,reason:'Скрытая проверка',stakes:'Последствия известны ведущему'}:c.pending||null,images:(c.images||[]).filter(i=>i.status==='ready')
      },
      campaigns:campaigns.map(x=>({id:x.id,name:x.name,heroesCount:x.characters?.length||0}))
     });
@@ -239,8 +258,7 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const c=lockPlayerCampaign(b,req);
     const heroName=b.characterName||'Герой',title=b.title||'Бросок кубика',total=Number(b.total)||0;
     const d20=b.d20!==undefined&&b.d20!==''?b.d20:'';
     const modifier=Number(b.modifier)||0,modSign=modifier>=0?`+${modifier}`:`${modifier}`;
@@ -257,8 +275,7 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const c=lockPlayerCampaign(b,req);
     const hero=c.characters.find(h=>h.id===b.characterId);
     if(!hero)throw Error('Герой не найден');
     if(b.action==='hp'){
@@ -289,8 +306,7 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const c=lockPlayerCampaign(b,req);
     const hero=c.characters.find(h=>h.id===b.characterId);
     if(!hero)throw Error('Герой не найден');
     const r=(hero.resources||[]).find(res=>res.id===b.resourceId);
@@ -314,8 +330,7 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const c=lockPlayerCampaign(b,req);
     const kind=b.kind==='short'?'short':'long';
     const heroId=b.characterId||null;
     const hero=c.characters.find(h=>h.id===heroId);
@@ -340,13 +355,21 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const c=lockPlayerCampaign(b,req);
+    if(c.initiative?.active)throw Error('Бой уже идёт. Завершите его, прежде чем начать новый');
+    if(!c.characters.length)throw Error('Добавьте хотя бы одного героя');
+    const hasHeroRolls=b.heroRolls!==undefined;
+    if(hasHeroRolls){
+     if(!b.heroRolls||typeof b.heroRolls!=='object'||Array.isArray(b.heroRolls))throw Error('Укажите броски героев как список результатов d20');
+     const ids=new Set(c.characters.map(h=>h.id));
+     if(Object.keys(b.heroRolls).some(id=>!ids.has(id)))throw Error('Бросок указан для неизвестного героя');
+     for(const h of c.characters)integer(b.heroRolls[h.id],1,20,`Бросок d20: ${h.name}`);
+    }
     const combatants=[];
     for(const h of c.characters){
      const dex=h.abilityScores?.dexterity||h.stats?.dex||10;
      const mod=Math.floor((dex-10)/2);
-     const roll=Math.floor(Math.random()*20)+1;
+     const roll=hasHeroRolls?b.heroRolls[h.id]:Math.floor(Math.random()*20)+1;
      combatants.push({id:h.id,characterId:h.id,name:h.name,initiative:roll+mod,roll,mod,kind:'hero',hp:h.hp,maxHp:h.maxHp,avatar:h.avatar||''});
     }
     const map=c.maps?.[0];
@@ -361,10 +384,6 @@ const serverHandler=async(req,res)=>{
       const roll=Math.floor(Math.random()*20)+1;
       combatants.push({id:en.id,name:en.label||'Враг',initiative:roll,roll,mod:0,kind:'enemy',hp:15,maxHp:15});
      }
-    }
-    if(!combatants.some(x=>x.kind==='enemy')){
-     const roll=Math.floor(Math.random()*20)+1;
-     combatants.push({id:randomUUID(),name:'Противник',initiative:roll,roll,mod:0,kind:'enemy',hp:20,maxHp:20});
     }
     combatants.sort((a,b)=>b.initiative-a.initiative);
     c.initiative={active:true,round:1,turnIndex:0,combatants};
@@ -381,8 +400,7 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const c=lockPlayerCampaign(b,req);
     if(!c.initiative||!c.initiative.combatants?.length)throw Error('Бой не активен');
     let {round,turnIndex,combatants}=c.initiative;
     turnIndex++;
@@ -400,8 +418,7 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const c=lockPlayerCampaign(b,req);
     c.initiative=null;
     if(c.encounter)c.encounter.active=false;
     if(c.dm)c.dm.ambient='camp';
@@ -416,8 +433,7 @@ const serverHandler=async(req,res)=>{
     const auth=req.headers['x-app-token']||req.headers['x-player-token'];
     if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const c=lockPlayerCampaign(b,req);
     const type=b.type||'encounter';
     let result={};
     if(type==='encounter'){
@@ -467,14 +483,13 @@ const serverHandler=async(req,res)=>{
     return json(res,{ok:true,type,result});
    }
    if(req.method==='POST'&&url.pathname==='/api/map/fog'){
-    const auth=req.headers['x-app-token']||req.headers['x-player-token'];
-    if(auth!==token&&auth!==playerToken)return json(res,{error:'Не авторизован'},403);
+    if(!isLoopback(req)||req.headers['x-app-token']!==token)return json(res,{error:'Туманом управляет ведущий'},403);
     const b=await body(req);
-    const c=campaigns.find(x=>x.id===b.campaignId)||campaigns[0];
-    if(!c)throw Error('Кампания не найдена');
+    const c=lockPlayerCampaign(b,req);
     const map=(c.maps||[]).find(m=>m.id===b.mapId)||c.maps?.[0];
     if(!map)throw Error('Карта не найдена');
     if(b.toggleFog!==undefined)map.fogOfWar=!!b.toggleFog;
+    else if(b.action==='toggle')map.fogOfWar=!map.fogOfWar;
     if(b.revealAll){
      map.revealedCells=[];
      for(let x=0;x<map.width;x++)for(let y=0;y<map.height;y++)map.revealedCells.push(`${x},${y}`);
@@ -534,8 +549,9 @@ const serverHandler=async(req,res)=>{
      if(raw===null||raw===undefined)throw Error('Мастер ждёт физический d20: скажите «на кубике 14» или введите результат в панели броска');
     }else if(raw!==undefined)throw Error('Сейчас мастер не ожидает бросок');
     checkpoint(c);
+    const privateRoll=c.pending?.isWhisper===true;
     const roll=c.pending?resolveRoll(c,raw):null;
-    if(roll)c.journal.push({id:randomUUID(),role:'system',text:'VERIFIED_ROLL '+JSON.stringify(roll),at:new Date().toISOString()});
+    if(roll)c.journal.push({id:randomUUID(),role:'system',text:'VERIFIED_ROLL '+JSON.stringify(roll),...(privateRoll?{isWhisper:true,characterId:hero.id,characterName:hero.name}:{}),at:new Date().toISOString()});
     if(roll&&!text)text='Результат физического броска: '+(Array.isArray(raw)?raw.join(', '):raw);
     const isWhisper=b.isWhisper===true;
     const whisperPrefix=isWhisper?'🤫 [ШЁПОТ] ':'';
@@ -561,6 +577,8 @@ const serverHandler=async(req,res)=>{
      costRequests--;
     }
     if(voiceDelivery)stageReply(c,reply);else acceptReply(c,reply);
+    if(isWhisper&&c.journal.at(-1)?.role==='assistant')Object.assign(c.journal.at(-1),{isWhisper:true,characterId:hero.id,characterName:hero.name});
+    if(isWhisper&&c.pending)c.pending.isWhisper=true;
     const latest=campaigns.find(x=>x.id===c.id);
     if(latest?.summary&&(!c.summary||latest.summary.count>c.summary.count)&&summaryValid({...c,summary:latest.summary}))c.summary=latest.summary;
     await commitCampaign(c);
@@ -576,7 +594,7 @@ const serverHandler=async(req,res)=>{
     return json(res,{ok:true,characterId:hero.id,characterName:hero.name,text,narration:reply.narration});
     }finally{busy.delete(original.id);}
    }
-   if(req.headers['x-app-token']!==token)return json(res,{error:'Нужна локальная сессия приложения'},403);
+   if(!isLoopback(req)||req.headers['x-app-token']!==token)return json(res,{error:'Нужна локальная сессия приложения'},403);
   if(req.method==='GET'&&url.pathname==='/api/state')return json(res,state());
   if(req.method==='GET'&&url.pathname==='/api/archive'){const c=campaigns.find(x=>x.id===url.searchParams.get('id'));if(!c)throw Error('Кампания не найдена');const query=(url.searchParams.get('q')||'').slice(0,300);return json(res,{results:query?searchArchive({...c,dm:publicDM(c.dm)},query,20):c.journal.slice(-100),indexed:campaignStore.search(c.id,query)});}
   if(req.method==='GET'&&url.pathname==='/api/voice-latency')return json(res,{recent:voiceLatencies});
@@ -692,12 +710,14 @@ const serverHandler=async(req,res)=>{
   }
   if(url.pathname==='/api/campaign/delete'){
    const id=b.id;if(!id)throw Error('ID кампании не указан');
+   if(busy.has(id))throw Error('Дождитесь завершения текущего действия');busy.add(id);
+   try {
    let newActiveId=config.activeCampaignId;
    const task=commitQueue.then(async()=>{
     const index=campaigns.findIndex(c=>c.id===id);
     if(index<0)throw Error('Кампания не найдена');
-    campaigns.splice(index,1);
     await campaignStore.delete(id);
+    campaigns=campaigns.filter(c=>c.id!==id);
     if(config.activeCampaignId===id||!config.activeCampaignId||!campaigns.some(c=>c.id===config.activeCampaignId)){
      newActiveId=campaigns[0]?.id||'';
      config.activeCampaignId=newActiveId;
@@ -708,18 +728,20 @@ const serverHandler=async(req,res)=>{
    commitQueue=task.catch(()=>{});
    await task;
    return json(res,{ok:true,activeCampaignId:newActiveId,...state()});
+   }finally{busy.delete(id);}
   }
   if(url.pathname==='/api/create'){
    let c;
    if(b.seed){const source=await fs.readFile(path.join(root,'seed','theon-alvari.md'),'utf8');c=makeCampaign({name:'Теон и Альвари',setting:'D&D 2024 Cinematic. Закат у старой башни на северном тракте. Встреча с Э ещё НЕ началась. Неизвестные тайны из файла остаются неизвестными. КД Альвари 12 — временно по предложенному варианту со щитом, подтвердить с игроком.',source,characters:[{name:'Теон',description:'Полуэльф · Artificer 4 · Artillerist',maxHp:31,ac:15,bonuses:{strength:0,dexterity:2,constitution:2,intelligence:4,wisdom:1,charisma:-1,perception:3,investigation:6,arcana:6,stealth:2,athletics:0,persuasion:-1,survival:1,insight:1}},{name:'Альвари',description:'Полуэльф · Druid 4 · Circle of Stars',maxHp:31,ac:12,bonuses:{strength:1,dexterity:-1,constitution:2,intelligence:2,wisdom:4,charisma:0,perception:6,investigation:2,arcana:2,stealth:-1,athletics:1,persuasion:0,survival:6,insight:6}}],persona:b.persona||'realist_dreamer',personaDetails:b.personaDetails||''});}
    else c=makeCampaign({...b,characters:Array.isArray(b.characters)?b.characters:[],persona:b.persona||'realist_dreamer',personaDetails:b.personaDetails||''});
    if(b.dm)c.dm=dmState(b.dm);
+   if(!b.seed&&b.scenario)applyScenario(c,b.scenario,config.language);
    if(b.sessionZero===true){
     beginSessionZero(c,config.provider,c.persona);
     if(config.provider!=='demo'){
      await keysReady;
      const tempSysId=randomUUID();
-     c.journal.push({id:tempSysId,role:'system',text:`[Инструкция для приветствия]: Нулевая сессия только начинается. Поприветствуй игроков за столом лично в своём неповторимом характере Мастера (${c.persona||'realist_dreamer'}). Кратко и сочно задай тон вашей игры, объясни, что они могут выбрать любой мир и сеттинг или просто попросить тебя сгенерировать всё на твой вкус и начать, и спроси, в каком мире они хотят оказаться. Отвечай строго по JSON-протоколу с полем "narration".`,at:new Date().toISOString()});
+     c.journal.push({id:tempSysId,role:'system',text:`[Инструкция для приветствия]: Нулевая сессия только начинается. Если в данных есть выбранная заготовка, кратко представь её открытую завязку и предложи изменить или принять; не раскрывай заметки ведущего. Поприветствуй игроков за столом лично в своём неповторимом характере Мастера (${c.persona||'realist_dreamer'}). Кратко и сочно задай тон вашей игры, объясни, что они могут выбрать любой мир и сеттинг или просто попросить тебя сгенерировать всё на твой вкус и начать, и спроси, в каком мире они хотят оказаться. Отвечай строго по JSON-протоколу с полем "narration".`,at:new Date().toISOString()});
      try{
       const reply=await generate({...config},{...keys},c,observe);
       c.journal=c.journal.filter(e=>e.id!==tempSysId);
@@ -817,7 +839,7 @@ const serverHandler=async(req,res)=>{
    if(b.closed===true){liveSessions.delete(b.sessionId);if(b.finalized===false)await observe({provider:'openai',model:session.model,kind:'live-finalization-unconfirmed',status:200,data:{}});}return json(res,{ok:true});
   }
   if(url.pathname==='/api/generate-map'){
-   const c=campaigns.find(x=>x.id===b.id);if(!c)throw Error('Кампания не найдена');
+   const c=lockPlayerCampaign(b,req);
    if(config.provider!=='demo')await keysReady;
    const map=await generateTacticalMap(config,keys,c,observe,b.focus||'',b.mode||'tactical');
    checkpoint(c);
@@ -980,7 +1002,7 @@ updateReactionClock(c,b);}
    return json(res,state());
   }finally{busy.delete(b.id);}
  } catch(e){json(res,{error:e.message||'Ошибка приложения'},400);}
- finally{if(costSensitive)costRequests--;}
+ finally{if(req.playerCampaignLock)busy.delete(req.playerCampaignLock);if(costSensitive)costRequests--;}
 };
 server=http.createServer(serverHandler);
 if(tlsOptions)httpsServer=https.createServer(tlsOptions,serverHandler);

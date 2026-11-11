@@ -146,7 +146,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKUIDelegate, WKNaviga
         alert.informativeText = text
         alert.runModal()
     }
-    @objc func about() { showError("Сказитель 0.4.1\nГолосовой ведущий D&D. В установленной версии сохранения находятся в Library/Application Support/Skazitel/Saves; в переносной — рядом с приложением. Ключи API сохраняются в защищённой Связке ключей macOS.\n\nУчебный режим использует заготовленные ответы. Для свободной игры подключите модель.") }
+    @objc func about() { showError("Сказитель 0.9.5\nГолосовой ведущий D&D. В установленной версии сохранения находятся в Library/Application Support/Skazitel/Saves; в переносной — рядом с приложением. Ключи API сохраняются в защищённой Связке ключей macOS.\n\nУчебный режим использует заготовленные ответы. Для свободной игры подключите модель.") }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationWillTerminate(_ notification: Notification) {
         voice.stopSpeaking(at: .immediate)

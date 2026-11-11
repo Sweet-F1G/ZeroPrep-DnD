@@ -28,7 +28,7 @@ export async function createCampaignStore(directory){
  }
  function deleteCampaignRecord(campaignId){
   transaction(()=>{
-   const actual=Number(db.prepare("SELECT value FROM metadata WHERE key='generation'").get()?.value||0);
+   const actual=Number(db.prepare("SELECT value FROM metadata WHERE key='generation'").get()?.value||0);if(actual!==generation)throw Error('Сохранение изменено другим окном Сказителя. Перезапустите приложение, чтобы не затереть изменения.');
    db.prepare('DELETE FROM campaigns WHERE id=?').run(campaignId);
    db.prepare('DELETE FROM audit WHERE campaign_id=?').run(campaignId);
    db.prepare('DELETE FROM journal_archive WHERE campaign_id=?').run(campaignId);
@@ -40,9 +40,6 @@ export async function createCampaignStore(directory){
   let legacy=[],raw;try{raw=await fs.readFile(path.join(directory,'campaigns.json'),'utf8');legacy=JSON.parse(raw);if(!Array.isArray(legacy))throw Error();}catch(e){if(e.code!=='ENOENT'){db.close();throw Error('Повреждён campaigns.json. Миграция остановлена; исходный файл сохранён.');}}
   if(raw!==undefined){const backups=path.join(directory,'Backups');await fs.mkdir(backups,{recursive:true});await fs.writeFile(path.join(backups,'campaigns-before-sqlite-'+Date.now()+'.json'),raw,{mode:0o600,flag:'wx'});}
   writeCampaigns(legacy);transaction(()=>{db.prepare("INSERT OR REPLACE INTO metadata VALUES('schema','1')").run();db.prepare("INSERT OR REPLACE INTO metadata VALUES('migrated','1')").run();});
- }else{
-  const hasData=Number(db.prepare('SELECT count(*) AS n FROM campaigns').get().n)>0;
-  if(!hasData){try{const raw=await fs.readFile(path.join(directory,'campaigns.json'),'utf8'),fromJson=JSON.parse(raw);if(Array.isArray(fromJson)&&fromJson.length)writeCampaigns(fromJson);}catch{}}
  }
  const load=()=>db.prepare('SELECT data FROM campaigns ORDER BY rowid').all().map(r=>JSON.parse(r.data));
  return {

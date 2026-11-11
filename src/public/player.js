@@ -27,6 +27,22 @@ const campaignSelect = document.getElementById('campaignSelect');
 const heroSelect = document.getElementById('heroSelect');
 const playerToast = document.getElementById('playerToast');
 
+function showPrivateReply(narration) {
+  const dialog = document.createElement('dialog');
+  const title = document.createElement('h2');
+  const message = document.createElement('p');
+  const close = document.createElement('button');
+  title.textContent = 'Ответ мастера на шёпот';
+  message.textContent = narration;
+  close.type = 'button';
+  close.textContent = 'Закрыть';
+  close.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('close', () => dialog.remove(), {once: true});
+  dialog.append(title, message, close);
+  document.body.append(dialog);
+  dialog.showModal();
+}
+
 // Navigation Tabs
 const tabButtons = document.querySelectorAll('.tab-btn');
 const panels = {
@@ -50,14 +66,21 @@ connectSSE();
 // ----------------------------------------------------------------------------
 function initTabs() {
   tabButtons.forEach(btn => {
+    const panel = panels[btn.dataset.tab];
+    btn.id = `tab-${btn.dataset.tab}`;
+    btn.setAttribute('aria-controls', panel.id);
+    btn.tabIndex = btn.classList.contains('active') ? 0 : -1;
+    panel.setAttribute('aria-labelledby', btn.id);
     btn.addEventListener('click', () => {
       const tabName = btn.dataset.tab;
       tabButtons.forEach(b => {
         b.classList.remove('active');
         b.setAttribute('aria-selected', 'false');
+        b.tabIndex = -1;
       });
       btn.classList.add('active');
       btn.setAttribute('aria-selected', 'true');
+      btn.tabIndex = 0;
 
       Object.entries(panels).forEach(([name, panel]) => {
         if (!panel) return;
@@ -69,6 +92,17 @@ function initTabs() {
           panel.hidden = true;
         }
       });
+    });
+    btn.addEventListener('keydown', e => {
+      const buttons = Array.from(tabButtons);
+      const i = buttons.indexOf(btn);
+      let next;
+      if (e.key === 'ArrowRight') next = (i + 1) % buttons.length;
+      else if (e.key === 'ArrowLeft') next = (i + buttons.length - 1) % buttons.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = buttons.length - 1;
+      else return;
+      e.preventDefault(); buttons[next].click(); buttons[next].focus();
     });
   });
 }
@@ -616,26 +650,26 @@ function renderSpellSlots(hero) {
       const resId = pip.dataset.resourceId;
       const targetRes = res.find(r => r.id === resId);
       if (!targetRes) return;
-      const cur = targetRes.current !== undefined ? targetRes.current : targetRes.max;
       const isExpended = pip.classList.contains('expended');
-      const nextVal = isExpended ? Math.min(targetRes.max, cur + 1) : Math.max(0, cur - 1);
       
-      targetRes.current = nextVal;
-      playSfx('magic');
-      renderSpellSlots(hero);
-
       try {
-        await fetch('/api/player/resource', {
+        const response = await fetch('/api/player/resource', {
           method: 'POST',
           headers,
           body: JSON.stringify({
             campaignId: campaign?.id,
             characterId: hero.id,
             resourceId: resId,
-            current: nextVal
+            action: isExpended ? 'recover' : 'use',
+            amount: 1
           })
         });
-        showToast(`${targetRes.name}: ${nextVal}/${targetRes.max}`);
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || 'Ошибка обновления ресурса');
+        targetRes.current = result.resource.current;
+        playSfx('magic');
+        renderSpellSlots(hero);
+        showToast(`${targetRes.name}: ${targetRes.current}/${targetRes.max}`);
       } catch (err) {
         showToast(err.message || 'Ошибка обновления ресурса');
       }
@@ -808,6 +842,8 @@ function initDiceControls() {
 async function executeRoll(sides, modifier, title) {
   const hero = getActiveHero();
   const heroName = hero ? hero.name : 'Игрок';
+  const pending = sides === 20 && hero && campaign?.pending?.characterId === hero.id ? campaign.pending : null;
+  const effectiveMode = pending ? ({advantage:'adv', disadvantage:'dis'}[pending.mode] || 'normal') : rollMode;
 
   let d1 = Math.floor(Math.random() * sides) + 1;
   let d2 = null;
@@ -815,11 +851,11 @@ async function executeRoll(sides, modifier, title) {
   let modeNote = '';
 
   if (sides === 20) {
-    if (rollMode === 'adv') {
+    if (effectiveMode === 'adv') {
       d2 = Math.floor(Math.random() * 20) + 1;
       finalDie = Math.max(d1, d2);
       modeNote = ` (преимущество: ${d1}, ${d2})`;
-    } else if (rollMode === 'dis') {
+    } else if (effectiveMode === 'dis') {
       d2 = Math.floor(Math.random() * 20) + 1;
       finalDie = Math.min(d1, d2);
       modeNote = ` (помеха: ${d1}, ${d2})`;
@@ -866,6 +902,8 @@ async function executeRoll(sides, modifier, title) {
   const breakdownEl = document.getElementById('rollBreakdownText');
   const critBanner = document.getElementById('critBanner');
   const fumbleBanner = document.getElementById('fumbleBanner');
+  const deliveryStatus = document.getElementById('reSendRollBtn');
+  if (deliveryStatus) { deliveryStatus.disabled = true; deliveryStatus.textContent = 'Отправляем мастеру…'; }
 
   if (showcase) showcase.hidden = false;
   if (totalEl) totalEl.textContent = total;
@@ -879,11 +917,11 @@ async function executeRoll(sides, modifier, title) {
   addRecentRoll(heroName, title, total, sides === 20 ? finalDie : '', modifier, isCrit, isFumble);
 
   // If the Master is awaiting a d20 roll for this hero, resolve the pending roll!
-  if (sides === 20 && campaign?.pending && campaign.pending.characterId === hero.id) {
-    const p = campaign.pending;
+  if (pending) {
+    const p = pending;
     const raw = !p.mode || p.mode === 'normal' ? finalDie : [d1, d2];
-    showToast(`🎲 Бросок ${finalDie} передан Мастеру!`);
-    await sendPttTextAction({ raw, rollId: p.id });
+    const sent = await sendPttTextAction({ raw, rollId: p.id });
+    if (deliveryStatus) deliveryStatus.textContent = sent ? '✓ Принято мастером' : 'Не подтверждено — проверьте состояние стола';
     return;
   }
 
@@ -903,8 +941,10 @@ async function executeRoll(sides, modifier, title) {
       })
     });
     if(!response.ok)throw Error((await response.json()).error || 'Бросок не передан');
+    if (deliveryStatus) deliveryStatus.textContent = '✓ Принято мастером';
     showToast(`🎲 Бросок ${total} отправлен Мастеру!`);
   } catch (error) {
+    if (deliveryStatus) deliveryStatus.textContent = 'Не подтверждено — проверьте состояние стола';
     showToast(error.message || 'Бросок не передан мастеру');
   }
 }
@@ -1440,6 +1480,7 @@ function escapeHtml(str) {
 // ----------------------------------------------------------------------------
 let pttRecording = null;
 let pttRecordHeld = false;
+let pttRecordSequence = 0;
 let pttBusy = false;
 
 const hasMediaDevices = !!(
@@ -1551,6 +1592,7 @@ function initPttControls() {
         }
 
         const data = await res.json();
+        if (data.narration?.startsWith('🤫 [Шёпотом')) showPrivateReply(data.narration);
         showToast(`✨ ${hero.name}: «${data.text}» отправлено!`);
         if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
         await refreshCampaignState();
@@ -1608,11 +1650,12 @@ function initPttControls() {
       }
     });
     pttBtn.addEventListener('keyup', e => {
-      if ((e.code === 'Space' || e.key === 'Enter') && pttRecording) {
+      if (e.code === 'Space' || e.key === 'Enter') {
         e.preventDefault();
         stopPttRecording();
       }
     });
+    pttBtn.addEventListener('blur', () => { if (pttRecordHeld || pttRecording) stopPttRecording(); });
   }
 
   if (toggleBtn && textRow) {
@@ -1699,7 +1742,7 @@ function wav(chunks, sampleRate) {
 }
 
 async function startPttRecording() {
-  if (pttBusy || pttRecording) return;
+  if (pttBusy || pttRecording || pttRecordHeld) return;
   const hero = getActiveHero();
   if (!hero) {
     showToast('Сначала выберите героя');
@@ -1717,19 +1760,21 @@ async function startPttRecording() {
   }
 
   pttRecordHeld = true;
+  const sequence = ++pttRecordSequence;
   let stream = null, ctx = null;
   try {
     stream = await getUM({
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       video: false
     });
-    if (!pttRecordHeld) {
+    if (!pttRecordHeld || sequence !== pttRecordSequence) {
       stream.getTracks().forEach(t => t.stop());
       return;
     }
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     ctx = new AudioContextClass();
     await ctx.resume();
+    if (!pttRecordHeld || sequence !== pttRecordSequence) { stream.getTracks().forEach(t => t.stop()); await ctx.close().catch(() => {}); return; }
     const source = ctx.createMediaStreamSource(stream);
     const processor = ctx.createScriptProcessor(4096, 1, 1);
     const gain = ctx.createGain();
@@ -1763,6 +1808,7 @@ async function startPttRecording() {
   } catch (e) {
     stream?.getTracks().forEach(t => t.stop());
     if (ctx) await ctx.close().catch(() => {});
+    if (sequence !== pttRecordSequence) return;
     pttRecordHeld = false;
     if (e.name === 'NotAllowedError' || e.name === 'SecurityError' || e.name === 'TypeError') {
       showToast('Прямой доступ ограничен браузером, открываем запись…');
@@ -1775,6 +1821,7 @@ async function startPttRecording() {
 
 async function stopPttRecording() {
   pttRecordHeld = false;
+  pttRecordSequence++;
   if (!pttRecording) return;
   const r = pttRecording;
   pttRecording = null;
@@ -1826,6 +1873,7 @@ async function stopPttRecording() {
       throw new Error(err.error || 'Ошибка отправки хода');
     }
     const data = await res.json();
+    if (data.narration?.startsWith('🤫 [Шёпотом')) showPrivateReply(data.narration);
     showToast(isWhisperMode ? `🤫 ${r.hero.name}: «${data.text}» шепнули Мастеру!` : `✨ ${r.hero.name}: «${data.text}» отправлено!`);
     if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
     await refreshCampaignState();
@@ -1840,14 +1888,14 @@ async function stopPttRecording() {
 }
 
 async function sendPttTextAction(rollSubmission = null) {
-  if (pttBusy || pttRecording || pttRecordHeld) return;
+  if (pttBusy || pttRecording || pttRecordHeld) return false;
   const input = document.getElementById('pttTextInput');
   const text = rollSubmission ? '' : input?.value?.trim();
-  if (!text && !rollSubmission) return;
+  if (!text && !rollSubmission) return false;
   const hero = getActiveHero();
   if (!hero) {
     showToast('Сначала выберите героя');
-    return;
+    return false;
   }
   setPttBusy(true);
   const pttBtn = document.getElementById('playerPttBtn');
@@ -1870,11 +1918,14 @@ async function sendPttTextAction(rollSubmission = null) {
       throw new Error(err.error || 'Ошибка отправки');
     }
     const data = await res.json();
+    if (data.narration?.startsWith('🤫 [Шёпотом')) showPrivateReply(data.narration);
     if(!rollSubmission && input.value.trim() === text)input.value = '';
     showToast(rollSubmission ? 'Результат броска передан мастеру' : isWhisperMode ? `🤫 ${hero.name}: «${text}» шепнули Мастеру!` : `✨ ${hero.name}: «${text}» отправлено!`);
     await refreshCampaignState();
+    return true;
   } catch (e) {
     showPlayerSendError(e.message || 'Не удалось передать ход');
+    return false;
   } finally {
     setPttBusy(false);
     if (pttBtn) pttBtn.classList.remove('busy');

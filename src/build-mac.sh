@@ -9,10 +9,18 @@ mkdir -p "$TASK_APP/Contents/MacOS" "$TASK_APP/Contents/Resources/src" "$TASK_CA
 cat "$TASK_SRC/Keychain.swift" "$TASK_SRC/MacApp.swift" > "$TASK_STAGE/main.swift"
 swiftc -O -target arm64-apple-macos14.0 -module-cache-path "$TASK_CACHE" "$TASK_STAGE/main.swift" -o "$TASK_APP/Contents/MacOS/Skazitel" -framework Cocoa -framework WebKit -framework AVFoundation -framework CFNetwork -framework Security
 NODE_BIN="${SKAZITEL_NODE:-$(command -v node 2>/dev/null || echo "$TASK_OUT/Skazitel.app/Contents/Resources/node")}"
+if [[ ! -x "$NODE_BIN" ]] || (( $("$NODE_BIN" -p 'Number(process.versions.node.split(".")[0])') < 24 )); then
+  echo 'Требуется автономный Node.js 24+ для macOS ARM64; укажите путь через SKAZITEL_NODE.' >&2
+  exit 1
+fi
+if otool -L "$NODE_BIN" | tail -n +2 | grep -Eq '@rpath/|/opt/homebrew/|/usr/local/'; then
+  echo 'Node.js зависит от внешних библиотек. Укажите официальный автономный бинарник через SKAZITEL_NODE.' >&2
+  exit 1
+fi
 cp -X "$NODE_BIN" "$TASK_APP/Contents/Resources/node"
 install_name_tool -add_rpath /opt/homebrew/lib "$TASK_APP/Contents/Resources/node" 2>/dev/null || true
 install_name_tool -add_rpath /usr/local/lib "$TASK_APP/Contents/Resources/node" 2>/dev/null || true
-for TASK_FILE in server.mjs audio-stream.mjs response-stream.mjs maps.mjs openai-context.mjs cost.mjs progression.mjs dm-state.mjs illustrations.mjs rules.mjs memory.mjs inventory.mjs actions.mjs prompts.mjs campaign-store.mjs engine.mjs session-zero.mjs providers.mjs credentials.mjs usage.mjs context.mjs delivery.mjs local-voice.mjs edge-voice.mjs edge-worker.py silero-worker.py voice_text.py package.json; do
+for TASK_FILE in server.mjs audio-stream.mjs response-stream.mjs maps.mjs openai-context.mjs cost.mjs progression.mjs dm-state.mjs illustrations.mjs rules.mjs memory.mjs inventory.mjs actions.mjs prompts.mjs scenarios.mjs campaign-store.mjs engine.mjs session-zero.mjs providers.mjs credentials.mjs usage.mjs context.mjs delivery.mjs local-voice.mjs edge-voice.mjs edge-worker.py silero-worker.py voice_text.py package.json; do
   cp -X "$TASK_SRC/$TASK_FILE" "$TASK_APP/Contents/Resources/src/$TASK_FILE"
 done
 cp -RX "$TASK_SRC/public" "$TASK_APP/Contents/Resources/src/"
@@ -45,8 +53,8 @@ cat > "$TASK_APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Сказитель</string>
 <key>CFBundleDisplayName</key><string>Сказитель</string>
 <key>CFBundleIconFile</key><string>Skazitel.icns</string>
-<key>CFBundleVersion</key><string>24</string>
-<key>CFBundleShortVersionString</key><string>0.9.4</string>
+<key>CFBundleVersion</key><string>25</string>
+<key>CFBundleShortVersionString</key><string>0.9.5</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSCameraUsageDescription</key><string>Мастер наблюдает за эмоциями, взглядами и вовлечённостью игроков за столом.</string>
@@ -71,6 +79,7 @@ dot_clean "$TASK_OUT/Skazitel.app" 2>/dev/null || true
 xattr -cr "$TASK_OUT/Skazitel.app" 2>/dev/null || true
 xattr -d com.apple.FinderInfo "$TASK_OUT/Skazitel.app/Contents/Resources/KeyStore.app" 2>/dev/null || true
 xattr -d com.apple.FinderInfo "$TASK_OUT/Skazitel.app" 2>/dev/null || true
-codesign --force --sign - "$TASK_OUT/Skazitel.app/Contents/Resources/node" 2>/dev/null || true
-(xattr -d com.apple.FinderInfo "$TASK_OUT/Skazitel.app" 2>/dev/null || true; codesign --force --sign - "$TASK_OUT/Skazitel.app") || true
+if ! codesign --verify --deep --strict "$TASK_OUT/Skazitel.app" 2>/dev/null; then
+  echo 'Примечание: облачная папка добавила служебные атрибуты Finder. Для переносимого архива запустите src/package-release.py; он проверит подпись в локальной временной папке.' >&2
+fi
 echo "Готово: $TASK_OUT/Skazitel.app"

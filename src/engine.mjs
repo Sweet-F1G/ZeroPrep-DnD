@@ -68,7 +68,7 @@ export function acceptReply(c,reply) {
 }
 export function approveProposal(c,id,accept) {
  const p=c.proposals.find(x=>x.id===id); if(!p) throw Error('Предложение уже обработано');
- if(accept) { const hero=c.characters.find(x=>x.id===p.characterId);hero.hp=Math.max(0,Math.min(hero.maxHp,hero.hp+p.hpDelta));if(hero.hp>0)hero.deathSaves={successes:0,failures:0};else hero.concentration=''; }
+ if(accept) { const hero=c.characters.find(x=>x.id===p.characterId);let delta=p.hpDelta;if(delta<0){const absorbed=Math.min(hero.tempHp||0,-delta);hero.tempHp=(hero.tempHp||0)-absorbed;delta+=absorbed;}hero.hp=Math.max(0,Math.min(hero.maxHp,hero.hp+delta));if(hero.hp>0)hero.deathSaves={successes:0,failures:0};else hero.concentration=''; }
  c.journal.push({id:randomUUID(),role:'system',text:`${accept?'Подтверждено':'Отклонено'}: ${p.reason}; HP ${p.hpDelta>0?'+':''}${p.hpDelta}`,at:new Date().toISOString()});
  c.proposals=c.proposals.filter(x=>x.id!==id);
 }

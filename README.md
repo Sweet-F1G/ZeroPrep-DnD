@@ -1,10 +1,12 @@
-# ZeroPrep-DnD · v0.9.4
+# ZeroPrep-DnD · v0.9.5
+
+[Что нового в 0.9.5 / Release notes](RELEASE-0.9.5.md)
 
 > **[English](./README.md)** | **[Русский](./README.ru.md)**
 
 A privacy-first, self-hosted AI Dungeon Master for genuine tabletop D&D 2024 & 5e. Cross-platform application for macOS (Apple Silicon) and Windows 10/11, combining cinematic AI narration, physical dice rolling, local computer vision on the Apple Neural Engine, low-latency multi-voice streaming TTS, tactile battle maps, and a zero-install LAN companion for players' smartphones.
 
-**Flagship Release v0.9.4 (Local Table Vision · Apple Neural Engine):** 100% private and free computer vision via Apple's native Vision framework. Detects player count, smiles, laughter, suspense, and smartphone distraction right on the Mac chip with zero API tokens; hybrid action & background monitoring; compact 👁️ "Table Vision" HUD preview, and dynamic system prompt adaptation. [Read Release Notes](RELEASE-0.9.4.md).
+**Latest Release v0.9.5 (Adventure Starters, Hardened LAN Security & Initiative Overhaul):** 4 modular adventure starters for instant Session Zero; enhanced player agency directives; physical & automated d20 initiative handling; temporary HP damage absorption; server-side fog-of-war sanitization and private whisper delivery for LAN companion. [Read Release Notes](RELEASE-0.9.5.md).
 
 ---
 
@@ -53,7 +55,7 @@ A privacy-first, self-hosted AI Dungeon Master for genuine tabletop D&D 2024 & 5
 ### 🪟 Windows (10 / 11)
 1. **One-Click Batch File:**
    Double-click `Start-Windows.bat`.
-   * Requires [Node.js 20+](https://nodejs.org/).
+   * Requires [Node.js 24+](https://nodejs.org/).
    * Opens automatically at `http://127.0.0.1:47831`.
 2. **Optional Computer Vision on Windows:**
    ```cmd
@@ -86,7 +88,7 @@ A privacy-first, self-hosted AI Dungeon Master for genuine tabletop D&D 2024 & 5
 ## 📚 Guides & Documentation
 
 - **[Installation & User Guide](INSTALL-GUIDE.md)** — Step-by-step setup, model connection, physical dice rules, and gameplay instructions.
-- **[Release Notes (v0.9.4)](RELEASE-0.9.4.md)** — Highlights of the flagship release (Table Vision, Living DM, Multi-Voice TTS).
+- **[Release Notes (v0.9.5)](RELEASE-0.9.5.md)** — Highlights of the latest release (Starters, LAN Security, Initiative Overhaul).
 - **[Russian Guide / Инструкция на русском](README.ru.md)** — Полное руководство на русском языке.
 
 ---
